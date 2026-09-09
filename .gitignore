@@ -1,0 +1,19 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# environment variables
+.env
+.env.production
+
+# macOS
+.DS_Store
+
+# logs
+npm-debug.log*
+
+# local Claude Code settings (workspace-specific, not shared)
+.claude/

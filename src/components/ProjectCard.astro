@@ -1,0 +1,152 @@
+---
+interface Props {
+  image: string;
+  imageAlt?: string;
+  title: string;
+  description?: string;
+  tags: string[];
+  imageStyle?: string;
+  href?: string;
+}
+
+const { image, imageAlt = '', title, description, tags, imageStyle, href } = Astro.props;
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag class="project-card" href={href}>
+  <div class="project-card-image-wrap">
+    <img class="project-card-image" src={image} alt={imageAlt} style={imageStyle} />
+  </div>
+  <div class="project-card-spacer"></div>
+  <div class="project-card-info">
+    <p class="project-card-title">{title}</p>
+    {description && (
+      <div class="project-card-desc-row">
+        <p class="project-card-desc">{description}</p>
+      </div>
+    )}
+    <div class="project-card-tags">
+      {tags.map((tag) => <span class="project-card-tag">{tag}</span>)}
+    </div>
+  </div>
+</Tag>
+
+<style>
+  .project-card {
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 0;
+    min-width: 0;
+    aspect-ratio: 488 / 335;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0px 4px 4.5px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transform: scale(1, 1);
+    transform-origin: center;
+    transition: transform 0.3s ease-out;
+  }
+
+  .project-card:hover {
+    transform: scale(1.04, 1.0388);
+    z-index: 1;
+  }
+
+  .project-card-image-wrap {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .project-card-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: none;
+  }
+
+  .project-card-spacer {
+    flex: 1 0 0;
+    min-height: 0;
+  }
+
+  .project-card-info {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 32px;
+    background: rgba(255, 255, 255, 0.84);
+    transition: gap 0.3s ease-out;
+  }
+
+  .project-card:hover .project-card-info {
+    gap: 12px;
+  }
+
+  .project-card-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: normal;
+    color: #000;
+    text-align: left;
+  }
+
+  .project-card-desc-row {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
+  }
+
+  .project-card:hover .project-card-desc-row {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  /* Touch devices have no hover state to reveal the description — show it
+     by default there instead of hiding it permanently. */
+  @media (hover: none) {
+    .project-card-desc-row {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+  }
+
+  .project-card-desc {
+    margin: 0;
+    min-height: 0;
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: normal;
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .project-card-tags {
+    display: flex;
+    gap: 10px;
+  }
+
+  .project-card-tag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: rgba(118, 189, 232, 0.17);
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-size: 10px;
+    color: #000;
+    white-space: nowrap;
+  }
+</style>

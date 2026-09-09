@@ -1,0 +1,450 @@
+---
+// Mirrors Window.astro's real titlebar (traffic lights + folder icon + page
+// title) exactly, at mobile scale — mobile pages had dropped the window
+// chrome entirely in favor of a plain "‹ Home" text link, which is what read
+// as "generic app" rather than "an OS window on the desktop", the site's
+// actual visual identity everywhere else. The red light does double duty as
+// the real back-navigation affordance (same semantic as desktop's red =
+// Close = go Home), so this replaces the old back-link rather than sitting
+// alongside it.
+interface Props {
+  title: string;
+  backHref?: string;
+}
+
+const { title, backHref = '/' } = Astro.props;
+---
+
+<div class="m-titlebar">
+  <div class="m-titlebar-lights">
+    <a class="m-titlebar-light m-titlebar-red" href={backHref} aria-label="Back"></a>
+    <button type="button" class="m-titlebar-light m-titlebar-yellow" aria-label="Minimize"></button>
+    <button type="button" class="m-titlebar-light m-titlebar-green" aria-label="Maximize"></button>
+  </div>
+  <div class="m-titlebar-title">
+    <img src="/images/shared/window-title-icon.png" alt="" width="13" height="14" />
+    <span>{title}</span>
+  </div>
+</div>
+
+<style>
+  .m-titlebar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    flex-shrink: 0;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+  }
+
+  .m-titlebar-lights {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .m-titlebar-light {
+    position: relative;
+    display: block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    /* Skips the ~300ms tap-delay/double-tap-zoom gesture detection some
+       mobile browsers still do on custom tappable elements — the visible
+       dot itself is fine, but real fingers are far less precise than a
+       cursor, and this can otherwise read as "nothing happened" while the
+       browser is still waiting to see if a second tap is coming. */
+    touch-action: manipulation;
+  }
+
+  /* Real hit area, independent of the visible 11px dot (which stays
+     Figma-accurate) — 11px is far under any real touch-target guideline
+     (Apple HIG wants 44pt), so on an actual finger this was very easy to
+     miss even with every click-handling bug fixed. Sized to the lights'
+     own 18px center-to-center spacing (11px dot + 7px gap) so neighboring
+     hit areas butt up against each other without overlapping — an
+     overlap would make the LATER dot in DOM order (green) steal taps
+     meant for its neighbor in the shared strip. Taller than wide since
+     there's no vertical neighbor to collide with. */
+  .m-titlebar-light::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 17px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+  }
+
+  .m-titlebar-red {
+    background: #ff736a;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .m-titlebar-yellow {
+    background: #febc2e;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .m-titlebar-green {
+    background: #19c332;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .m-titlebar-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+    white-space: nowrap;
+  }
+
+  /* Maximized state: the structured titlebar (bordered 40px bar, folder
+     icon + title text) goes away entirely — the sheet becomes the whole
+     screen (see .mobile-content[data-maximized] in Layout.astro), so a
+     bar implying "this is a bounded window" would contradict that. Only
+     the three lights survive, now floating free over whatever content is
+     underneath rather than sitting in their own bordered row — a small
+     translucent pill behind them keeps them legible over arbitrary page
+     content the way the rest of this site's floating glass chrome
+     (dock, window) already does, rather than assuming the content below
+     is always light enough for plain dots to read against it.
+     :global() is required here (not a scoping bug) — .mobile-content
+     belongs to Layout.astro, a different file's scope, and this needs to
+     reach it as the ancestor while .m-titlebar-lights itself stays a
+     normal scoped selector, same cross-file-slot pattern noted elsewhere
+     this project (see MEMORY.md's Astro gotchas entry).
+
+     top-right rather than top-left (every other titlebar/dock in this
+     codebase puts its lights at the left) — user feedback: left covered
+     real page content (headings typically start flush left), and moving
+     to the opposite corner was the offered fix rather than reserving
+     empty space above the content for the bar to sit in. */
+  :global(.mobile-content[data-maximized='true']) .m-titlebar {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: 14px;
+    height: auto;
+    padding: 0;
+    border-bottom: none;
+    z-index: 20;
+  }
+
+  :global(.mobile-content[data-maximized='true']) .m-titlebar-lights {
+    padding: 7px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.12);
+  }
+
+  :global(.mobile-content[data-maximized='true']) .m-titlebar-title {
+    display: none;
+  }
+</style>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  // Mobile's equivalent of Window.astro's setMinimized() — same shape
+  // (shrink+fade toward the bottom, where MobileDock floats, then the
+  // reverse to restore), applied to .mobile-content (Layout.astro) instead
+  // of .window, since mobile has no per-page window element — the whole
+  // frosted sheet (this titlebar + the page's own content below it) IS the
+  // "window" here. #page-backdrop is already a shared, always-rendered,
+  // position:fixed element outside both .scale-viewport and .mobile-shell
+  // (see Layout.astro), and MobileDock always floats regardless of
+  // minimize state (mobile has no maximize/dock-hiding concept to fight
+  // with, unlike desktop) — so minimizing already leaves exactly "the
+  // empty screen with dock and backdrop" with no extra plumbing needed
+  // there, same outcome as desktop for a different, simpler reason.
+  // Both setMobileMinimized and flip() schedule a delayed cleanup
+  // (setTimeout, not transitionend — see below) that writes inline
+  // styles back on the SAME elements (sheet, and for flip, bar too).
+  // Tapping green then yellow in quick succession (well within real
+  // human double-tap speed, confirmed live: a 50ms gap reproduces it
+  // every time) used to leave the sheet permanently dead — minimize's
+  // fresh `transform:scale(0.04)...` + `opacity:0` + `pointerEvents:
+  // none` would apply correctly, but the EARLIER flip() call's own
+  // still-pending cleanup (scheduled when green was tapped, unaware
+  // anything else touched the element since) would fire afterward and
+  // blindly clear `sheet.style.transform` back to '' — snapping the
+  // sheet to full size while opacity/pointerEvents stayed at the
+  // minimized values, so it rendered invisible AND, critically,
+  // pointer-events:none blocks real touches (unlike a scripted
+  // .click()) on every descendant, including the titlebar's own three
+  // buttons — no tap could ever reach them again. Whichever operation
+  // touches an element most recently must own that element's cleanup;
+  // this map lets each one cancel the other's stale pending write
+  // before applying its own, keyed per-element so flip's sheet+bar
+  // cleanups can be canceled independently of each other too.
+  const pendingCleanup = new WeakMap();
+
+  function cancelCleanup(el) {
+    const id = pendingCleanup.get(el);
+    if (id !== undefined) {
+      clearTimeout(id);
+      pendingCleanup.delete(el);
+    }
+  }
+
+  function scheduleCleanup(el, run, duration) {
+    cancelCleanup(el);
+    const id = setTimeout(() => {
+      pendingCleanup.delete(el);
+      run();
+    }, duration);
+    pendingCleanup.set(el, id);
+  }
+
+  function setMobileMinimized(sheet, minimized) {
+    cancelCleanup(sheet);
+    sheet.dataset.minimized = String(minimized);
+    sheet.style.transformOrigin = 'bottom center';
+    if (minimized) {
+      sheet.style.transition = 'transform 0.4s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.3s ease-in';
+      sheet.style.transform = 'scale(0.04) translateY(45%)';
+      sheet.style.opacity = '0';
+      sheet.style.pointerEvents = 'none';
+    } else {
+      sheet.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out';
+      sheet.style.transform = 'none';
+      sheet.style.opacity = '1';
+      sheet.style.pointerEvents = '';
+    }
+    // Clears the inline transition once it's done its job — left set
+    // permanently, it would silently block .mobile-content's own base
+    // CSS transition (margin/border-radius/box-shadow/min-height, for
+    // maximize — see Layout.astro) from ever animating anything again,
+    // since an inline `transition` value fully replaces the computed one
+    // for EVERY property, not just the ones it names. Found exactly this
+    // interaction while adding the maximize transition: without this
+    // cleanup, maximizing after ever minimizing once snapped instantly
+    // instead of animating.
+    //
+    // setTimeout, not a transitionend listener — the AppLayout dock-fix
+    // earlier this session hit the identical lesson: a `transitionend`
+    // listener is NOT guaranteed to fire promptly (confirmed live, this
+    // very function: minimized -> restored -> the inline transition was
+    // STILL sitting there half a second later, un-cleaned, and the very
+    // next maximize snapped instantly instead of animating because of
+    // it). 400ms matches the longer of the two durations set above.
+    scheduleCleanup(sheet, () => { sheet.style.transition = ''; }, 400);
+    document.dispatchEvent(new CustomEvent('appwindow:minimize', { detail: { minimized } }));
+  }
+
+  // Close (red light): deliberately NOT the same motion as minimize. That
+  // shrink-toward-bottom-center animates toward where the dock sits,
+  // reading as "this is now tucked away, retrievable from the dock" — true
+  // for minimize, false for close, which is navigating away entirely. So
+  // this scales down and fades IN PLACE (transform-origin center, no
+  // translateY) instead, distinct from minimize's motion the same way
+  // close and minimize read as distinct actions on real macOS. Duration is
+  // shorter than minimize's too (250ms vs 400ms) — closing reads as a
+  // snappier, more final action than the deliberate genie-to-dock motion.
+  //
+  // navigate() (Astro's own client-side router, see the import above) is
+  // called after a short delay, not immediately — calling it immediately
+  // would let Astro's view-transition system snapshot the "old" page
+  // before this animation had time to visually progress at all, so the
+  // close motion would never be seen. But that delay is pure ADDED
+  // latency stacked in front of Astro's own ~350ms root crossfade (see
+  // Layout.astro's FADE_S) — waiting for the full 250ms transition to
+  // finish before navigating (the first version of this) made every close
+  // noticeably slower than it used to feel, even though nothing was
+  // actually janky. 90ms is enough for the eye to catch the shrink
+  // starting — which is all that's needed to read as "this is closing in
+  // place," distinct from minimize's dock-directed motion — without
+  // requiring the animation to fully finish before Astro's own crossfade
+  // picks up (whatever partial scale/opacity it's reached at that point
+  // becomes the "old" snapshot, and finishes settling visually as part of
+  // that crossfade instead of before it).
+  function setMobileClosing(sheet, backHref) {
+    cancelCleanup(sheet);
+    sheet.style.transformOrigin = 'center center';
+    sheet.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.2s ease-in';
+    sheet.style.transform = 'scale(0.92)';
+    sheet.style.opacity = '0';
+    sheet.style.pointerEvents = 'none';
+    setTimeout(() => navigate(backHref), 90);
+  }
+
+  // Real maximize: the sheet becomes the whole screen (see
+  // .mobile-content[data-maximized] in Layout.astro) and the titlebar
+  // collapses to just its three lights (see the :global() rules above).
+  // No PORTAL is needed to reach real screen edges the way desktop's
+  // maximize needs one — .mobile-shell has no transformed ancestor the
+  // way .scale-frame does, so .mobile-content already lays out
+  // edge-to-edge in normal document flow once its own margin/max-width/
+  // radius are stripped, nothing to escape. But a portal and a smooth
+  // ANIMATION are two separate things FLIP solves on desktop, and this
+  // still needs the second one: user feedback after a first attempt at a
+  // plain CSS transition on height/margin was "no animation still...
+  // abrupt changing position of radio buttons, no scaling animation of
+  // window nothing" — .m-titlebar also flips between position:relative
+  // (in the flex column, normal state) and position:fixed (floating,
+  // maximized state), and `position` itself isn't a CSS-animatable
+  // property at all, discrete positioning-scheme jumps can't be
+  // interpolated by a transition regardless of duration/easing. FLIP
+  // (First-Last-Invert-Play, same technique/shape as Window.astro's
+  // flipResize on desktop) sidesteps both problems at once: it works from
+  // getBoundingClientRect() snapshots, which are always viewport-relative
+  // regardless of position scheme or DOM parent, so it doesn't care that
+  // .m-titlebar's positioning is fundamentally discrete — it just
+  // animates a transform between the before/after rects either way.
+  // Takes a LIST of elements because the bar's own position change here
+  // is a side effect of the sheet's attribute change (its maximized CSS
+  // is keyed off :global(.mobile-content[data-maximized]) .m-titlebar,
+  // not anything set on the bar itself) — flipping them as two
+  // independent single-element calls would measure the bar's "before"
+  // AFTER the sheet's own flip() already applied the state change,
+  // capturing an already-moved bar with nothing left to animate. Snapshot
+  // every element's rect first, apply the ONE state change that affects
+  // all of them, then animate each element's own before/after delta.
+  function flip(elements, applyFinalState, duration = 350) {
+    // Cancel each element's own previously-scheduled cleanup (from an
+    // earlier flip(), or from setMobileMinimized on the sheet) before
+    // measuring — otherwise a stale cleanup left over from whatever ran
+    // before this could fire mid-animation and clobber the transform
+    // this call is about to apply. See pendingCleanup's comment above.
+    elements.forEach((el) => cancelCleanup(el));
+
+    const firsts = elements.map((el) => el.getBoundingClientRect());
+    applyFinalState();
+    elements.forEach((el, i) => {
+      const first = firsts[i];
+      const last = el.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      const scaleX = first.width / last.width;
+      const scaleY = first.height / last.height;
+      el.style.transition = 'none';
+      el.style.transformOrigin = 'top left';
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+    });
+
+    elements[0].getBoundingClientRect(); // force one reflow so every inverted transform above paints first
+
+    elements.forEach((el) => {
+      el.style.transition = `transform ${duration / 1000}s cubic-bezier(0.22, 1, 0.36, 1)`;
+      el.style.transform = 'none';
+    });
+
+    // setTimeout, not transitionend — see setMobileMinimized's own
+    // comment on why an event-based cleanup isn't reliable enough here.
+    // Scheduled per-element (not one shared timeout for the whole list)
+    // so that if something else (e.g. setMobileMinimized) touches just
+    // the sheet before this fires, canceling the sheet's cleanup doesn't
+    // also cancel the bar's — each element's cleanup is owned and
+    // canceled independently.
+    elements.forEach((el) => {
+      scheduleCleanup(
+        el,
+        () => {
+          el.style.transition = '';
+          el.style.transformOrigin = '';
+          el.style.transform = '';
+        },
+        duration + 50
+      );
+    });
+  }
+
+  function setMobileMaximized(sheet, bar, maximized) {
+    const elements = bar instanceof HTMLElement ? [sheet, bar] : [sheet];
+    flip(elements, () => { sheet.dataset.maximized = String(maximized); });
+  }
+
+  // MobileTitlebar itself isn't persisted (unlike MobileDock) — a fresh
+  // instance renders on every page, so its buttons need (re-)binding on
+  // every astro:page-load, same dataset.bound-per-element guard pattern
+  // Window.astro uses for the same reason.
+  function initMobileTitlebarControls() {
+    document.querySelectorAll('.m-titlebar').forEach((bar) => {
+      if (!(bar instanceof HTMLElement) || bar.dataset.bound === 'true') return;
+      bar.dataset.bound = 'true';
+
+      const redBtn = bar.querySelector('.m-titlebar-red');
+      const yellowBtn = bar.querySelector('.m-titlebar-yellow');
+      const greenBtn = bar.querySelector('.m-titlebar-green');
+      const getSheet = () => document.querySelector('.mobile-content');
+
+      // Real <a href> stays in the markup (keeps it a genuine link — right-
+      // click/long-press "open in new tab", no-JS fallback, crawlers) but a
+      // plain unmodified tap is intercepted to play the close animation
+      // first. Modified clicks (cmd/ctrl/shift/alt, or not the primary
+      // button) are left alone so opening in a new tab etc. still works
+      // exactly like a normal link.
+      if (redBtn instanceof HTMLAnchorElement) {
+        redBtn.addEventListener('click', (e) => {
+          if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault();
+          const sheet = getSheet();
+          if (!(sheet instanceof HTMLElement)) return;
+          setMobileClosing(sheet, redBtn.href);
+        });
+      }
+
+      if (yellowBtn instanceof HTMLElement) {
+        yellowBtn.addEventListener('click', () => {
+          const sheet = getSheet();
+          if (!(sheet instanceof HTMLElement)) return;
+          const minimized = sheet.dataset.minimized === 'true';
+          setMobileMinimized(sheet, !minimized);
+        });
+      }
+
+      if (greenBtn instanceof HTMLElement) {
+        greenBtn.addEventListener('click', () => {
+          const sheet = getSheet();
+          if (!(sheet instanceof HTMLElement)) return;
+          const maximized = sheet.dataset.maximized === 'true';
+          setMobileMaximized(sheet, bar, !maximized);
+        });
+      }
+
+      // Drag-to-dismiss (dragging the titlebar down to minimize) was
+      // removed — even after excluding the traffic-light buttons from
+      // starting a drag, it was still implicated in the yellow button
+      // reading as unresponsive on a real device, and the user asked for
+      // it gone outright rather than debugged further. The yellow button
+      // itself is the only way to minimize on mobile now, same as before
+      // this gesture was ever added.
+    });
+  }
+
+  initMobileTitlebarControls();
+  document.addEventListener('astro:page-load', initMobileTitlebarControls);
+
+  // MobileDock.astro dispatches this (same event Dock.astro uses on
+  // desktop) when its own current-page icon is clicked while
+  // .mobile-content is minimized — the minimized sheet has
+  // pointer-events:none on itself (titlebar included), so, same as
+  // desktop, there's no in-sheet control left to click once it's gone;
+  // the dock is the only thing still listening. This listener is at the
+  // script's top level (runs once, not re-bound per page-load) — matches
+  // Window.astro's identical restore-request listener for the same reason.
+  document.addEventListener('appwindow:restore-request', () => {
+    const sheet = document.querySelector('.mobile-content[data-minimized="true"]');
+    if (sheet instanceof HTMLElement) setMobileMinimized(sheet, false);
+  });
+</script>

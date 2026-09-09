@@ -1,0 +1,101 @@
+---
+---
+
+<nav class="hero-nav" data-figma-node="0:4" transition:name="home-toggle">
+  <div class="hero-nav-inner" data-figma-node="0:5">
+    <div class="hero-nav-group" data-figma-node="13:75">
+      <label for="mode-toggle" class="hero-nav-label">View</label>
+      <div class="toggle-switch" data-figma-node="13:69">
+        <input type="checkbox" id="mode-toggle" class="toggle-checkbox" checked />
+        <label for="mode-toggle" class="toggle-track"></label>
+      </div>
+      <label for="mode-toggle" class="hero-nav-label">Play</label>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .hero-nav {
+    width: 100%;
+    height: 112px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 72px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .hero-nav-inner {
+    flex: 1 0 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 96px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .hero-nav-group {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+  }
+
+  .hero-nav-label {
+    font-family: var(--font-mono);
+    font-weight: 100;
+    font-size: 20px;
+    color: #000;
+    text-align: center;
+    white-space: nowrap;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 72px;
+    height: 36px;
+  }
+
+  .toggle-checkbox {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background: #d6cab6;
+    box-shadow: inset 0px 4px 2px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #fefaf5, #ebe3d6);
+    box-shadow: 0px 4px 3.5px 0px rgba(0, 0, 0, 0.18);
+    transition: left 0.15s ease;
+  }
+
+  .toggle-switch:has(#mode-toggle:checked) .toggle-track {
+    background: #4dbf5e;
+  }
+
+  .toggle-switch:has(#mode-toggle:checked) .toggle-track::after {
+    left: 41px;
+  }
+</style>

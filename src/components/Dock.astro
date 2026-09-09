@@ -1,0 +1,186 @@
+---
+// Each dock icon has two distinct Figma-exported glyphs, not just a
+// recolor of the same shape — active/inactive pairs differ in both color
+// AND their natural pixel dimensions (verified against
+// https://www.figma.com/design/7kTYmYC3vPSMVlebg6vdC1/claudeporfolio?node-id=212-532,
+// which shows one "Property 1=Variant" state per page: Default has every
+// icon in its pale/inactive form, and each numbered variant shows exactly
+// one icon swapped to its saturated/active form). Home is excluded — every
+// variant shows the identical black house icon regardless of which other
+// icon is active.
+const path = Astro.url.pathname;
+const isActive = (href: string) => path.startsWith(href);
+
+const items = [
+  {
+    href: '/work',
+    label: 'Work',
+    active: { src: '/images/shared/dock/icon-folder-active.png', width: 35, height: 29 },
+    inactive: { src: '/images/shared/dock/icon-folder-inactive.png', width: 35, height: 29 },
+  },
+  {
+    href: '/music',
+    label: 'Music',
+    active: { src: '/images/shared/dock/icon-music-active.png', width: 26, height: 34 },
+    inactive: { src: '/images/shared/dock/icon-music-inactive.png', width: 32, height: 33 },
+  },
+  {
+    href: '/writings',
+    label: 'Writings & Captures',
+    active: { src: '/images/shared/dock/icon-notes-active.png', width: 32, height: 36 },
+    inactive: { src: '/images/shared/dock/icon-notes-inactive.png', width: 32, height: 33 },
+  },
+  {
+    href: '/hobbies',
+    label: 'Squash',
+    active: { src: '/images/shared/dock/icon-figure-active.png', width: 31, height: 31 },
+    inactive: { src: '/images/shared/dock/icon-figure-inactive.png', width: 39, height: 34 },
+  },
+  {
+    href: '/reading',
+    label: 'Books & Movies',
+    active: { src: '/images/shared/dock/icon-book-active.png', width: 27, height: 33 },
+    inactive: { src: '/images/shared/dock/icon-book-inactive.png', width: 34, height: 33 },
+  },
+];
+---
+
+<div class="dock" data-figma-node="212:580">
+  <div class="dock-background"></div>
+  <a class="dock-link" href="/" aria-label="Home" data-transition-slow>
+    <img class="dock-icon" src="/images/shared/dock/icon-home.png" alt="" width="48" height="35" />
+  </a>
+  <div class="dock-separator-frame">
+    <div class="dock-separator"></div>
+  </div>
+  {items.map((item) => {
+    const state = isActive(item.href) ? item.active : item.inactive;
+    return (
+      <a
+        class="dock-link"
+        href={item.href}
+        aria-label={item.label}
+        data-href={item.href}
+        data-active-src={item.active.src}
+        data-active-w={item.active.width}
+        data-active-h={item.active.height}
+        data-inactive-src={item.inactive.src}
+        data-inactive-w={item.inactive.width}
+        data-inactive-h={item.inactive.height}
+      >
+        <img class="dock-icon" src={state.src} width={state.width} height={state.height} alt="" />
+      </a>
+    );
+  })}
+</div>
+
+<script>
+  // The desktop dock persists across every AppLayout<->AppLayout navigation
+  // (see .app-dock's transition:persist in AppLayout.astro/intro.astro) —
+  // that's the same literal DOM node the whole session, so the Astro.url.pathname
+  // computed above only ever reflects whichever page this node FIRST mounted
+  // on. Every later navigation has to recompute which icon should be active
+  // from location.pathname directly (same pattern as MobileDock's own
+  // updateMobileDockActive), swapping both the image src and its width/height
+  // — active and inactive states are genuinely different-sized glyphs, not a
+  // same-size recolor, so the size has to travel with the src or the icon
+  // would distort.
+  function updateDockActiveIcons() {
+    const path = location.pathname;
+    document.querySelectorAll('.dock-link[data-href]').forEach((link) => {
+      if (!(link instanceof HTMLElement)) return;
+      const href = link.dataset.href ?? '';
+      const active = path.startsWith(href);
+      const img = link.querySelector('.dock-icon');
+      if (!(img instanceof HTMLImageElement)) return;
+      const src = active ? link.dataset.activeSrc : link.dataset.inactiveSrc;
+      const w = active ? link.dataset.activeW : link.dataset.inactiveW;
+      const h = active ? link.dataset.activeH : link.dataset.inactiveH;
+      if (src && img.getAttribute('src') !== src) img.src = src;
+      if (w) img.width = Number(w);
+      if (h) img.height = Number(h);
+    });
+  }
+
+  updateDockActiveIcons();
+  document.addEventListener('astro:page-load', updateDockActiveIcons);
+
+  // Minimizing a window (Window.astro's yellow light) sets pointer-events:
+  // none on the whole .window — including its own titlebar buttons — so
+  // there's no way to un-minimize it from the window itself once it's gone.
+  // Real macOS restores a minimized app when you click its Dock icon again;
+  // this is that, scoped to "the icon for the page you're currently on,
+  // while that page's window happens to be minimized" — clicking any OTHER
+  // icon is left alone and just navigates normally, which already opens
+  // that page's own window un-minimized with zero extra code (Window.astro
+  // isn't transition:persist'd, so a fresh page mount is never minimized).
+  function initDockRestore() {
+    document.querySelectorAll('.dock-link[data-href]').forEach((link) => {
+      if (!(link instanceof HTMLElement) || link.dataset.restoreBound === 'true') return;
+      link.dataset.restoreBound = 'true';
+      link.addEventListener('click', (e) => {
+        const href = link.dataset.href ?? '';
+        const onCurrentPage = location.pathname.startsWith(href);
+        const minimizedWindow = document.querySelector('.window[data-minimized="true"]');
+        if (onCurrentPage && minimizedWindow) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent('appwindow:restore-request'));
+        }
+      });
+    });
+  }
+
+  initDockRestore();
+  document.addEventListener('astro:page-load', initDockRestore);
+</script>
+
+<style>
+  .dock {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 8px 11px;
+  }
+
+  .dock-background {
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    background: rgba(246, 246, 246, 0.36);
+    /* Figma's own component defines this border at 0.46 opacity, but its
+       canvas renderer blends a border into the backdrop-blur behind it —
+       a real browser draws the border crisply on top, unaffected by
+       backdrop-filter, which reads as a much harder line than Figma's
+       actual (barely-perceptible) rendered appearance. Softened to match
+       what's actually seen, not the literal exported value. */
+    border: 1px solid rgba(26, 26, 26, 0.1);
+    backdrop-filter: blur(67.957px);
+    -webkit-backdrop-filter: blur(67.957px);
+    box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.15);
+  }
+
+  .dock-link {
+    position: relative;
+    display: block;
+    line-height: 0;
+    cursor: pointer;
+  }
+
+  .dock-icon {
+    display: block;
+  }
+
+  .dock-separator-frame {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+  }
+
+  .dock-separator {
+    width: 1px;
+    height: 41px;
+    background: rgba(60, 60, 67, 0.2);
+  }
+</style>

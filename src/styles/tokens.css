@@ -1,0 +1,9 @@
+:root {
+  /* Colors */
+  --color-bg: #EFE8DD;
+
+  /* Fonts */
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}

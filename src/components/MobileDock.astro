@@ -1,0 +1,178 @@
+---
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+
+// A floating rounded pill of icons — the real macOS-dock treatment
+// Dock.astro uses on desktop (rgba(246,246,246,0.36) + heavy blur + a
+// centered pill that hugs its content, no text labels) — mirrored here at
+// mobile scale, replacing a full-width edge-to-edge bar with text labels
+// under each icon, which reads as a generic iOS/Android tab bar rather than
+// the site's own dock. Active/inactive is a real asset swap here too (same
+// pairs Dock.astro uses, see that component's comment: they're genuinely
+// different glyphs, not a same-size recolor), not just a CSS opacity dim —
+// dimensions below are each desktop pair scaled by the same ~0.6 factor, to
+// keep the dock's own proportions (folder wider than tall, figure taller
+// than the rest, etc.) rather than forcing every icon into one square box.
+// Home has no active/inactive split on desktop either (stays black in every
+// Figma variant) — same here.
+const items = [
+  { href: '/', label: 'Home', active: { src: '/images/shared/dock/icon-home.png', width: 29, height: 21 }, inactive: { src: '/images/shared/dock/icon-home.png', width: 29, height: 21 } },
+  { href: '/work', label: 'Work', active: { src: '/images/shared/dock/icon-folder-active.png', width: 21, height: 17 }, inactive: { src: '/images/shared/dock/icon-folder-inactive.png', width: 21, height: 17 } },
+  { href: '/music', label: 'Music', active: { src: '/images/shared/dock/icon-music-active.png', width: 16, height: 20 }, inactive: { src: '/images/shared/dock/icon-music-inactive.png', width: 19, height: 20 } },
+  { href: '/writings', label: 'Writings & Captures', active: { src: '/images/shared/dock/icon-notes-active.png', width: 19, height: 22 }, inactive: { src: '/images/shared/dock/icon-notes-inactive.png', width: 19, height: 20 } },
+  { href: '/hobbies', label: 'Squash', active: { src: '/images/shared/dock/icon-figure-active.png', width: 19, height: 19 }, inactive: { src: '/images/shared/dock/icon-figure-inactive.png', width: 23, height: 20 } },
+  { href: '/reading', label: 'Books & Movies', active: { src: '/images/shared/dock/icon-book-active.png', width: 16, height: 20 }, inactive: { src: '/images/shared/dock/icon-book-inactive.png', width: 20, height: 20 } },
+];
+---
+
+<!-- transition:persist: see the original comment this carried forward —
+     this exact dock looks identical on every page (only which icon is
+     active differs), so without persisting it, it was fading out and back
+     in on every mobile navigation for no visible reason. Astro.url.pathname
+     above only runs at SSR time, so a persisted node would otherwise freeze
+     on whichever page it first mounted on — the script below recomputes
+     which icon is active (and swaps its actual asset, see updateDockActiveIcons
+     in Dock.astro for why size has to travel with src) from location.pathname
+     on every astro:page-load instead. -->
+<nav class="mobile-dock" aria-label="Primary" transition:name="mobile-dock" transition:persist>
+  {items.map((item) => {
+    const active = isActive(item.href);
+    const icon = active ? item.active : item.inactive;
+    return (
+      <a
+        href={item.href}
+        data-href={item.href}
+        class={`mobile-dock-link${active ? ' active' : ''}`}
+        aria-label={item.label}
+        data-active-src={item.active.src}
+        data-active-w={item.active.width}
+        data-active-h={item.active.height}
+        data-inactive-src={item.inactive.src}
+        data-inactive-w={item.inactive.width}
+        data-inactive-h={item.inactive.height}
+      >
+        <img class="mobile-dock-icon" src={icon.src} width={icon.width} height={icon.height} alt="" />
+      </a>
+    );
+  })}
+</nav>
+
+<script>
+  function updateMobileDockActive() {
+    const path = location.pathname;
+    document.querySelectorAll('.mobile-dock-link').forEach((link) => {
+      if (!(link instanceof HTMLElement)) return;
+      const href = link.dataset.href ?? '';
+      const active = href === '/' ? path === '/' : path.startsWith(href);
+      link.classList.toggle('active', active);
+      const img = link.querySelector('.mobile-dock-icon');
+      if (!(img instanceof HTMLImageElement)) return;
+      const src = active ? link.dataset.activeSrc : link.dataset.inactiveSrc;
+      const w = active ? link.dataset.activeW : link.dataset.inactiveW;
+      const h = active ? link.dataset.activeH : link.dataset.inactiveH;
+      if (src && img.getAttribute('src') !== src) img.src = src;
+      if (w) img.width = Number(w);
+      if (h) img.height = Number(h);
+    });
+  }
+
+  updateMobileDockActive();
+  document.addEventListener('astro:page-load', updateMobileDockActive);
+
+  // Mirrors Dock.astro's initDockRestore() exactly, for the mobile
+  // equivalent of minimize (MobileTitlebar.astro's setMobileMinimized(),
+  // applied to .mobile-content rather than .window) — clicking the current
+  // page's own dock icon while its sheet is minimized restores it instead
+  // of navigating (which would be a same-URL no-op anyway); any OTHER icon
+  // is left untouched and just navigates normally, opening that page's own
+  // sheet already un-minimized for free (MobileTitlebar isn't
+  // transition:persist'd, so a fresh page mount is never minimized).
+  function initMobileDockRestore() {
+    document.querySelectorAll('.mobile-dock-link[data-href]').forEach((link) => {
+      if (!(link instanceof HTMLElement) || link.dataset.restoreBound === 'true') return;
+      link.dataset.restoreBound = 'true';
+      link.addEventListener('click', (e) => {
+        const href = link.dataset.href ?? '';
+        const onCurrentPage = href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
+        const minimizedSheet = document.querySelector('.mobile-content[data-minimized="true"]');
+        if (onCurrentPage && minimizedSheet) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent('appwindow:restore-request'));
+        }
+      });
+    });
+  }
+
+  initMobileDockRestore();
+  document.addEventListener('astro:page-load', initMobileDockRestore);
+</script>
+
+<style>
+  /* Exact values from Dock.astro (.dock/.dock-background: gap, padding,
+     border-radius, background opacity, blur, border, box-shadow) — the
+     first version of this independently invented its own numbers for all
+     of these instead of actually matching desktop, which is what the user
+     called out ("havent you replicated the dock from desktop exacktly?").
+     Only position/z-index differ, and only because they have to: desktop
+     positions .dock via .floating-dock-anchor inside .app-frame (a
+     different layout context entirely), while mobile has no equivalent
+     frame to anchor within and needs real viewport-fixed positioning
+     instead. */
+  .mobile-dock {
+    position: fixed;
+    left: 50%;
+    bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+    transform: translateX(-50%);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 8px 11px;
+    border-radius: 15px;
+    background: rgba(246, 246, 246, 0.36);
+    backdrop-filter: blur(67.957px);
+    -webkit-backdrop-filter: blur(67.957px);
+    border: 1px solid rgba(26, 26, 26, 0.1);
+    box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.15);
+  }
+
+  /* The "uniform rectangular box drawn around every icon" the user flagged
+     wasn't anything this stylesheet was actually drawing — no rule here
+     ever set a background or border on .mobile-dock-link. It's WebKit's
+     default -webkit-tap-highlight-color: a translucent gray rect matching
+     the tapped element's own box, shown on every touch unless explicitly
+     turned off — invisible on desktop (Dock.astro has no touch input to
+     trigger it at all) which is why this only ever showed up here.
+     44x44 stays as an invisible touch-target size (a real accessibility
+     minimum) even though desktop's .dock-link has no fixed box at all —
+     the visible box that's actually going away is the highlight, not the
+     hit area. */
+  .mobile-dock-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+
+  /* Same opacity-based tap feedback used for Home's desk illustrations
+     (see home.css) — opacity rather than a background/transform, so it
+     doesn't reintroduce a visible box of its own and composes cleanly
+     regardless of each icon's own natural size within the shared 44x44
+     hit area. */
+  .mobile-dock-link:active .mobile-dock-icon {
+    opacity: 0.4;
+  }
+
+  .mobile-dock-icon {
+    display: block;
+    object-fit: contain;
+    opacity: 0.55;
+  }
+
+  .mobile-dock-link.active .mobile-dock-icon {
+    opacity: 1;
+  }
+</style>

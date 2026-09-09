@@ -1,0 +1,2570 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import MobileDock from '../components/MobileDock.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  /**
+   * 'fit-width'  — scale the 1440px composition down to the viewport width only;
+   *                natural height is preserved so the page still scrolls vertically (Home).
+   * 'fit-both'   — scale to fit both viewport width and height so nothing scrolls
+   *                at the page level (the fixed-size "desktop" app screens).
+   */
+  scaleMode?: 'fit-width' | 'fit-both';
+  /** Full-viewport blurred desktop backdrop, independent of the scaled frame (inner app pages). */
+  backdrop?: boolean;
+}
+
+const {
+  title,
+  description = 'Ishan Rajpurohit - Product Designer taking ideas from 0 to 1, crafting thoughtful products and visual experiences.',
+  scaleMode = 'fit-width',
+  backdrop = false,
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@100&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <ClientRouter />
+
+  <!-- Holds --frame-scale as an actual stylesheet rule instead of an inline
+       style on <html>. transition:persist keeps this literal <style> node
+       (and whatever JS has written into its textContent) across every
+       client-side navigation, because Astro's router unconditionally wipes
+       <html>'s own attributes — including any inline style — on every swap
+       (swapRootAttributes in astro/dist/transitions/swap-functions.js) and
+       never restores them, since the freshly-fetched document's own <html>
+       tag never had that inline style to begin with. A previous version of
+       this set --frame-scale directly on <html> and used a MutationObserver
+       to reactively reapply it the instant that wipe was detected — timing
+       analysis says that should be safe (Astro fires astro:after-swap,
+       which re-runs fitScale(), synchronously right after the wipe, and the
+       View Transition API suppresses rendering for the whole update
+       callback either way) but the actual reported symptom (window stuck to
+       the top and clipped, dock thrown to a wrong position, after a
+       dock-link navigation — an unscaled 1440x1024 canvas being clipped by
+       the viewport — until a full reload) kept recurring on a real device
+       regardless. Persisting the node this way needs no race to win at
+       all: nothing ever removes it, so there's nothing to reapply. -->
+  <style id="frame-scale-style" is:inline transition:name="frame-scale-style" transition:persist>:root{--frame-scale:1}</style>
+
+</head>
+<body>
+  {backdrop && (
+    <div id="page-backdrop" class="page-backdrop" transition:name="page-backdrop" transition:persist>
+      <img src="/images/shared/desktop-backdrop.jpg" alt="" />
+    </div>
+  )}
+  <main id="page">
+    <div class="scale-viewport" data-scale-mode={scaleMode}>
+      <div class="scale-frame">
+        <slot />
+      </div>
+    </div>
+    <script is:inline define:vars={{ scaleMode }}>
+      // Blocking and inline (not the deferred module script below) so this
+      // runs at parse time, before the browser's first paint — .scale-frame
+      // reads its transform from --frame-scale (see its CSS rule), which
+      // isn't set yet on the very first load of the whole app, so without
+      // this the first frame can briefly paint the full unscaled 1440×1024
+      // canvas: on a normal viewport that only shows its top-left corner,
+      // the window (vertically centered on the full canvas) reading as cut
+      // off from above until the deferred script below catches up. Once
+      // --frame-scale has been set here (or by that deferred script), it
+      // lives on <html> and survives every later client-side navigation
+      // automatically — this only ever needs to run once. fit-both's
+      // natural height is always exactly 1024 (.app-frame/.intro-stage are
+      // hardcoded to that), so it can be scaled here without waiting on
+      // layout the way the fit-width case (Home, variable content height)
+      // still has to.
+      (function () {
+        if (window.innerWidth <= 1024 || scaleMode !== 'fit-both') return;
+        var scale = Math.min(window.innerWidth / 1440, window.innerHeight / 1024, 1);
+        var styleEl = document.getElementById('frame-scale-style');
+        if (styleEl) styleEl.textContent = ':root{--frame-scale:' + scale + '}';
+      })();
+    </script>
+    <div class="mobile-shell">
+      <div class="mobile-content">
+        <slot name="mobile" />
+      </div>
+      <MobileDock />
+    </div>
+  </main>
+
+  <!-- Maximize's true-fullscreen target: a window being maximized (see
+       Window.astro's flipResize/initWindowControls) gets physically moved
+       here via appendChild, escaping .scale-frame's transform:scale(...)
+       entirely. That's not optional cosmetic choice — position:fixed's
+       containing block is normally the viewport, but the CSS spec makes ANY
+       transformed ancestor become the containing block for fixed descendants
+       instead, so a maximized window trying to go position:fixed;inset:0
+       while still nested inside .scale-frame would size itself against the
+       already-scaled 1440x1024 frame, not the real browser viewport — which
+       is exactly the bug this fixes: the window filling all the vertical
+       space fit-both's height-constrained scaling leaves available, but
+       never actually reaching the real edges of the screen horizontally
+       (or vice versa, depending on which dimension fit-both's Math.min ends
+       up constrained by). Moved back to its original DOM position on
+       un-maximize. -->
+  <div id="maximize-portal"></div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+    <button type="button" class="lightbox-close" aria-label="Close image">&times;</button>
+    <img class="lightbox-image" src="" alt="" />
+  </div>
+
+
+  <!-- Persistent global "now playing" widget. Lives out here (not inside
+       .scale-frame) for the exact reason #maximize-portal above does:
+       position:fixed's containing block is normally the real viewport, but
+       ANY transformed ancestor becomes the containing block for fixed
+       descendants instead, and .scale-frame has `transform: scale(...)` —
+       nested inside it, position:fixed would resolve against the scaled
+       1440x1024 frame, not the real screen. It needs the REAL screen edge
+       here (not the frame's edge): the frame is centered with visible
+       backdrop on either side on any monitor wider than 1440 scaled px, so
+       clipping at the frame's own boundary (an earlier version of this) put
+       the widget floating in that empty margin — visually anchored to
+       nothing, which is what actually read as "not on the edge of screen."
+
+       Playback engine: a real SoundCloud track, controlled through
+       SoundCloud's own official Widget JS API (SC.Widget) rather than a
+       self-hosted audio file — direct instruction, after the earlier
+       placeholder-file approach: "you can use the soundcloud api ... player
+       can control the calls instead. some kind of wrapper." Every control
+       in this file (play/pause, seek, volume) calls methods on the
+       SC.Widget instance wrapping the actual player iframe (see the script
+       at the bottom of this file) instead of touching an <audio> element
+       directly. No API key needed for this — the Widget API controls a
+       track that's already embedded by URL, which is different from
+       SoundCloud's HTTP/search API (that one needs a registered client_id,
+       and new registrations are effectively closed).
+
+       The iframe itself is NOT rendered here as template markup anymore —
+       it's created once in JS and appended to document.documentElement (a
+       sibling of <body>, not a descendant), specifically to keep it outside
+       Astro's swapBodyElement. Confirmed live: even with transition:persist
+       correctly keeping the exact same DOM node across a navigation (the
+       node's identity survived), the iframe's own 'load' event still fired
+       again during the swap — the "replace body wholesale, then reinsert
+       persisted nodes into the new body" sequence detaches everything
+       inside the old body from the document for a moment, and browsers
+       reset an iframe's browsing context on disconnection regardless of
+       whether the exact same node gets reconnected right after (unlike
+       <audio>/<video>, which the browser specially preserves across this).
+       That reset silently restarted the SoundCloud player's internal state
+       every time — reported back as "when i click on mac the song stops".
+       Living outside <body> entirely sidesteps the swap altogether: nothing
+       in <html>'s other children (this iframe included) is ever touched by
+       a body-only swap, so there's nothing left to detach. See
+       initSoundCloudWidget's own iframe-creation code further down for the
+       actual element (same src/style/allow attributes as this used to
+       have). -->
+  <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
+
+  <div class="music-widget" id="music-widget" transition:name="music-widget" transition:persist>
+    <div class="music-widget-slide">
+      <!-- Two separate buttons, not one — direct instruction: the icon
+           itself should toggle play/pause, while the rest of the widget
+           (the album art) opens the full overlay. A <button> can't nest
+           another <button>, hence .music-widget-trigger is a plain div now
+           (still carries the pill background via ::before) wrapping two
+           sibling buttons instead of one button wrapping two spans. -->
+      <div class="music-widget-trigger" id="music-widget-trigger">
+        <button type="button" class="music-widget-art-btn" id="music-widget-art-btn" aria-label="Now playing: Good Days by SZA, open player">
+          <span class="music-widget-art">
+            <img src="/images/music/good-days-cover.png" alt="" draggable="false" />
+          </span>
+        </button>
+        <button type="button" class="music-widget-icon-btn" id="music-widget-icon-btn" data-icon="chevron" aria-label="Play or pause">
+          <svg class="icon-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="music-overlay" id="music-overlay" aria-hidden="true">
+    <div class="music-overlay-card">
+      <div class="music-overlay-art">
+        <img src="/images/music/good-days-cover.png" alt="" />
+      </div>
+      <div class="music-overlay-meta">
+        <p class="music-overlay-title">Good Days</p>
+        <p class="music-overlay-artist">SZA</p>
+      </div>
+
+      <!-- Timeline/seek bar — direct instruction ("the large overlay main
+           player should have more [controls]"), scoped to THIS overlay
+           only, not the small widget. Track is clickable/draggable to seek;
+           the fill width and both time labels are driven live off the real
+           SoundCloud track's position, via SC.Widget's own PLAY_PROGRESS
+           event and a one-time getDuration() call on READY (see
+           initSoundCloudWidget in the script below) — not an <audio>
+           element's timeupdate/loadedmetadata, now that playback is a real
+           embedded SoundCloud track rather than a self-hosted file. -->
+      <div class="music-overlay-timeline">
+        <div class="music-overlay-timeline-track" id="music-overlay-timeline-track">
+          <div class="music-overlay-timeline-fill" id="music-overlay-timeline-fill"></div>
+          <div class="music-overlay-timeline-thumb" id="music-overlay-timeline-thumb"></div>
+        </div>
+        <div class="music-overlay-timeline-times">
+          <span id="music-overlay-time-current">0:00</span>
+          <span id="music-overlay-time-duration">0:00</span>
+        </div>
+      </div>
+
+      <!-- Everything that used to be two rows (a centered prev/play/next
+           row, then a full-width volume bar below it) is now one row —
+           direct instruction: volume was "taking up too much space" as its
+           own bar, so it's folded in alongside transport instead, plus a
+           new queue button flanking the other side. -->
+      <div class="music-overlay-controls">
+        <button type="button" class="music-overlay-queue" id="music-overlay-queue" aria-label="Queue" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h13M4 12h13M4 18h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><circle cx="19" cy="15" r="2.2" stroke="currentColor" stroke-width="1.6" fill="none" /></svg>
+        </button>
+
+        <div class="music-overlay-transport">
+          <button type="button" class="music-overlay-btn music-overlay-prev" id="music-overlay-prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6z"/><path d="M18 6.5v11l-9-5.5 9-5.5z"/></svg>
+          </button>
+          <button type="button" class="music-overlay-btn music-overlay-play" id="music-overlay-play" aria-label="Play or pause">
+            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M9 6.5v11l9-5.5-9-5.5z"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="6" width="4" height="12" rx="1.2"/><rect x="14" y="6" width="4" height="12" rx="1.2"/></svg>
+          </button>
+          <button type="button" class="music-overlay-btn music-overlay-next" id="music-overlay-next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2z"/><path d="M6 6.5v11l9-5.5-9-5.5z"/></svg>
+          </button>
+        </div>
+
+        <!-- Icon-only now, not an icon+always-visible-bar — direct
+             instruction: hovering reveals the slider in a popover above the
+             icon (pure-CSS :hover, no JS needed to show/hide it), while
+             clicking the icon itself still mutes/unmutes directly, same as
+             before. Two separate gestures, two separate actions. -->
+        <div class="music-overlay-volume-control" id="music-overlay-volume-control">
+          <!-- .music-overlay-volume-popover's own box now touches the icon
+               directly (bottom:100%, no gap) and its padding-bottom bridges
+               what used to be dead space between the two — reported back as
+               "slider disappears the moment I try to move the cursor up
+               into it", i.e. the gap wasn't covered by ANY element's
+               hitbox, so :hover dropped mid-transit before the cursor ever
+               reached the popover. The pretty card + its own slide-in
+               animation moved to the inner div instead, so the outer
+               hit-box stays geometrically constant (touching, not
+               animating) while only the visual layer moves. -->
+          <div class="music-overlay-volume-popover">
+            <div class="music-overlay-volume-popover-inner">
+              <input type="range" class="music-overlay-volume-slider" id="music-overlay-volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+            </div>
+          </div>
+          <button type="button" class="music-overlay-mute" id="music-overlay-mute" aria-label="Mute or unmute">
+            <svg class="icon-vol-on" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+            <svg class="icon-vol-off" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Queue panel — toggled by the button above. There's no real
+           playlist yet (one placeholder track, same as prev/next's own
+           currentTime=0 stub), so this is a minimal but genuinely
+           functional stub rather than a decorative button: it opens/closes
+           a real panel that lists what's actually playing, not a no-op.
+           Swap the single <li> for a real .map() over a track list once
+           one exists. -->
+      <div class="music-overlay-queue-panel" id="music-overlay-queue-panel">
+        <p class="music-overlay-queue-heading">Up next</p>
+        <div class="music-overlay-queue-item">
+          <span class="music-overlay-queue-item-art">
+            <img src="/images/music/good-days-cover.png" alt="" />
+          </span>
+          <span class="music-overlay-queue-item-meta">
+            <span class="music-overlay-queue-item-title">Good Days</span>
+            <span class="music-overlay-queue-item-artist">SZA</span>
+          </span>
+          <span class="music-overlay-queue-item-tag">Now playing</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Figma reference: node 2410:10745 ("music player"). Two layers, and
+       deliberately NOT one animating box:
+
+       #music-widget is the STABLE hit-area — position:fixed, right:0 (the
+       real screen edge), a fixed vertical position, fixed 108x66 size,
+       overflow:hidden, and it NEVER moves or resizes on hover. Reproducing
+       Figma's "collapsed sliver / expanded full pill" by moving THIS box
+       (an earlier version did: right:-74px -> right:0 on :hover) causes a
+       real hover-oscillation bug, confirmed live: sliding the hit-area out
+       from under a stationary cursor can put the cursor outside the box's
+       new bounds, firing mouseleave, which snaps it back under the cursor,
+       firing mouseenter again — a rapid loop that reads as the widget
+       "vibrating." A hit-area that never moves can't produce that loop by
+       construction, regardless of where the cursor happens to be within it.
+
+       .music-widget-slide is what actually animates — translateX(74px) at
+       rest (pushes the pill mostly past the STABLE box's own right edge,
+       which IS the screen edge, so overflow:hidden on the parent clips it
+       down to the same ~34px sliver Figma's Variant5 shows) to
+       translateX(0) on hover (slides fully into view). Figma's two hover
+       reference frames also happened to sit 51px lower than the resting
+       frame (y:143 -> y:194) — reproduced in an earlier version as a `top`
+       animation alongside the horizontal one, and explicitly reported back
+       as wrong ("it goes slightly down wtf") rather than reading as
+       Figma's intended motion — dropped; hover is horizontal-only now. */
+    .music-widget {
+      position: fixed;
+      top: calc(50% - 247px);
+      right: 0;
+      width: 108px;
+      height: 66px;
+      overflow: hidden;
+      z-index: 500;
+    }
+
+    .music-widget-slide {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform: translateX(74px);
+      transition: transform 0.3s ease-out;
+    }
+
+    .music-widget.is-expanded .music-widget-slide {
+      transform: translateX(0);
+    }
+
+    .music-widget-trigger {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      /* The album-art <img> inside is natively draggable by every browser
+         (the built-in "drag this image out" ghost-drag feature) — a real
+         click with even a pixel or two of incidental movement can get
+         hijacked into that native drag instead of registering as a click,
+         which is exactly what "can only be dragged, not clicked" turned out
+         to be. -webkit-user-drag covers the image itself (draggable="false"
+         on the <img> tag handles the rest, incl. non-WebKit); user-select
+         stops the click-drag from also selecting the "Good Days by SZA"
+         label text as a side effect. */
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    .music-widget.is-dragging .music-widget-art-btn,
+    .music-widget.is-dragging .music-widget-icon-btn {
+      cursor: grabbing;
+    }
+
+    .music-widget-trigger::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.49);
+      border-radius: 60px 0 0 60px;
+    }
+
+    /* The album-art button — opens the full overlay (see
+       #music-widget-art-btn's click handler). Separate from
+       #music-widget-icon-btn now: direct instruction was for the icon
+       specifically to toggle play/pause instead of also opening the
+       overlay, which the single shared button this replaced couldn't do
+       (one click target, one action). */
+    .music-widget-art-btn {
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      width: 55px;
+      height: 54px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-widget-art {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .music-widget-art img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: music-vinyl-spin 8s linear infinite;
+    }
+
+    /* Vinyl-style spin, applied to the art image only (not its circular
+       mask), so the disc rotates while the "window" it's viewed through
+       stays put. First pass used a real LP's literal 33 1/3 RPM (1.8s/
+       revolution) — reported back as "too fast" for a ~55-100px circle, so
+       this is a slower, purely decorative rate instead of the literal
+       figure. Runs continuously regardless of actual playback state
+       (explicit direction: "keep it rotating all the time"), not gated to
+       audio being unpaused. */
+    @keyframes music-vinyl-spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* The play/pause/chevron button — toggles playback directly (see
+       #music-widget-icon-btn's click handler), separate from the art button
+       above which opens the overlay instead. */
+    /* Hit area (32x32) is deliberately bigger than the visual glyph (22x22,
+       centered inside via the svg rule below) — 22px alone is a genuinely
+       small real-world click target on a widget this small, and "not
+       functional" may partly have been "hard to land the exact pixel"
+       rather than a pure logic bug. right:11px (not 16px) keeps the glyph's
+       CENTER at the same visual spot the original 22px box had. */
+    .music-widget-icon-btn {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #f5f0e6;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-widget-icon-btn svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .music-widget-icon-btn[data-icon='chevron'] .icon-chevron,
+    .music-widget-icon-btn[data-icon='play'] .icon-play,
+    .music-widget-icon-btn[data-icon='pause'] .icon-pause {
+      opacity: 1;
+    }
+
+    /* Was desktop-only ("for now" per an earlier direct instruction) —
+       direct instruction lifted that: "add music player to mobile version
+       as well now". Same breakpoint as .scale-viewport/.mobile-shell's own
+       swap, but the widget/overlay themselves stay visible; only their
+       hover-dependent bits get touch-friendly overrides below, since touch
+       has no :hover/:focus-within at all. */
+    /* Mobile trades desktop's pill-widget (hover-sliver + separate
+       play/pause icon button) for just the rotating album-cover circle —
+       direct instruction: "just a rotating album cover orb instead of the
+       small overlay like desktop." Still hides to an edge sliver like
+       desktop's own collapsed state (direct follow-up: "hide it in edge
+       like we did for desktop") — touch has no hover to reveal it though,
+       so revealing is now a tap (see the click handler below) instead:
+       first tap while collapsed expands the orb into view, a second tap
+       opens the player. No icon-btn regardless of expanded state — a
+       single tap target, not two. */
+    @media (max-width: 1024px) {
+      /* Desktop's own 74px collapsed offset (see the base .music-widget-slide
+         rule) was tuned for its 108px-wide pill; this orb is narrower (64px),
+         so a smaller offset leaves a proportionally similar sliver (~18px)
+         peeking past the true screen edge instead of hiding the whole thing
+         or barely tucking any of it away. .is-expanded (below) still
+         overrides back to translateX(0) — same class, same mechanism as
+         desktop, just now toggled by tap instead of :hover/:focus-within
+         (see the click handler's own comment). */
+      .music-widget-slide {
+        transform: translateX(46px);
+      }
+
+      /* No stable-hitbox-vs-sliding-inner split needed the way desktop's
+         markup structurally has one (.music-widget outer + .music-widget-
+         slide inner) — that split exists purely to dodge a hover-oscillation
+         bug (see .music-widget's own comment up top) that doesn't apply to
+         touch at all (nothing here reacts to a finger merely being nearby).
+         Reusing the same two elements anyway (rather than restructuring the
+         shared markup) since the slide element's translateX already does
+         exactly what's needed: overflow stays visible (not clipped to a
+         mask) so the sliver's drop-shadow (see .music-widget-art below)
+         renders naturally on whatever portion is still inside the real
+         viewport, rather than being cut off by an arbitrary CSS box. */
+      .music-widget {
+        width: 64px;
+        height: 64px;
+        overflow: visible;
+        /* Defensively above MobileDock (also z-index:500) rather than
+           relying on DOM-order as the tiebreaker for two equal z-index
+           values — an implicit tiebreak is exactly the kind of thing a
+           later, unrelated markup reorder could silently invert. */
+        z-index: 600;
+        /* Top-right — direct instruction. right: same env(safe-area-inset)
+           pattern MobileDock.astro already uses for its own bottom edge —
+           plain 16px would sit the orb under a notch/Dynamic Island on
+           phones that have one. top is NOT the equivalent small offset
+           though — found live, exactly matching the "disappears in full
+           screen window mode" report: MobileTitlebar.astro's own maximized
+           state puts a SECOND floating pill (the traffic lights) at that
+           identical corner — top: max(10px, safe-area-inset-top); right:
+           14px; see its own comment for why top-right specifically — with
+           a much lower z-index (20) than this widget's 600. The orb doesn't
+           literally disappear; it sits ON TOP of and blocks the maximized
+           window's own back/minimize/restore controls, which is worse, not
+           better. 76px (safe-area+66px on notched phones) clears that
+           cluster's real footprint (10-46px) with margin to spare, on both
+           the maximized floating-pill titlebar AND the resting in-flow one
+           (which sits even lower, inset within the non-maximized sheet's
+           own top margin — never a conflict there to begin with). Still
+           "top right" as asked, just low enough not to collide with the
+           window's own chrome. Still draggable afterward (see the
+           pointerdown handler below) — this is only the initial resting
+           spot before any drag/localStorage value takes over. */
+        top: max(76px, calc(env(safe-area-inset-top, 0px) + 66px));
+        right: max(16px, calc(env(safe-area-inset-right, 0px) + 12px));
+      }
+
+      /* The dark pill background read as a UI chrome element — wrong once
+         there's no pill shape left to justify it, just the round art. */
+      .music-widget-trigger::before {
+        display: none;
+      }
+
+      /* Single tap target — the play/pause toggle desktop has as a second,
+         separate button doesn't exist here. Tapping anywhere on the art
+         opens the full player instead (its own click handler, unchanged). */
+      .music-widget-icon-btn {
+        display: none;
+      }
+
+      /* Fills the whole (now-circular) widget box instead of desktop's
+         inset 55x54 rect within a bigger 108x66 pill. */
+      .music-widget-art-btn {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* The shadow that used to come from the dark pill sitting behind it —
+         needed here instead, or the orb reads as flat pasted-on artwork
+         with nothing grounding it against whatever's scrolling underneath. */
+      .music-widget-art {
+        box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    /* intro.astro plays its own fixed [data-beat] sequence recreating this
+       exact desk scene from scratch (see intro.astro) — the real widget
+       floating on top of that illusion would double up on it, so it's
+       hidden for the duration of /intro specifically (see the script below
+       toggling .is-hidden-route). */
+    .music-widget.is-hidden-route {
+      display: none;
+    }
+
+    /* Card size/position/button position are Figma's exact values (node
+       2411:12525..12528); everything else inside the card (art, title,
+       artist, layout) is this site's own glass-card language (see
+       Window.astro's real titlebar/frosted-glass recipe, reused throughout
+       this session) standing in for Figma's rough grey placeholder block —
+       explicit direction from the user: "design the player overlay yourself
+       ... final polish baad mein". */
+    /* visibility's own transition (0s duration, delayed) is the same
+       technique already used for #lightbox elsewhere in this file — flips
+       to hidden only AFTER the opacity fade finishes closing (so content
+       stays visible/interactive for the full close animation instead of
+       vanishing at t=0), but flips to visible immediately on open (no
+       delay) rather than waiting the full fade-in to become interactive. */
+    .music-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      background: rgba(239, 232, 221, 0.55);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+    }
+
+    .music-overlay.is-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+    }
+
+    /* Grew taller (height: auto now, was a fixed 345px) and narrower (460px,
+       was 635px) to comfortably stack the timeline + volume rows added
+       below — a short wide card suited one centered button row, not a
+       five-row player. Still the same glass-card recipe throughout. */
+    /* In/out motion matches Window.astro's own open/minimize animation
+       exactly — direct instruction: "smooth animations just like we had
+       for windows". Window.astro's restore/open uses
+       cubic-bezier(0.22, 1, 0.36, 1) (a snappy "pop" — fast start, gentle
+       settle) over 0.4s; its minimize/close uses cubic-bezier(0.5, 0, 0.75, 0)
+       (an accelerating shrink) at a shorter duration. Same two curves here,
+       just scaling from/to a centered point instead of Window's
+       dock-directed genie motion, since this is a centered popup rather
+       than something minimizing toward a specific corner. Two separate
+       transition declarations (base rule = the CLOSED/exit state, .is-open
+       = the OPEN/enter state) is what lets entering and exiting use
+       different easing/duration instead of one symmetric transition. */
+    /* min(460px, ...) rather than a mobile-only override: this keeps the
+       card readable on any viewport narrower than 460+40px, phones
+       included, without needing a separate breakpoint — a fixed 460px
+       card had no way to fit inside a ~375px-wide phone screen at all. */
+    .music-overlay-card {
+      position: relative;
+      width: min(460px, calc(100vw - 40px));
+      border-radius: 48px;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.12);
+      box-sizing: border-box;
+      padding: 44px 40px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0);
+    }
+
+    @media (max-width: 1024px) {
+      .music-overlay-card {
+        padding: 36px 24px 28px;
+      }
+    }
+
+    .music-overlay.is-open .music-overlay-card {
+      transform: scale(1);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .music-overlay-art {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0px 10px 30px 0px rgba(0, 0, 0, 0.25);
+    }
+
+    .music-overlay-art img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: music-vinyl-spin 8s linear infinite;
+    }
+
+    .music-overlay-meta {
+      text-align: center;
+    }
+
+    .music-overlay-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 28px;
+      line-height: normal;
+      color: #000;
+    }
+
+    .music-overlay-artist {
+      margin: 4px 0 0;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 14px;
+      color: #8b8b8b;
+    }
+
+    .music-overlay-timeline {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .music-overlay-timeline-track {
+      position: relative;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+    }
+
+    .music-overlay-timeline-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.65);
+      pointer-events: none;
+    }
+
+    .music-overlay-timeline-thumb {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .music-overlay-timeline-times {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #8b8b8b;
+    }
+
+    /* Prev/play/next control row, styled skeuomorphic ("actual jaise radio
+       jaise" — like a real radio/CD player's tactile button cluster)
+       instead of the flat glass circle this replaced. Figma only specified
+       one button (node 2411:12528: left:287px top:249px size:61px within
+       the 635x345 card) — that geometry's CENTER POINT (317.5, 279.5) is
+       preserved as the row's shared anchor via absolute+translate(-50%,-50%)
+       on the row itself, so the primary play/pause button still sits
+       exactly where Figma placed it; prev/next are this site's own addition
+       flanking it, per direct instruction. */
+    /* Was absolutely positioned at Figma's exact button-center coordinate
+       (317.5, 279.5 within the old 635x345 card) — that only worked while
+       this row was the card's sole/last piece of content. Now that a
+       timeline sits above it and volume below, absolute positioning would
+       just overlap both instead of stacking after them, so this is back to
+       being a normal flex child in the card's own column flow. */
+    /* One row now, not two — direct instruction: the volume bar was "taking
+       up too much space" as its own full-width row below transport, so it's
+       folded in alongside prev/play/next instead (plus the new queue
+       button on the other side). space-between with three groups keeps
+       prev/play/next visually centered-ish as the primary focus while queue
+       and volume flank it, rather than everything just left-to-right. */
+    /* justify-content:space-between (the first version) only truly centers
+       the middle item when the two flanking items are the SAME width —
+       queue (32px) and the volume icon (now also ~32px, was an 84px
+       icon+slider bar) happened to end up close enough for that to mostly
+       hold, but it's fragile by construction. Direct instruction: transport
+       should stay centered regardless. Positioning it with
+       position:absolute + translate(-50%,-50%) anchors it to the row's true
+       geometric center no matter what either side's width is — queue and
+       volume are the only two items left in normal flex flow, so
+       space-between still puts them at the row's two ends correctly. */
+    .music-overlay-controls {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 61px;
+    }
+
+    .music-overlay-transport {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Smaller and flatter than the prev/play/next cluster on purpose — it's
+       a secondary/utility action (opening a panel), not primary transport,
+       so it shouldn't visually compete with the tactile radio buttons. */
+    /* Plain icon, no background circle — matches the volume icon's own
+       minimal treatment instead of competing visually with it. */
+    .music-overlay-queue {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.6);
+      transition: color 0.15s ease-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-overlay-queue[aria-expanded='true'] {
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .music-overlay-queue svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Shared tactile-button recipe: a soft light-to-dark diagonal gradient
+       (suggests a brushed/molded physical surface) plus a highlight+shadow
+       pair (inset top-left highlight, drop shadow below) reads as a raised,
+       pressable button rather than a flat glass chip. :active inverts the
+       shadow to an inset one and nudges the button down 1px, simulating an
+       actual physical press. */
+    .music-overlay-btn {
+      position: relative;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff, #d9d4c9);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.08),
+        0 3px 6px rgba(0, 0, 0, 0.22),
+        0 1px 2px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(0, 0, 0, 0.72);
+      transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-overlay-btn:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.4);
+    }
+
+    .music-overlay-prev,
+    .music-overlay-next {
+      width: 44px;
+      height: 44px;
+    }
+
+    .music-overlay-prev svg,
+    .music-overlay-next svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Figma's exact primary-button size (node 2411:12528). */
+    .music-overlay-play {
+      width: 61px;
+      height: 61px;
+    }
+
+    .music-overlay-play svg {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+    }
+
+    .music-overlay-play .icon-play {
+      opacity: 1;
+    }
+
+    .music-overlay-play[data-playing='true'] .icon-play {
+      opacity: 0;
+    }
+
+    .music-overlay-play[data-playing='true'] .icon-pause {
+      opacity: 1;
+    }
+
+    /* Compact + fixed-width now that it lives inline in the controls row
+       instead of stretching full-width as its own bar below. */
+    /* Icon-only control, not icon+always-visible-bar (see the popover rule
+       below for where the slider actually lives now) — direct instruction:
+       hover reveals the slider, click mutes/unmutes. Two gestures, two
+       separate targets (the popover's slider vs. this button), so they
+       can't fight over the same click. */
+    .music-overlay-volume-control {
+      position: relative;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .music-overlay-mute {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.6);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-overlay-mute svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .music-overlay-mute .icon-vol-off {
+      display: none;
+    }
+
+    .music-overlay-mute[data-muted='true'] .icon-vol-on {
+      display: none;
+    }
+
+    .music-overlay-mute[data-muted='true'] .icon-vol-off {
+      display: block;
+    }
+
+    /* Pure-CSS hover reveal. This outer box's own geometry is the actual
+       hit-region and deliberately DOESN'T animate or leave any gap —
+       bottom:100% touches the icon's top edge directly, and padding-bottom
+       (10px) extends that same hoverable box further down, overlapping the
+       icon's own box rather than stopping short of it. Found live: the
+       first version had this element start 10px ABOVE the icon (bottom:
+       calc(100% + 10px), no padding) — that 10px was truly empty space
+       covered by neither box, so moving the cursor from the icon up toward
+       the popover dropped :hover mid-transit and closed it before the
+       cursor ever arrived ("hover khatam hote hi hat ja raha" — closes the
+       instant hover ends, because hover WAS ending, in that gap). Opacity/
+       visibility/pointer-events still live here (this is what
+       :hover/:focus-within toggle) — only the width/position changed. */
+    .music-overlay-volume-popover {
+      position: absolute;
+      left: 50%;
+      bottom: 100%;
+      transform: translateX(-50%);
+      width: 40px;
+      padding-bottom: 10px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.15s ease-out, visibility 0.15s;
+    }
+
+    /* .is-open is a JS-toggled fallback for touch, which has neither :hover
+       nor (reliably — iOS Safari doesn't focus a tapped <button>)
+       :focus-within — see the click handler on #music-overlay-volume-control
+       below. Purely additive: it never overrides or conflicts with the
+       hover/focus-within reveal, just provides a working alternative where
+       neither of those can ever fire. */
+    .music-overlay-volume-control:hover .music-overlay-volume-popover,
+    .music-overlay-volume-control:focus-within .music-overlay-volume-popover,
+    .music-overlay-volume-control.is-open .music-overlay-volume-popover {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    /* The actual visible card + its slide-in animation — separated from
+       the outer hit-box specifically so the popover's TARGET geometry
+       (what a moving cursor needs to stay inside) is constant from the
+       instant hover starts, instead of still sliding into its final
+       position while the cursor is already trying to reach it. */
+    .music-overlay-volume-popover-inner {
+      width: 40px;
+      height: 120px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(6px);
+      transition: transform 0.15s ease-out;
+    }
+
+    .music-overlay-volume-control:hover .music-overlay-volume-popover-inner,
+    .music-overlay-volume-control:focus-within .music-overlay-volume-popover-inner,
+    .music-overlay-volume-control.is-open .music-overlay-volume-popover-inner {
+      transform: translateY(0);
+    }
+
+    /* Native <input type="range"> restyled to match the rest of the card
+       instead of the browser's bare default — a filled track behind the
+       thumb (via the --vol custom property + linear-gradient, set live in
+       JS on input) reads as a real volume level, not just an empty slider. */
+    /* Rotated -90deg to read as a vertical fader inside the popover — a
+       real <input type="range"> is horizontal by construction, and `width`
+       here becomes its visual on-screen HEIGHT after rotating, not its
+       width. flex-shrink:0 is load-bearing, not defensive: the parent
+       (.music-overlay-volume-popover-inner) is only 40px wide, and
+       `transform` doesn't change layout, only paint — this element's real
+       LAYOUT box is still 120px wide pre-rotation, so without
+       flex-shrink:0 the default flex-shrink:1 was shrinking it down to fit
+       that 40px row, clamping it to ~36px regardless of the declared
+       width (confirmed live: even an inline `width:120px!important` didn't
+       survive that shrink — it's a layout-stage constraint, not a
+       cascade/specificity one, so no amount of `!important` on `width`
+       itself could have fixed it). (orient="vertical" was removed from the
+       element too along the way — Firefox-specific and not load-bearing for
+       this rotation-based approach, but not actually the cause of this
+       particular bug.) */
+    .music-overlay-volume-slider {
+      width: 90px;
+      min-width: 0;
+      flex-shrink: 0;
+      transform: rotate(-90deg);
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.65) 0%,
+        rgba(0, 0, 0, 0.65) calc(var(--vol, 1) * 100%),
+        rgba(0, 0, 0, 0.12) calc(var(--vol, 1) * 100%),
+        rgba(0, 0, 0, 0.12) 100%
+      );
+      cursor: pointer;
+    }
+
+    .music-overlay-volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+
+    .music-overlay-volume-slider::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border: none;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+
+    .music-overlay-volume-slider::-moz-range-track {
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    .music-overlay-volume-slider::-moz-range-progress {
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.65);
+    }
+
+    /* Collapsed by default (max-height:0, clipped) and grown open via
+       .is-open (toggled by the queue button) — animating max-height rather
+       than display:none/block so it can transition instead of popping.
+       A generous max-height (400px) is fine to animate to even though the
+       real content is much shorter: the visible endpoint is governed by the
+       content's own height via the transition, not by this number. */
+    .music-overlay-queue-panel {
+      width: 100%;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease-out, margin-top 0.25s ease-out;
+    }
+
+    .music-overlay-queue-panel.is-open {
+      max-height: 400px;
+      margin-top: 4px;
+    }
+
+    .music-overlay-queue-heading {
+      margin: 0 0 10px;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #8b8b8b;
+    }
+
+    .music-overlay-queue-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .music-overlay-queue-item-art {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .music-overlay-queue-item-art img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .music-overlay-queue-item-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .music-overlay-queue-item-title {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 13px;
+      color: #000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .music-overlay-queue-item-artist {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 12px;
+      color: #8b8b8b;
+    }
+
+    .music-overlay-queue-item-tag {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #8b8b8b;
+    }
+  </style>
+
+  <style>
+    .page-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .page-backdrop img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.3;
+    }
+
+    .scale-viewport {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Below the breakpoint, pages render their [slot="mobile"] content instead
+       of scaling down the 1440px desktop composition — a shrunk desktop UI
+       reads as tiny, unreadable text and unusable tap targets on a phone.
+       Both trees exist in the DOM always; only one is ever displayed. */
+    .mobile-shell {
+      display: none;
+    }
+
+    /* A genuinely floating window, not a full-bleed sheet — margin on all
+       four sides (not just a top safe-area allowance) so the desk backdrop
+       peeks through on every edge, and all four corners rounded (not just
+       the top two) to read as a real rectangle sitting on the desk, the
+       same idea as the desktop window (rgba(255,255,255,0.58) + blur)
+       just narrower. User feedback on the first version of this ("the
+       minimized versions are covering too much space... it can be like a
+       floating window, not too small but small enough to feel like it is
+       a window and not a full screen mobile page") — with maximize (see
+       [data-maximized] below) now the genuinely full-bleed state, this
+       resting state needed to visibly NOT be that, or the two would read
+       as near-identical.
+
+       animation: unlike desktop's .window (persisted across most
+       navigation via view-transition crossfades), .mobile-content is
+       never persisted — a fresh instance mounts on every single page
+       arrival, including the very first load — so a plain CSS animation
+       here (no JS/class-toggling needed) plays "a window opening" every
+       time a mobile page appears, matching the equivalent desktop request
+       for dock-to-dock navigation. Scoped to :has(.m-titlebar) rather
+       than the bare class — Home's own .mobile-content has no
+       MobileTitlebar (matches desktop: Home has no window chrome either,
+       it's the desktop itself, not a window) and per explicit feedback
+       shouldn't play a "window opening" motion it has no window for. */
+    /* Genuinely bounded, not just "tall enough for most content" — a real
+       floating mac window has a fixed outer edge and scrolls its CONTENT
+       inside that edge; the previous version only set a min-height floor,
+       so any page with more content than that floor just kept growing the
+       whole sheet (and the whole page under it) taller, past where the
+       dock sits, with only an internal padding-bottom guessing at enough
+       dock-clearance. User feedback: "the content is only scrollable
+       within that boundary." Now: fixed height (not min-height),
+       overflow:hidden on the outer edge so nothing escapes the rounded
+       corners, flex column so the titlebar (flex-shrink:0, added on
+       .m-titlebar itself in MobileTitlebar.astro) stays pinned at the top
+       while :global(.mobile-content > *:last-child) below — whichever
+       element is actually the page's own content wrapper, .m-work/
+       .m-music/.m-home/etc, all different classes per page — becomes the
+       ONE thing that scrolls, matching desktop's .window/.window-content
+       split exactly. Since the window's own edge now never grows past
+       where MobileDock sits, the old padding-bottom:84px dock-clearance
+       reservation is gone too — there's nothing left for it to protect
+       against, the boundary itself makes the collision impossible.
+
+       Margin sized off MobileDock's own real footprint (padding 10px top
+       + 44px icon + 11px bottom = 65px tall, floating
+       max(20px, safe-area+12px) off the viewport bottom — see
+       MobileDock.astro) plus a real gap on top of that, so the window's
+       own bottom edge visibly clears the dock rather than running behind
+       it.
+
+       transition: only border-radius/box-shadow here — the actual
+       size/position change (height, margin) is handled by a proper FLIP
+       animation instead (see flipMobileWindow in MobileTitlebar.astro),
+       not a plain CSS transition on height/margin directly. Those ARE
+       technically animatable properties, but user feedback after that
+       first attempt was "no animation still... no scaling animation of
+       window nothing" — border-radius/box-shadow transitioning smoothly
+       while the actual resize snapped suggests something about animating
+       layout-shifting properties (height/margin, which trigger reflow
+       every frame) directly wasn't working reliably, where a transform
+       (GPU-composited, the same technique desktop's own maximize already
+       uses via Window.astro's flipResize) is the proven-reliable
+       approach in this codebase for exactly this kind of "instant CSS
+       state change that needs to look like a smooth resize." */
+    /* Base rule is deliberately bare — NO background/blur/radius/shadow/
+       side-margin here. Those are the "floating window" chrome, which only
+       makes sense for pages that actually render a MobileTitlebar (a
+       window's traffic lights) — see the :has(.m-titlebar) rule below,
+       which is the ONLY place that chrome gets added. Home has no
+       titlebar (matches desktop, where Home is the desktop itself, not a
+       window sitting on it) and was wrongly getting the same box/blur
+       treatment anyway, since this rule used to apply it unconditionally —
+       found live from direct feedback ("why is there a bounding box on
+       home page? that is only needed for windows"). Height/overflow/flex
+       stay unscoped though: every mobile page still needs the screen
+       itself to never scroll (only its own last child scrolls, see
+       below) — that requirement isn't specific to windows, just applied
+       via a shorter, chrome-free box for Home. */
+    .mobile-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+      height: 100dvh;
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* :global() required — the actual last-child element (.m-work,
+       .m-music, .m-home, ...) belongs to whichever PAGE file renders it,
+       not this one, same cross-file-slot scoping trap noted elsewhere in
+       this project (see MEMORY.md's Astro gotchas entry) — a plain scoped
+       rule here would silently match nothing. .m-home-backdrop (Home's
+       own decorative layer, when present) is position:fixed and so
+       doesn't participate in flex layout/DOM-order sizing the normal way,
+       leaving the REAL content wrapper as the effective last flex child
+       either way, titlebar-bearing pages or not. */
+    :global(.mobile-content > *:last-child) {
+      flex: 1 0 0;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 32px;
+    }
+
+    /* Real bug caught live: every one of these page wrappers (.m-work,
+       .m-reading, etc) is ITSELF a flex column for its own children
+       (heading, grid, tab switcher, panels...), and a flex item's default
+       flex-shrink:1 doesn't care that its parent has overflow-y:auto —
+       once the parent's own height is bounded (it now is, see above), the
+       flex algorithm shrinks children to fit that bound REGARDLESS of
+       overflow, squishing them instead of letting the parent scroll past
+       them. Confirmed live on reading.astro: .m-reading-switcher (the
+       Books/Movies pill toggle) computed to height:0px, fully collapsed
+       and invisible, while still present in the DOM — this is what read
+       as content being "literally removed." flex-shrink:0 on every DIRECT
+       child of the scrollable wrapper (not just the switcher/panels on
+       tabbed pages — project-card grids, headings, everything) stops the
+       shrink entirely, so content keeps its natural size and the
+       overflow-y:auto on the wrapper itself is what actually handles
+       anything taller than the window, via scrolling, the way it was
+       always meant to. Harmless on the few things this also touches that
+       don't need it (the hidden radio inputs are position:absolute,
+       already out of flex flow entirely; display:none tab panels don't
+       participate in layout regardless of any other property). */
+    :global(.mobile-content > *:last-child > *) {
+      flex-shrink: 0;
+    }
+
+    /* fill-mode was `both` — WRONG, found live via a real-device debug
+       log: minimize/maximize's own inline transform/opacity writes were
+       silently having zero visual effect, even though the DOM (dataset,
+       inline style attribute) all showed the correct minimized state.
+       Root cause: per the CSS cascade, "CSS Animations" rank ABOVE plain
+       author styles, inline styles included — `both`/`forwards` keeps
+       this animation's ending keyframe (opacity:1, transform:none)
+       permanently in force for as long as :has(.m-titlebar) keeps
+       matching (i.e. forever, since the titlebar is never removed), which
+       silently wins over any later `sheet.style.transform`/`opacity`
+       write from MobileTitlebar.astro's setMobileMinimized/flip — the
+       entrance animation was permanently locking out both. No fill-mode
+       needed here anyway: with no animation-delay, there's no gap for
+       `backwards` to cover, and the animation's own end keyframe already
+       matches the element's normal resting style, so dropping fill
+       entirely plays the identical one-time entrance and then gets out
+       of the way, handing transform/opacity back to normal cascade
+       (inline styles) the instant it's done. */
+    /* All the floating-window chrome lives here now, scoped to pages that
+       actually have a titlebar — see the base .mobile-content rule's
+       comment above. Top margin at 70px (not just a safe-area allowance)
+       specifically so it reads closer to the ~110px the bottom NEEDS for
+       dock clearance — user feedback: "keep the window kind of centred
+       currently it is leaning more toward the top." Genuinely equal
+       top/bottom isn't practical (the bottom has a hard floor the dock
+       imposes; the top doesn't), but closing most of that 90px gap down to
+       ~40px reads as balanced rather than pinned to the top with the
+       dock's own clearance dumped entirely below it. height's subtracted
+       total (220px) matches that top+bottom margin sum plus a ~40px
+       buffer. padding-top:0 overrides the base rule's own safe-area
+       padding — margin's top value already covers that here, so both
+       would double up the allowance otherwise. */
+    .mobile-content:has(.m-titlebar) {
+      height: calc(100dvh - 220px);
+      margin: max(70px, env(safe-area-inset-top, 0px)) 16px max(110px, calc(env(safe-area-inset-bottom, 0px) + 100px));
+      padding-top: 0;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-radius: 20px;
+      box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.12);
+      transition: border-radius 0.35s ease, box-shadow 0.35s ease;
+      animation: mobile-sheet-open 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes mobile-sheet-open {
+      from {
+        opacity: 0;
+        transform: translateY(28px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Above phone width (this breakpoint now reaches up to portrait
+       tablets, see the 1024px media query below), letting text/cards run
+       edge-to-edge full-bleed the way they do on a 390px phone stretches
+       body copy to an ~800px line length and spreads project cards/tap
+       targets thin — capping the sheet's own width and centering it reads
+       as a deliberate tablet layout instead of "the phone version, just
+       wider." Phones stay exactly as they were: this only engages past
+       600px, wider than any actual phone in portrait. Only overrides the
+       left/right longhands, so the base rule's top/bottom margin (and its
+       env(safe-area-inset) allowances) still apply here too. */
+    @media (min-width: 600px) {
+      .mobile-content {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    /* Real maximize (MobileTitlebar.astro's green button) — the sheet
+       becomes the whole screen: no margin/peek on any side, no rounded
+       corners, no tablet width cap, tall enough to cover the viewport
+       even if its own content is shorter. Deliberately a large,
+       unmissable visual jump from both the resting state (now a genuinely
+       smaller floating window, see above) AND from minimized (opacity-0,
+       shrunk to nothing) — the three states need to read as clearly
+       different tiers, not subtle variations of each other. Higher
+       specificity ([data-maximized="true"] adds an attribute selector)
+       than the min-width:600px tablet-cap rule above, so this wins at any
+       viewport width regardless of source order. */
+    .mobile-content[data-maximized='true'] {
+      margin: 0;
+      max-width: none;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* 1024px, not a phone-only ~600px cutoff: below this, the alternative
+       is the scaled-down DESKTOP composition (.scale-frame, still 1440px
+       wide, just shrunk via --frame-scale) — at a portrait tablet's own
+       width (768-834px for iPad mini/Air/Pro 11", 1024px for iPad Pro
+       12.9" portrait) that scale factor is ~0.53-0.72, small enough to
+       shrink the 10px traffic-light dots and 13-16px body text down to
+       genuinely hard-to-hit/hard-to-read sizes, while still being "close
+       enough" to full size that it doesn't obviously read as "the mobile
+       version" the way it does on a phone — the worst of both. Routing
+       those widths into .mobile-shell instead means they get the same
+       flex-column, real-touch-target layout a phone gets (with its own
+       max-width cap above phone width — see .mobile-content/.mobile-dock)
+       rather than a miniaturized desktop. Landscape tablets are left on
+       the desktop path: at that aspect ratio the available width (1024px+)
+       scales the 1440-wide frame close enough to 1:1 that it's genuinely
+       the better-fitting experience, not a compromise. */
+    @media (max-width: 1024px) {
+      .scale-viewport {
+        display: none;
+      }
+
+      .mobile-shell {
+        display: block;
+      }
+    }
+
+    .scale-viewport[data-scale-mode='fit-both'] {
+      height: 100vh;
+      align-items: center;
+    }
+
+    /* transform reads a custom property set on <html> (see the script below)
+       rather than being set directly on this element. <html> is never
+       replaced by a client-side navigation, so the property — and the
+       correct scale it holds, since the viewport hasn't actually changed
+       size — survives automatically onto a freshly-swapped-in .scale-frame
+       from its very first rendered frame. Setting the transform directly on
+       .scale-frame instead means each new instance starts unscaled until
+       whichever script/event gets to it first, and no event turned out to
+       reliably beat the View Transition's own snapshot of that unscaled
+       state — which is what showed up as the window looking cut off from
+       the top right after a dock-link navigation. */
+    .scale-frame {
+      width: 1440px;
+      flex-shrink: 0;
+      transform-origin: top center;
+      transform: scale(var(--frame-scale, 1));
+      /* Matches every individual Figma frame's own clipping (each "Desktop -
+         NN" frame in the source clips its own content at its 1440x1024
+         bounds — see the music widget's collapsed state, which is only a
+         sliver because its own frame cuts it off at x:1440). Without this,
+         .scale-frame's actual content can extend past its 1440-wide box into
+         the empty margin .scale-viewport centers it within — found live: the
+         music widget's right:-74px correctly computed, but rendered fully
+         visible, floating with a gap past the window instead of clipped
+         flush against the frame edge, because .scale-viewport's own
+         overflow:hidden only clips at the real *browser window* edge (it's
+         full viewport width, not 1440-frame width), which sits well beyond
+         where .scale-frame's narrower, centered box actually ends. */
+      overflow: hidden;
+    }
+
+    /* fit-both centers on both axes via flexbox, which aligns using the
+       frame's *unscaled* box — the scale must originate from that same
+       center point, or the visual result drifts off-center as scale changes. */
+    .scale-viewport[data-scale-mode='fit-both'] .scale-frame {
+      transform-origin: center center;
+    }
+
+    /* Case-study image lightbox: sits outside .scale-frame so the enlarged
+       image renders at real viewport size, independent of the page's fit
+       scale. Click any .cs-content img to open. */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 17, 13, 0.82);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out, visibility 0s linear 0.25s;
+    }
+
+    .lightbox.is-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.25s ease-out, visibility 0s linear 0s;
+    }
+
+    .lightbox-image {
+      max-width: 88vw;
+      max-height: 86vh;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0px 24px 60px 0px rgba(0, 0, 0, 0.5);
+      transform: scale(0.94);
+      transition: transform 0.25s ease-out;
+    }
+
+    .lightbox.is-open .lightbox-image {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 28px;
+      right: 36px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Custom cursor removed — went through three different approaches
+       (a JS-tracked blend-mode div, a native cursor:url() swap, a
+       glass-blur DOM element) and landed back on "leave it, let's go back
+       to the default cursor". Back to the plain OS default, no override. */
+  </style>
+
+  <style is:global>
+    /* Page-transition timings, matching the Figma prototype's Smart Animate specs:
+       0.3s ease-out is the default baseline for every named group here. The
+       slower 1.0s tier (Home illustration-cluster links, and the Home entry/
+       exit sequencing below) and the leaving-home/entering-home sequencing
+       itself are NOT set with static classed selectors here — see
+       #nav-sequence-style in <head> and buildNavSequenceCSS in the script
+       below for why: astro:before-preparation is the only point early enough
+       to compute them, but swapRootAttributes wipes any class set on <html>
+       before the browser ever gets to decide which ::view-transition-*()
+       animation CSS applies, so anything conditional has to live in that
+       persisted stylesheet instead of a toggled class here.
+
+       ::view-transition-*(active-window) (intro.astro's/work.astro's shared
+       transition:name, see intro.astro's .intro-window comment),
+       ::view-transition-*(home-toggle) (Nav.astro's .hero-nav — Home's
+       View/Play switch, its only content), and ::view-transition-*(page-backdrop)
+       (this file's #page-backdrop) are included in this DEFAULT rule too —
+       without it, Astro gives every named transition:name group its own
+       untouched default animation (180ms cubic-bezier, its stock "fade"
+       preset) totally independent of whatever duration the surrounding
+       root crossfade actually runs at, which read as a flicker every time a
+       window-bearing page opened. Un-layered rules always beat Astro's own
+       (its defaults live inside `@layer astro`), so this doesn't need any
+       extra specificity to win. */
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-old(active-window),
+    ::view-transition-new(active-window),
+    ::view-transition-old(home-toggle),
+    ::view-transition-new(home-toggle),
+    ::view-transition-old(page-backdrop),
+    ::view-transition-new(page-backdrop) {
+      animation-duration: 0.3s;
+      animation-timing-function: ease-out;
+    }
+
+    /* Home's window arrives ON TOP of its desk scene (still fully visible,
+       not separately animated — see buildNavSequenceCSS below for why: it
+       just gets cut once the window's done covering it, rather than
+       animating away on its own), so it needs to actually paint above
+       root's own layer rather than relying on default document-order
+       stacking. Harmless for every other active-window transition (dock
+       nav, case studies) where nothing sits underneath it to begin with. */
+    ::view-transition-group(active-window) {
+      z-index: 2;
+    }
+
+    /* Astro's default crossfade (astroFadeIn/astroFadeOut in
+       astro/components/viewtransitions.css) sets mix-blend-mode:plus-lighter
+       on both snapshots — the standard trick for crossfading thin content
+       like text without a ghosted double-exposure look, since additive
+       blending hides the moment both layers are simultaneously
+       semi-transparent instead of letting them show through each other. The
+       window is the opposite case: a large translucent white panel
+       (rgba(255,255,255,0.58) background) over a photo backdrop, so that
+       same additive blending visibly brightens/washes out the whole overlap
+       region for the length of the crossfade — worse now that it runs a
+       full 0.3s-1s instead of Astro's original unsynced 180ms, since
+       there's simply more time for the wash-out to be seen. A plain normal
+       blend (the two snapshots just alpha-composite over each other, no
+       brightness boost) is the right call for this kind of large opaque-ish
+       area. */
+    ::view-transition-old(active-window),
+    ::view-transition-new(active-window),
+    ::view-transition-old(home-toggle),
+    ::view-transition-new(home-toggle),
+    ::view-transition-old(page-backdrop),
+    ::view-transition-new(page-backdrop) {
+      mix-blend-mode: normal;
+    }
+
+    /* Home <-> a destination page. Forward: only the View/Play toggle
+       (Nav.astro's .hero-nav — a small bar above the desk scene, never
+       overlapping where the window sits, so the window can't cover it the
+       way it covers everything below) gets its own exit, sliding straight
+       up and out of frame. The desk scene itself isn't separately animated
+       at all — the window arrives on top of it (z-index above, see
+       ::view-transition-group(active-window) above) and simply covers it as
+       it scales in; the scene only actually gets cut once the window has
+       fully finished, at which point it's already hidden underneath anyway.
+       Reverse: the window shrinks/fades away first, revealing the scene
+       that was there underneath the whole time, and the toggle slides back
+       down. Static keyframes only — the sequencing itself (animation-name/
+       -delay, which direction if any applies, actual durations) is written
+       into #nav-sequence-style per navigation; see buildNavSequenceCSS
+       below. */
+    @keyframes toggle-slide-up {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-100%);
+      }
+    }
+
+    @keyframes toggle-slide-down {
+      from {
+        transform: translateY(-100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes window-scale-in {
+      from {
+        opacity: 0;
+        scale: 0.96;
+      }
+      to {
+        opacity: 1;
+        scale: 1;
+      }
+    }
+
+    @keyframes window-scale-out {
+      from {
+        opacity: 1;
+        scale: 1;
+      }
+      to {
+        opacity: 0;
+        scale: 0.96;
+      }
+    }
+
+    /* Both currently unused — see buildNavSequenceCSS's default branch
+       below. Explored for ordinary dock-to-dock navigation (Work <-> Music
+       <-> a case study, etc.) as a lighter stand-in for real multi-window
+       (there is still only ever one .window in the DOM either way; every
+       navigation fully replaces it, not a real stack): first as a two-sided
+       motion reusing Window.astro's setMinimized() shape (new window
+       grows+fades in from near the dock while old shrinks+fades toward it,
+       concurrently), then as new-only once the two-sided version read as
+       "crowded". Reverted entirely per direct feedback asking for the
+       plain fade this had before any of this — left both keyframes defined
+       rather than deleted in case a later tweak wants to reach for this
+       shape again instead of reinventing it. */
+    @keyframes window-cascade-in {
+      from {
+        opacity: 0;
+        transform: scale(0.04) translateY(45%);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes window-cascade-out {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.04) translateY(45%);
+      }
+    }
+  </style>
+
+  <!-- Holds every navigation's actual duration/sequencing CSS, written into
+       its textContent per-navigation from astro:before-preparation (see
+       buildNavSequenceCSS in the script below) instead of toggled as
+       classes on <html> — confirmed live that classList.toggle there
+       doesn't survive to when it'd matter: swapRootAttributes (astro/dist/
+       transitions/swap-functions.js) wipes every attribute on <html> during
+       the DOM swap, which happens before the browser ever decides which
+       ::view-transition-*() animation CSS applies (only resolved after the
+       update callback — the same callback the wipe happens inside —
+       resolves). Same root cause, same fix shape as --frame-scale's own
+       #frame-scale-style (<head>): a transition:persist'd node's textContent
+       survives every navigation untouched, so there's nothing to race.
+       Placed here, AFTER the static is:global rules above rather than in
+       <head> — on a tie, an unlayered rule's specificity is identical
+       regardless of which stylesheet it's in, so the one later in DOM order
+       wins; this one needs to win over the static default duration rule
+       above it, and being later in source order is what makes that happen,
+       not anything about being un-layered (both blocks already are). -->
+  <style id="nav-sequence-style" is:inline transition:name="nav-sequence-style" transition:persist></style>
+
+  <script>
+    // Astro's own ClientRouter (node_modules/astro/dist/transitions/router.js,
+    // astro 5.18.2) calls document.startViewTransition() and attaches
+    // .finally() handlers to the returned ViewTransition's updateCallbackDone
+    // and finished promises — both of which the actual page swap and
+    // animation depend on — but never touches its .ready promise anywhere.
+    // .ready legitimately rejects in several browser-internal cases (e.g.
+    // the document not being visible at the moment the transition starts),
+    // without affecting the swap/animation at all, so this is a harmless but
+    // real gap in Astro's shipped code, not patchable here without editing
+    // node_modules (which a reinstall would wipe). Silence specifically this
+    // known rejection so it doesn't spam the console; anything else still
+    // surfaces normally.
+    //
+    // (A follow-up theory that this rejection also left the
+    // ::view-transition-old/new(root) pseudo-elements stuck on screen,
+    // causing a washed-out double-exposure look, did not hold up:
+    // getComputedStyle(el, '::view-transition-old(root)') returns the same
+    // display:block/opacity:1 even on a completely fresh page load with no
+    // navigation ever having happened — it's a hypothetical/stylesheet-
+    // derived value regardless of whether the pseudo-element currently
+    // exists, not evidence of anything stuck. Root cause of the washed-out/
+    // cut-off report is still open.)
+    window.addEventListener('unhandledrejection', (e) => {
+      if (e.reason instanceof DOMException && e.reason.name === 'InvalidStateError' && /transition/i.test(e.reason.message)) {
+        e.preventDefault();
+      }
+    });
+
+    function fitScale() {
+      if (window.innerWidth <= 1024) return; // mobile-shell is active instead; nothing to scale
+      const viewport = document.querySelector('.scale-viewport');
+      const frame = document.querySelector('.scale-frame');
+      if (!viewport || !frame) return;
+
+      const mode = viewport.getAttribute('data-scale-mode');
+      const naturalWidth = 1440;
+
+      // Measuring natural height needs the *unscaled* box, but reading that
+      // off the frame itself would require zeroing out --frame-scale first
+      // (visible, and only reads back correctly after a reflow) — reading
+      // the un-transformed child in fit-both mode instead (natural height is
+      // always exactly 1024 there anyway) sidesteps needing to touch the
+      // custom property just to measure.
+      const naturalHeight = mode === 'fit-both' ? 1024 : frame.offsetHeight;
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const scale =
+        mode === 'fit-both'
+          ? Math.min(vw / naturalWidth, vh / naturalHeight, 1)
+          : Math.min(vw / naturalWidth, 1);
+
+      const styleEl = document.getElementById('frame-scale-style');
+      if (styleEl) styleEl.textContent = `:root{--frame-scale:${scale}}`;
+      if (mode !== 'fit-both') {
+        viewport.style.height = `${naturalHeight * scale}px`;
+      }
+    }
+
+    let resizeTimer;
+    function scheduleFit() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(fitScale, 50);
+    }
+
+    window.addEventListener('resize', scheduleFit);
+    // Fit on every lifecycle event this could plausibly need it — astro:after-swap
+    // has the new page's DOM in place but hasn't painted yet, astro:page-load is
+    // the final "settled" point. #frame-scale-style (see <head>) is what actually
+    // keeps the value alive across navigations now; these two calls just keep it
+    // numerically correct (e.g. after a resize that happened mid-navigation).
+    document.addEventListener('astro:after-swap', fitScale);
+    document.addEventListener('astro:page-load', fitScale);
+
+    // Toggling between alternate full-screen panels (e.g. Home's View/Play switch)
+    // changes the frame's natural height without a page navigation — refit.
+    document.addEventListener('change', (e) => {
+      if (e.target instanceof HTMLInputElement && (e.target.type === 'radio' || e.target.type === 'checkbox')) {
+        fitScale();
+      }
+    });
+
+    // Links marked [data-transition-slow] (Home's illustration cluster, plus
+    // the two "return to Home" triggers — Dock's Home icon and Window's red
+    // close button) use the slower 1.0s page-transition timing instead of
+    // the 0.3s default.
+    //
+    // Home <-> a destination page also gets its own dedicated sequencing —
+    // currently the simplest version of it, deliberately, as an A/B
+    // reference point: everything (desk scene, toggle, window, backdrop)
+    // does one plain synchronized fade together, and the only sequencing
+    // kept is the dock still arriving afterward, not simultaneously with
+    // the rest. A more elaborate staged version (toggle slides out first,
+    // window scales in on top of the still-visible desk scene and covers
+    // it before it's cut, backdrop timed to arrive just ahead of the
+    // window) was built and discarded here specifically to compare against
+    // this simpler baseline — reach for that shape again (window-scale-in/
+    // -out and toggle-slide-up/-down keyframes are still defined below,
+    // unused, for exactly this reason) if the plain version reads as too
+    // flat rather than too busy. intro.astro is deliberately excluded from
+    // all of this either way: its own [data-beat] sequence already
+    // controls that exact handoff frame by frame.
+    //
+    // All of this is written into #nav-sequence-style's textContent (see
+    // <head>) instead of toggled as classes on <html> — confirmed live that
+    // classList.toggle here doesn't survive to when it'd matter:
+    // astro:before-preparation is the only point early enough to compute
+    // "is this link slow / is this leaving or entering Home", since by
+    // astro:before-swap the click has already resolved to a real navigation
+    // — but Astro's own router wipes every attribute on <html> (swapRootAttributes
+    // in astro/dist/transitions/swap-functions.js) during the DOM swap,
+    // which happens before the browser ever decides which ::view-transition-*()
+    // animation CSS applies (that's resolved only after the update callback
+    // — the same callback the wipe happens inside — resolves). Logged
+    // document.documentElement.className from inside an actual
+    // astro:after-swap handler during a real navigation and it was already ""
+    // — same root cause, same fix shape as --frame-scale's own #frame-scale-style.
+    //
+    // isSlow (1s) only applies as a fallback for triggers that aren't part
+    // of this Home entry/exit sequencing at all (currently none besides
+    // intro.astro's own synthetic navigate() call into /work, which sets
+    // data-transition-slow but is excluded from leaving/entering by the
+    // toPath/fromPath !== '/intro' checks below — its [data-beat] sequence
+    // needs active-window's root-level crossfade slowed to 1s too so its
+    // own beats don't finish before the surrounding page catches up).
+    const FADE_S = 0.35;
+
+    function buildNavSequenceCSS(isSlow, leaving, entering, introToWork) {
+      let css = '';
+      // Mobile's own intro sequence ends by scaling a fake "Work window"
+      // up to the EXACT position/size the real /work page's own window
+      // resolves to (intro.astro's playMobileIntro), specifically so the
+      // handoff reads as "content just appeared in the same window" —
+      // direct feedback after the first version: "why is there a big
+      // switch kind of transition... should be smooth like nothing
+      // happened, just different content faded in." The pixel-match
+      // alone wasn't enough: .mobile-content is never persisted (a fresh
+      // instance mounts every navigation, unlike desktop's real <Window>,
+      // which literally survives via transition:persist), so the
+      // incoming /work page still replayed its own mobile-sheet-open
+      // entrance (fade+scale+translateY from below) ON TOP of the root
+      // crossfade — two motions stacked instead of one, which is what
+      // actually read as "a switch." Suppressing that one animation for
+      // this specific navigation only (mobile-content still fades in via
+      // the root crossfade itself, just without ALSO bouncing) is the
+      // fix; can't do this with a static CSS rule since it depends on
+      // knowing the previous page was /intro, hence adding it here
+      // alongside the leaving/entering Home cases, which solve the exact
+      // same "know the nav direction before the DOM swap" problem.
+      if (introToWork) {
+        // !important is load-bearing here, not stylistic: the scoped
+        // component rule this overrides is
+        // `.mobile-content[data-astro-cid-XXXX]:has(.m-titlebar)` (class +
+        // attribute + pseudo-class), which outranks a plain
+        // `.mobile-content:has(.m-titlebar)` on specificity alone regardless
+        // of injection order — confirmed live (rule was present in
+        // #nav-sequence-style but had zero effect on computed animationName
+        // until this was added).
+        css += `.mobile-content:has(.m-titlebar){animation:none!important}`;
+      }
+      if (leaving) {
+        css += `::view-transition-old(root),::view-transition-new(root),::view-transition-old(home-toggle),::view-transition-new(home-toggle),::view-transition-old(active-window),::view-transition-new(active-window),::view-transition-old(page-backdrop),::view-transition-new(page-backdrop){animation-duration:${FADE_S}s}`;
+      } else if (entering) {
+        css += `::view-transition-old(root),::view-transition-new(root),::view-transition-old(home-toggle),::view-transition-new(home-toggle),::view-transition-old(active-window),::view-transition-new(active-window){animation-duration:${FADE_S}s}`;
+      } else if (isSlow) {
+        css += `::view-transition-old(root),::view-transition-new(root),::view-transition-old(active-window),::view-transition-new(active-window){animation-duration:1s}`;
+      }
+      // Ordinary AppLayout<->AppLayout navigation (dock link to dock link,
+      // or into/out of a case study) falls through to an empty string here
+      // on purpose — a window-cascade-in/-out pair (tried both as a
+      // two-sided motion and as new-only) was built and explicitly reverted
+      // per direct feedback ("pehle hi thik tha, sirf minimize mei animation
+      // rakho baaki pehle jaisa kardo fade wala jo tha" — it was fine
+      // before, keep the animation only on minimize, put everything else
+      // back to the plain fade). Reverting to nothing here means this kind
+      // of navigation is governed entirely by the unconditional base rule
+      // above (0.3s ease-out on ::view-transition-old/new(active-window)),
+      // the same plain crossfade this had before any of that exploration.
+      // The keyframes themselves (window-cascade-in/-out, static is:global
+      // block above) are left defined, unused, in case this gets revisited.
+      return css;
+    }
+
+    document.addEventListener('astro:before-preparation', (e) => {
+      const trigger = e.sourceElement;
+      const isSlow = trigger instanceof Element && !!trigger.closest('[data-transition-slow]');
+      const toPath = e.to?.pathname;
+      const fromPath = e.from?.pathname;
+      const leaving = fromPath === '/' && toPath !== '/' && toPath !== '/intro';
+      const entering = toPath === '/' && fromPath !== '/' && fromPath !== '/intro';
+      const introToWork = fromPath === '/intro' && toPath === '/work';
+      const seqStyleEl = document.getElementById('nav-sequence-style');
+      if (seqStyleEl) seqStyleEl.textContent = buildNavSequenceCSS(isSlow, leaving, entering, introToWork);
+
+      // AppLayout's dock-entrance script (initDockEntrance) reads this to
+      // delay its own start until AFTER the window has finished scaling
+      // in, instead of starting immediately on astro:page-load — which
+      // fires (and so previously kicked off the dock's fade+slide-up)
+      // right as the DOM swap completes, well before the View Transition's
+      // own crossfade even begins playing, landing the dock on screen
+      // before the window it's supposed to follow. A plain window global
+      // survives the navigation fine (nothing about swapRootAttributes'
+      // wipe touches window/document identity, only <html>'s attributes),
+      // so no persisted-stylesheet trick is needed for this one.
+      window.__dockEntranceDelayMs = leaving ? FADE_S * 1000 : 0;
+    });
+
+    // Case-study image lightbox. Bound once on the persistent `document` —
+    // this script re-runs on every Astro navigation (the #lightbox element
+    // itself is replaced each time), so re-binding would stack duplicate
+    // listeners; the flag below guards against that and every lookup below
+    // re-queries the current #lightbox instead of closing over a stale node.
+    if (!window.__lightboxInit) {
+      window.__lightboxInit = true;
+
+      const openLightbox = (src, alt) => {
+        const overlay = document.getElementById('lightbox');
+        const imgEl = overlay?.querySelector('.lightbox-image');
+        if (!overlay || !(imgEl instanceof HTMLImageElement)) return;
+        imgEl.src = src;
+        imgEl.alt = alt;
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      };
+
+      const closeLightbox = () => {
+        const overlay = document.getElementById('lightbox');
+        overlay?.classList.remove('is-open');
+        overlay?.setAttribute('aria-hidden', 'true');
+      };
+
+      document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        if (target.closest('.lightbox')) {
+          if (target.closest('.lightbox-close') || target.id === 'lightbox') closeLightbox();
+          return;
+        }
+
+        const img = target.closest('.cs-content img');
+        if (img instanceof HTMLImageElement) {
+          openLightbox(img.currentSrc || img.src, img.alt);
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+
+      document.addEventListener('astro:before-preparation', closeLightbox);
+    }
+
+    // Custom cursor removed (see <style> above) — back to the plain
+    // default, no JS needed.
+
+    // Global "now playing" widget (see the markup + <style> above this
+    // script, and node 2410:10745 in Figma). #music-sc-iframe/#music-widget
+    // both transition:persist, so this only needs to bind its listeners
+    // ONCE ever (guarded exactly like #lightbox above) — re-running per
+    // navigation would stack duplicate SC.Widget event bindings on the same
+    // surviving iframe.
+    if (!window.__musicWidgetInit) {
+      window.__musicWidgetInit = true;
+
+      // Playback engine: SoundCloud's Widget JS API wrapping the iframe
+      // above, not an <audio> element — direct instruction after the
+      // earlier placeholder-file version: "you can use the soundcloud api
+      // ... player can control the calls instead. some kind of wrapper."
+      // scWidget is null until SC.Widget(scIframe) below resolves, and
+      // "not ready" until its own READY event fires (SoundCloud has to load
+      // the track first) — every function below checks scReady rather than
+      // assuming scWidget is immediately usable the instant it's created.
+      // Created once here and appended to <html> itself (a sibling of
+      // <body>, never a descendant of it) rather than rendered as template
+      // markup inside <body> — see the long comment where the <iframe> used
+      // to sit, above the SoundCloud <script> tag near the top of this
+      // file, for why: Astro's swapBodyElement detaches everything inside
+      // the old <body> for a moment on every navigation, and an iframe
+      // resets its whole browsing context on disconnection regardless of
+      // transition:persist correctly preserving the node's identity
+      // afterward. Living outside <body> means the swap never touches it at
+      // all. This whole block only ever runs once (the __musicWidgetInit
+      // guard around this entire init block), so there's no risk of
+      // creating a second iframe on a later navigation.
+      const scIframe = document.createElement('iframe');
+      scIframe.id = 'music-sc-iframe';
+      scIframe.title = 'Good Days by SZA - SoundCloud player';
+      scIframe.src =
+        'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fqwarqrtt43%2Fgood-days-sza-best-173940637&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false';
+      scIframe.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; border:none;';
+      scIframe.setAttribute('allow', 'autoplay');
+      document.documentElement.appendChild(scIframe);
+
+      let scWidget = null;
+      let scReady = false;
+      let scDurationMs = 0;
+      let scPositionMs = 0;
+      let scPlayingState = false;
+      let scVolume = 1;
+      let scMuted = false;
+
+      const widget = document.getElementById('music-widget');
+      const widgetIcon = document.getElementById('music-widget-icon-btn');
+      const overlay = document.getElementById('music-overlay');
+      const overlayPlayBtn = document.getElementById('music-overlay-play');
+      const overlayPrevBtn = document.getElementById('music-overlay-prev');
+      const overlayNextBtn = document.getElementById('music-overlay-next');
+
+      // Source of truth for "is playing" lives on the widget's own dataset
+      // (survives navigation via transition:persist, same reasoning as
+      // everHovered below), kept in sync by SC.Widget's own PLAY/PAUSE
+      // events (see initSoundCloudWidget below) rather than read from
+      // scWidget directly — scWidget's methods are fire-and-forget/async
+      // (postMessage under the hood, no synchronous .paused-style property
+      // to read), so the events are the only reliable signal.
+      function setPlaying(playing) {
+        if (widget instanceof HTMLElement) widget.dataset.playing = playing ? 'true' : 'false';
+        overlayPlayBtn?.setAttribute('data-playing', playing ? 'true' : 'false');
+        refreshIcon();
+      }
+
+      // Hover shows a one-time "chevron" affordance the very first time
+      // ever (nothing has played yet, so there's no play/pause status to
+      // show) — every hover after that reflects the current playing state
+      // instead. Stored on the DOM node's dataset rather than a plain JS
+      // variable because transition:persist keeps the NODE but this
+      // script's own top-level scope still re-runs per navigation (see the
+      // __musicWidgetInit guard above) — a closure variable would silently
+      // reset to its initial value on the very next page.
+      function refreshIcon() {
+        if (!(widgetIcon instanceof HTMLElement) || !(widget instanceof HTMLElement)) return;
+        if (widget.dataset.everHovered !== 'true') {
+          widgetIcon.dataset.icon = 'chevron';
+        } else {
+          widgetIcon.dataset.icon = widget.dataset.playing === 'true' ? 'pause' : 'play';
+        }
+      }
+
+      function setExpanded(expanded) {
+        if (!(widget instanceof HTMLElement)) return;
+        widget.classList.toggle('is-expanded', expanded);
+        if (expanded && widget.dataset.everHovered !== 'true') {
+          widget.dataset.everHovered = 'true';
+        }
+        refreshIcon();
+      }
+
+      function openOverlay() {
+        overlay?.classList.add('is-open');
+        overlay?.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeOverlay() {
+        overlay?.classList.remove('is-open');
+        overlay?.setAttribute('aria-hidden', 'true');
+        // Reset so the queue panel doesn't reopen already-expanded next
+        // time — queueBtn/queuePanel are declared further down in this same
+        // init block; safe here since this function only ever RUNS later,
+        // via an event listener, well after those declarations execute.
+        document.getElementById('music-overlay-queue-panel')?.classList.remove('is-open');
+        document.getElementById('music-overlay-queue')?.setAttribute('aria-expanded', 'false');
+        // Back to hidden-in-the-edge once the player closes, rather than
+        // leaving the orb sitting expanded with no reason to be — matches
+        // "hide it in edge like we did for desktop" as the resting state,
+        // not just the initial one. No-op on desktop (already collapsed by
+        // mouseleave well before a click could have opened the overlay).
+        setExpanded(false);
+      }
+
+      // Route-gated: intro.astro recreates this same desk scene by hand for
+      // its own beat sequence (see intro.astro) — the real widget floating
+      // on top of it would double up on that illusion, so it's hidden for
+      // exactly that one route. Re-checked on every navigation, since the
+      // widget node persists across all of them.
+      function refreshRouteVisibility() {
+        widget?.classList.toggle('is-hidden-route', location.pathname === '/intro');
+      }
+
+      widget?.addEventListener('mouseenter', () => setExpanded(true));
+      widget?.addEventListener('mouseleave', () => setExpanded(false));
+      widget?.addEventListener('focusin', () => setExpanded(true));
+      widget?.addEventListener('focusout', () => setExpanded(false));
+
+      // Touch's equivalent of mouseleave — there's no hover to lose, so
+      // nothing above ever collapses a tap-expanded orb back down. Tapping
+      // anywhere outside it does instead, so a tap that expanded it but
+      // wasn't followed by the second tap-to-open doesn't just leave it
+      // stuck open with no way back except opening the player anyway.
+      document.addEventListener('click', (e) => {
+        if (!widget?.classList.contains('is-expanded')) return;
+        if (e.target instanceof Element && widget.contains(e.target)) return;
+        setExpanded(false);
+      });
+
+      // Vertical-only drag along the right edge (right:0 never changes,
+      // only top) — direct instruction: "draggable along the right edge of
+      // screen". Position persisted in localStorage (a per-browser
+      // convenience, not real app state, so localStorage is the right tool
+      // rather than anything server-synced) so it survives full reloads,
+      // not just SPA navigation. A real drag vs. a plain click are told
+      // apart by total pointer movement: past DRAG_CLICK_THRESHOLD, the
+      // upcoming native 'click' event (which still fires after pointerup on
+      // the same target) is suppressed for exactly that one gesture via
+      // justDragged, so dragging doesn't also pop the overlay open.
+      //
+      // 6px (the first version) turned out too tight — reported back as
+      // "not clickable, can't open the player overlay" after dragging
+      // shipped. Root cause, confirmed live: pointermove was applied to
+      // `top` on the very first pixel of movement, so ordinary click jitter
+      // (a mouse or trackpad essentially never releases at the *exact*
+      // pixel it pressed down on) already exceeded 6px and got misclassified
+      // as a drag on plain clicks. Fixed two ways together: a bigger
+      // threshold (12px), AND a real deadzone — pointermove no longer moves
+      // the widget at all until past that threshold (see below), so a
+      // normal click now has zero visual side effect instead of a tiny
+      // unwanted nudge.
+      const DRAG_CLICK_THRESHOLD = 12;
+      const DRAG_STORAGE_KEY = 'music-widget-top';
+
+      function clampTop(top) {
+        if (!(widget instanceof HTMLElement)) return top;
+        const margin = 20;
+        const max = window.innerHeight - widget.offsetHeight - margin;
+        return Math.min(Math.max(top, margin), Math.max(margin, max));
+      }
+
+      if (widget instanceof HTMLElement) {
+        let dragging = false;
+        let startY = 0;
+        let startTop = 0;
+        let moved = 0;
+
+        try {
+          const saved = localStorage.getItem(DRAG_STORAGE_KEY);
+          if (saved !== null) {
+            const top = parseFloat(saved);
+            if (Number.isFinite(top)) widget.style.top = clampTop(top) + 'px';
+          }
+        } catch (e) {
+          // Private-browsing/storage-blocked — fall back to the CSS default
+          // top (see .music-widget), nothing else to do.
+        }
+
+        // pointermove/pointerup are bound on `window`, not `widget`, and
+        // deliberately WITHOUT setPointerCapture — found live: capturing
+        // the pointer on the outer widget redirects the click that follows
+        // pointerup to target the capturing element instead of letting it
+        // reach the inner #music-widget-trigger button through the normal
+        // hit-test/bubble path, which is exactly what broke "click to open
+        // the overlay" the moment dragging was added. Listening on `window`
+        // instead achieves the same "track movement anywhere, even outside
+        // the small widget" goal without touching event routing at all.
+        widget.addEventListener('pointerdown', (e) => {
+          if (typeof e.button === 'number' && e.button !== 0) return;
+          // Direct instruction: the album cover should ONLY click (open the
+          // overlay), never drag; same for the icon (only toggles
+          // play/pause). Dragging happens by grabbing the rest of the
+          // widget — the pill background outside both buttons — instead.
+          // Since pointerdown bubbles up to this listener from EITHER
+          // button, checking the target here (not just relying on
+          // DRAG_CLICK_THRESHOLD after the fact) stops drag-tracking from
+          // ever starting on a button press at all, rather than starting it
+          // and then trying to suppress the click afterward.
+          if (e.target instanceof Element && e.target.closest('#music-widget-art-btn, #music-widget-icon-btn')) {
+            return;
+          }
+          dragging = true;
+          moved = 0;
+          startY = e.clientY;
+          startTop = widget.getBoundingClientRect().top;
+          widget.classList.add('is-dragging');
+          // Belt-and-suspenders alongside draggable="false"/-webkit-user-drag
+          // above: stops the browser's own native image-drag/text-selection
+          // gestures from starting on mouse pointers at all, so they can't
+          // compete with this custom drag for the same pointerdown. Touch
+          // pointers are excluded — preventDefault on a touch pointerdown
+          // also blocks the synthetic click touch devices rely on, which
+          // would break tapping this on mobile (moot on desktop-only for
+          // now, but no reason to paint into that corner).
+          if (e.pointerType !== 'touch') e.preventDefault();
+        });
+
+        window.addEventListener('pointermove', (e) => {
+          if (!dragging) return;
+          const dy = e.clientY - startY;
+          moved = Math.max(moved, Math.abs(dy));
+          // Deadzone: don't actually move the widget until movement is
+          // confirmed to be a real drag, not click jitter (see
+          // DRAG_CLICK_THRESHOLD's own comment above).
+          if (moved > DRAG_CLICK_THRESHOLD) {
+            widget.style.top = clampTop(startTop + dy) + 'px';
+          }
+        });
+
+        const endDrag = () => {
+          if (!dragging) return;
+          dragging = false;
+          widget.classList.remove('is-dragging');
+          if (moved > DRAG_CLICK_THRESHOLD) {
+            widget.dataset.justDragged = 'true';
+            // Self-clearing: the two button click handlers below also
+            // delete this flag when they consume it, but that only happens
+            // if the native 'click' that follows THIS pointerup actually
+            // lands on one of those two buttons. If a real drag ends with
+            // the pointer somewhere else on the widget (i.e. the drag
+            // didn't finish exactly back over a button — the ordinary case,
+            // not an edge case), that click never reaches either handler,
+            // so justDragged was staying 'true' forever — permanently
+            // jamming EVERY future click on both buttons after just one
+            // drag, not just suppressing the one click it was meant to.
+            // Matches the report: drag worked, then play/pause silently
+            // stopped responding to any click at all afterward.
+            setTimeout(() => {
+              delete widget.dataset.justDragged;
+            }, 300);
+            try {
+              localStorage.setItem(DRAG_STORAGE_KEY, parseFloat(widget.style.top) + '');
+            } catch (e) {
+              // Same private-browsing/storage-blocked case as above —
+              // dragging this session still works, it just won't persist.
+            }
+          }
+        };
+        window.addEventListener('pointerup', endDrag);
+        window.addEventListener('pointercancel', endDrag);
+
+        window.addEventListener('resize', () => {
+          if (widget.style.top) widget.style.top = clampTop(parseFloat(widget.style.top)) + 'px';
+        });
+      }
+
+      // Consumed by both buttons below — a drag ending on either one also
+      // fires a native 'click' afterward (see endDrag/DRAG_CLICK_THRESHOLD
+      // above), which this swallows for exactly that one gesture so
+      // dragging doesn't also trigger whichever button it ends on.
+      function consumeJustDragged() {
+        if (widget?.dataset.justDragged === 'true') {
+          delete widget.dataset.justDragged;
+          return true;
+        }
+        return false;
+      }
+
+      function togglePlay() {
+        if (!scWidget || !scReady) return;
+        // scPlayingState itself is set optimistically here, not just the UI
+        // — found live: leaving it to be set ONLY by SC's own PLAY/PAUSE
+        // events (a postMessage round-trip to the iframe, not instant) meant
+        // a second click before that event arrived still saw the OLD
+        // scPlayingState, so togglePlay took the same branch again — two
+        // "play" calls in a row instead of play-then-pause. The real events
+        // still correct this afterward if actual playback ever diverges
+        // (autoplay blocked, paused some other way), same self-correcting
+        // relationship the old <audio>-based version had.
+        if (scPlayingState) {
+          scWidget.pause();
+          scPlayingState = false;
+        } else {
+          scWidget.play();
+          scPlayingState = true;
+        }
+        setPlaying(scPlayingState);
+      }
+
+      // Two separate buttons now, two separate actions — direct correction
+      // from the earlier "all one control" version: the icon should toggle
+      // playback directly, only the album-art button opens the overlay.
+      //
+      // The is-expanded gate makes this the same click handler serve both
+      // desktop and mobile's different reveal gestures without branching on
+      // pointer type: on desktop, by the time a click on this button is
+      // even possible the cursor is already over the widget, so :hover (see
+      // mouseenter above) already set is-expanded — the gate is always true
+      // there, first click opens the overlay exactly like before. On mobile
+      // there's no hover, so is-expanded starts false — direct instruction:
+      // "on hidden state tap, it comes out, and on one more tap, the player
+      // opens" — first tap only expands (and returns, deliberately not
+      // opening yet), second tap (now already expanded) falls through to
+      // openOverlay().
+      document.getElementById('music-widget-art-btn')?.addEventListener('click', () => {
+        if (consumeJustDragged()) return;
+        if (!widget?.classList.contains('is-expanded')) {
+          setExpanded(true);
+          return;
+        }
+        openOverlay();
+      });
+
+      document.getElementById('music-widget-icon-btn')?.addEventListener('click', () => {
+        if (consumeJustDragged()) return;
+        togglePlay();
+      });
+
+      overlayPlayBtn?.addEventListener('click', togglePlay);
+
+      // Stubs until a real playlist exists (currently one track) — restart
+      // the current track rather than doing nothing, so the buttons still
+      // feel responsive. Swap for real track-list navigation (a new
+      // SC.Widget.load() call, or swapping the iframe's track URL) once
+      // there's more than one song.
+      overlayPrevBtn?.addEventListener('click', () => {
+        if (scWidget && scReady) scWidget.seekTo(0);
+      });
+      overlayNextBtn?.addEventListener('click', () => {
+        if (scWidget && scReady) scWidget.seekTo(0);
+      });
+
+      // Timeline/seek bar. Big-overlay-only, per direct instruction (the
+      // small widget stays icon-only). Draggable the same deadzone-free way
+      // as the click-through-a-drag problem on the widget itself was fixed
+      // — window-level pointermove/pointerup rather than setPointerCapture,
+      // since capture was what broke the widget's own click routing.
+      const timelineTrack = document.getElementById('music-overlay-timeline-track');
+      const timelineFill = document.getElementById('music-overlay-timeline-fill');
+      const timelineThumb = document.getElementById('music-overlay-timeline-thumb');
+      const timeCurrentEl = document.getElementById('music-overlay-time-current');
+      const timeDurationEl = document.getElementById('music-overlay-time-duration');
+
+      function formatTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+
+      function updateTimelineUI() {
+        // scDurationMs is 0 until SC.Widget's READY event resolves
+        // getDuration() (see initSoundCloudWidget below) — guarded
+        // explicitly rather than showing "NaN:NaN" or a fill computed from
+        // a divide-by-zero ratio in that brief window.
+        const hasDuration = scDurationMs > 0;
+        const ratio = hasDuration ? Math.min(1, Math.max(0, scPositionMs / scDurationMs)) : 0;
+        if (timelineFill instanceof HTMLElement) timelineFill.style.width = ratio * 100 + '%';
+        if (timelineThumb instanceof HTMLElement) timelineThumb.style.left = ratio * 100 + '%';
+        if (timeCurrentEl) timeCurrentEl.textContent = formatTime(scPositionMs / 1000);
+        if (timeDurationEl) timeDurationEl.textContent = hasDuration ? formatTime(scDurationMs / 1000) : '0:00';
+      }
+
+      function seekFromClientX(clientX) {
+        if (!scWidget || !scReady || !(timelineTrack instanceof HTMLElement) || scDurationMs <= 0) return;
+        const rect = timelineTrack.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        scPositionMs = ratio * scDurationMs;
+        scWidget.seekTo(scPositionMs);
+        updateTimelineUI();
+      }
+
+      if (timelineTrack instanceof HTMLElement) {
+        let seekingTimeline = false;
+        timelineTrack.addEventListener('pointerdown', (e) => {
+          seekingTimeline = true;
+          seekFromClientX(e.clientX);
+        });
+        window.addEventListener('pointermove', (e) => {
+          if (!seekingTimeline) return;
+          seekFromClientX(e.clientX);
+        });
+        window.addEventListener('pointerup', () => {
+          seekingTimeline = false;
+        });
+      }
+
+      // No timeupdate-equivalent listener setup here anymore — SC.Widget's
+      // PLAY_PROGRESS event (bound in initSoundCloudWidget below) drives
+      // scPositionMs/updateTimelineUI() instead, since there's no <audio>
+      // element to attach a native event to.
+      updateTimelineUI();
+
+      // Volume — mute toggle + a native range input restyled to match (see
+      // the --vol custom property in <style> above). Big-overlay-only, same
+      // as the timeline. scVolume/scMuted are the source of truth (declared
+      // up top) rather than reading back from scWidget — like play/pause,
+      // its setVolume() call is fire-and-forget with no synchronous
+      // property to read.
+      const muteBtn = document.getElementById('music-overlay-mute');
+      const volumeSlider = document.getElementById('music-overlay-volume-slider');
+
+      function updateVolumeUI() {
+        if (volumeSlider instanceof HTMLInputElement) {
+          volumeSlider.value = String(scVolume);
+          volumeSlider.style.setProperty('--vol', String(scMuted ? 0 : scVolume));
+        }
+        muteBtn?.setAttribute('data-muted', scMuted || scVolume === 0 ? 'true' : 'false');
+      }
+
+      muteBtn?.addEventListener('click', () => {
+        scMuted = !scMuted;
+        if (scWidget && scReady) scWidget.setVolume(scMuted ? 0 : scVolume * 100);
+        updateVolumeUI();
+      });
+
+      volumeSlider?.addEventListener('input', () => {
+        if (!(volumeSlider instanceof HTMLInputElement)) return;
+        scVolume = parseFloat(volumeSlider.value);
+        scMuted = false;
+        if (scWidget && scReady) scWidget.setVolume(scVolume * 100);
+        updateVolumeUI();
+      });
+
+      updateVolumeUI();
+
+      // Touch fallback for the volume popover — see its :hover/:focus-within
+      // CSS rule's own comment above for why touch needs one at all. Tapping
+      // the mute button already toggles mute via the listener above (this
+      // bubbles from the same tap); toggling .is-open alongside that is a
+      // deliberate combined action on touch — tap once to mute AND reveal
+      // the slider for further adjustment — rather than needing a second,
+      // separate tap target purely to reveal it. Doesn't interfere with
+      // desktop's hover reveal: this is an OR, not a replacement (see the
+      // CSS comment) — clicking the mute button on desktop toggling this
+      // class too is harmless since hover already independently shows/hides
+      // the same popover regardless of the class's state.
+      const volumeControl = document.getElementById('music-overlay-volume-control');
+      volumeControl?.addEventListener('click', (e) => {
+        // Dragging the slider itself fires 'click' too on release — don't
+        // let that close a popover the user is actively adjusting.
+        if (e.target instanceof Element && e.target.closest('.music-overlay-volume-slider')) return;
+        volumeControl.classList.toggle('is-open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!volumeControl || !volumeControl.classList.contains('is-open')) return;
+        if (e.target instanceof Element && volumeControl.contains(e.target)) return;
+        volumeControl.classList.remove('is-open');
+      });
+
+      // Queue button — toggles the panel added above. Real behavior (opens
+      // an actual panel listing what's playing), not decorative, even
+      // though there's only one placeholder track to list right now (see
+      // that panel's own markup comment).
+      const queueBtn = document.getElementById('music-overlay-queue');
+      const queuePanel = document.getElementById('music-overlay-queue-panel');
+      queueBtn?.addEventListener('click', () => {
+        const open = queuePanel?.classList.toggle('is-open');
+        queueBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      overlay?.addEventListener('click', (e) => {
+        if (e.target === overlay) closeOverlay();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeOverlay();
+      });
+
+      // Wires up the actual SoundCloud player. SC (the global the
+      // w.soundcloud.com/player/api.js script attaches) should already be
+      // defined by the time this runs — that <script> tag sits earlier in
+      // <body> with no async/defer, so the browser blocks parsing until
+      // it's fetched and executed, same ordering guarantee normal
+      // synchronous scripts always get. Guarded with a typeof check anyway
+      // rather than assumed, since a network hiccup on that external script
+      // shouldn't throw and break the rest of this init block.
+      function initSoundCloudWidget() {
+        if (!(scIframe instanceof HTMLIFrameElement) || typeof SC === 'undefined') return;
+        scWidget = SC.Widget(scIframe);
+
+        scWidget.bind(SC.Widget.Events.READY, () => {
+          scReady = true;
+          scWidget.getDuration((ms) => {
+            scDurationMs = ms;
+            updateTimelineUI();
+          });
+          scWidget.setVolume(scMuted ? 0 : scVolume * 100);
+        });
+
+        // Authoritative for "is playing" — e.g. the track ending naturally
+        // (FINISH), or being paused some way other than this site's own
+        // button (SoundCloud's own embed chrome, if it were visible; media
+        // keys). Redundant with togglePlay()'s own optimistic setPlaying()
+        // call for a click specifically, but harmless: same value, set
+        // twice.
+        scWidget.bind(SC.Widget.Events.PLAY, () => {
+          scPlayingState = true;
+          setPlaying(true);
+        });
+        scWidget.bind(SC.Widget.Events.PAUSE, () => {
+          scPlayingState = false;
+          setPlaying(false);
+        });
+        scWidget.bind(SC.Widget.Events.FINISH, () => {
+          scPlayingState = false;
+          setPlaying(false);
+        });
+
+        // Fires roughly every 250ms while playing — the closest thing to
+        // <audio>'s old 'timeupdate' for this engine.
+        scWidget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
+          scPositionMs = e.currentPosition;
+          updateTimelineUI();
+        });
+      }
+      initSoundCloudWidget();
+
+      document.addEventListener('astro:before-preparation', closeOverlay);
+      document.addEventListener('astro:page-load', refreshRouteVisibility);
+      refreshRouteVisibility();
+      refreshIcon();
+
+      // First-open/reload discoverability hint, Home only: nudge the
+      // widget out on its own for a few seconds so a new visitor notices
+      // it's there and interactive, then let it slide back — direct
+      // instruction ("should come out of its way to show the play button
+      // state for few seconds and go back in"). Deliberately placed inside
+      // this one-time init block (guarded by __musicWidgetInit above)
+      // rather than on every 'astro:page-load' — that guard only re-runs on
+      // an actual hard page load/reload (a fresh script execution), so
+      // arriving at Home via an ordinary SPA nav from another page (e.g.
+      // the dock's Home icon) does NOT replay this, matching "fresh load...
+      // first time open or reload" rather than every visit to Home.
+      // setExpanded(true) also marks everHovered, so the icon reads as a
+      // real play/pause status (not the chevron) both during this peek and
+      // on every real hover afterward — the peek doubles as teaching what
+      // the icon means.
+      if (location.pathname === '/') {
+        setTimeout(() => {
+          setExpanded(true);
+          setTimeout(() => setExpanded(false), 2500);
+        }, 800);
+      }
+    }
+  </script>
+</body>
+</html>

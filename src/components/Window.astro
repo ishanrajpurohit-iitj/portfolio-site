@@ -1,0 +1,342 @@
+---
+interface Props {
+  title: string;
+  width?: number;
+  height: number;
+  /** Forwarded to transition:name on the actual .window element. Astro does
+   * NOT propagate transition:name/transition:persist placed on a <Window
+   * .../> component usage down to the element this component renders — it
+   * silently applies to nothing, which is why intro.astro <-> work.astro's
+   * window crossfade was never actually happening as its own named
+   * transition (verified: no data-astro-transition-scope attribute for it
+   * ever showed up anywhere in the rendered page). Passing the name in as a
+   * prop instead lets it land on the real root element below.
+   *
+   * Every AppLayout page (work, hobbies, music, reading, writings,
+   * work/csite, work/photoshop-2030) passes the same "active-window" value
+   * here — they all render their Window at the identical 128,12,1184,738
+   * geometry (default windowTop, height=738), so any navigation between two
+   * of them gets a synced in-place content crossfade of just the window
+   * (see Layout.astro's ::view-transition-*(active-window) rules for the
+   * duration/blend-mode overrides that make that crossfade actually match
+   * the rest of the page) instead of two separately-positioned translucent
+   * window boxes crossfading as part of the generic root transition, which
+   * is what reads as a flicker/hard cut. A view-transition-name must be
+   * unique within a single page, which holds here since each of these pages
+   * renders exactly one Window. */
+  transitionName?: string;
+}
+
+const { title, width = 1184, height, transitionName } = Astro.props;
+---
+
+<div class="window" style={`width:${width}px;height:${height}px`} transition:name={transitionName}>
+  <div class="window-titlebar">
+    <div class="traffic-lights">
+      <a class="light red" href="/" aria-label="Close" data-transition-slow></a>
+      <button type="button" class="light yellow" aria-label="Minimize"></button>
+      <button type="button" class="light green" aria-label="Maximize"></button>
+    </div>
+    <div class="window-title">
+      <img src="/images/shared/window-title-icon.png" alt="" width="15" height="16" />
+      <span>{title}</span>
+    </div>
+  </div>
+  <div class="window-content">
+    <slot />
+  </div>
+</div>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  // Maximize makes the window's OUTER BOUNDS genuinely reach the real
+  // browser viewport's edges — not just fill the 1440x1024 design-space
+  // frame, which itself is often letterboxed (fit-both scales to whichever
+  // of width/height is more constraining, to preserve Figma's exact
+  // proportions everywhere else on the site, which necessarily leaves a
+  // gap on the OTHER axis unless the viewport happens to exactly match
+  // 1440:1024). Reaching the actual screen edges means escaping that
+  // scaled ancestry entirely: the window gets physically moved into
+  // #maximize-portal (see Layout.astro's comment on that div) — a plain,
+  // untransformed sibling of .scale-viewport — and set to
+  // position:fixed;inset:0. That's not optional: per the CSS spec, a
+  // position:fixed element's containing block is normally the viewport,
+  // but ANY transformed ancestor in the chain becomes the containing block
+  // instead if one exists — and .scale-frame always has one
+  // (transform:scale(var(--frame-scale))) — so without actually leaving
+  // that ancestry, "fixed;inset:0" would just fill the already-scaled
+  // 1440x1024 frame, not the real screen. Content inside stays at its
+  // Figma-authored fixed pixel sizes (not stretched/reflowed to the new
+  // bounds) — .window-content's existing overflow-y:auto handles anything
+  // that doesn't fit vertically, same as always.
+  //
+  // Animating position/parent/size changes with independent CSS transitions
+  // is what produced the original "grows more from the bottom" bug when
+  // this was still a same-parent resize — they don't move at matching
+  // rates. FLIP (First-Last-Invert-Play) sidesteps that: snapshot the
+  // on-screen rect before and after the instant change (DOM move included —
+  // getBoundingClientRect is always viewport-relative regardless of which
+  // parent an element sits under), then animate one transform between them,
+  // so every edge moves proportionally no matter how many properties (or
+  // which parent) changed underneath.
+  function flipResize(win, applyFinalState) {
+    const first = win.getBoundingClientRect();
+    applyFinalState();
+    const last = win.getBoundingClientRect();
+
+    const dx = first.left - last.left;
+    const dy = first.top - last.top;
+    const scaleX = first.width / last.width;
+    const scaleY = first.height / last.height;
+
+    win.style.transition = 'none';
+    win.style.transformOrigin = 'top left';
+    win.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+
+    win.getBoundingClientRect(); // force reflow so the inverted transform above paints first
+
+    win.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+    win.style.transform = 'none';
+
+    win.addEventListener(
+      'transitionend',
+      () => {
+        win.style.transition = '';
+        win.style.transformOrigin = '';
+        win.style.transform = '';
+      },
+      { once: true }
+    );
+  }
+
+  // Minimize doesn't move the window anywhere (unlike maximize, it never
+  // needs to escape .scale-frame's transformed ancestry — it's shrinking
+  // toward a point on the SAME page, not reaching for the real viewport
+  // edges) so it's just a transform+opacity animation in place, no FLIP/
+  // portal needed. transform-origin: bottom center points the shrink
+  // toward the dock, which sits below the window on every page that has
+  // one — the closest this site gets to the real macOS genie effect
+  // without actually building one. Leaves the window's own layout box
+  // (and therefore .window-position's centering math) completely alone;
+  // transform never affects layout, only paint, so nothing else on the
+  // page has to know or care that it happened.
+  // Dispatches appwindow:minimize itself rather than leaving that to each
+  // caller — there are two call sites (the yellow button's own click, and
+  // the appwindow:restore-request handler below, triggered from Dock.astro)
+  // and the first version only dispatched from the button click. AppLayout's
+  // dock-visibility listener never fired on a dock-driven restore because of
+  // that, which is exactly how minimizing a MAXIMIZED window, then
+  // restoring it via the dock, left the dock stuck visible over a
+  // full-screen window instead of hiding again — found live. One dispatch
+  // point means every caller stays in sync automatically instead of having
+  // to remember to fire the event themselves.
+  function setMinimized(win, minimized) {
+    win.dataset.minimized = String(minimized);
+    win.style.transformOrigin = 'bottom center';
+    if (minimized) {
+      win.style.transition = 'transform 0.4s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.3s ease-in';
+      win.style.transform = 'scale(0.04) translateY(45%)';
+      win.style.opacity = '0';
+      win.style.pointerEvents = 'none';
+    } else {
+      win.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out';
+      win.style.transform = 'none';
+      win.style.opacity = '1';
+      win.style.pointerEvents = '';
+    }
+    document.dispatchEvent(new CustomEvent('appwindow:minimize', { detail: { minimized } }));
+  }
+
+  // Close (red light): mirrors mobile's MobileTitlebar.astro treatment,
+  // ported over per direct request once mobile's felt right — deliberately
+  // NOT minimize's shrink-toward-bottom-center motion (that reads as "sent
+  // to the dock, retrievable," true for minimize, false for close, which is
+  // leaving the page entirely) but a quick scale-down + fade IN PLACE
+  // instead. navigate() (Astro's client-side router, imported above) fires
+  // after a short 90ms delay rather than immediately (so the eye catches
+  // the shrink starting before Astro's own view-transition snapshots the
+  // "old" page) and rather than waiting for the full animation to finish
+  // (mobile's first version did that at 250ms and it read as genuinely
+  // slower to close — see MobileTitlebar.astro's own comment on this exact
+  // regression). 90ms is proportionally an even smaller addition here since
+  // desktop's red is marked data-transition-slow (1s root crossfade, see
+  // Layout.astro) rather than mobile's 0.35s default.
+  function setClosing(win, backHref) {
+    win.style.transformOrigin = 'center center';
+    win.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.2s ease-in';
+    win.style.transform = 'scale(0.92)';
+    win.style.opacity = '0';
+    win.style.pointerEvents = 'none';
+    setTimeout(() => navigate(backHref), 90);
+  }
+
+  function initWindowControls() {
+    document.querySelectorAll('.window').forEach((win) => {
+      const greenBtn = win.querySelector('.light.green');
+      const yellowBtn = win.querySelector('.light.yellow');
+      const redBtn = win.querySelector('.light.red');
+      if (!(greenBtn instanceof HTMLElement) || greenBtn.dataset.bound === 'true') return;
+      greenBtn.dataset.bound = 'true';
+      if (!(win instanceof HTMLElement)) return;
+
+      // Real <a href> stays in the markup (right-click/long-press "open in
+      // new tab", no-JS fallback) — only a plain unmodified click is
+      // intercepted to play the close animation first; modified clicks
+      // (cmd/ctrl/shift/alt, non-primary button) are left alone.
+      if (redBtn instanceof HTMLAnchorElement) {
+        redBtn.addEventListener('click', (e) => {
+          if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault();
+          setClosing(win, redBtn.href);
+        });
+      }
+
+      if (yellowBtn instanceof HTMLElement) {
+        yellowBtn.addEventListener('click', () => {
+          const minimized = win.dataset.minimized === 'true';
+          setMinimized(win, !minimized);
+        });
+      }
+
+      // Exactly where this window lives when NOT maximized, captured once
+      // up front, so un-maximizing can put it back precisely rather than
+      // approximating "somewhere inside .window-position" — insertBefore
+      // with a null originalNextSibling behaves as append, matching how it
+      // was originally .window-position's only child either way.
+      const originalParent = win.parentElement;
+      const originalNextSibling = win.nextSibling;
+      const originalStyle = win.getAttribute('style') || '';
+
+      greenBtn.addEventListener('click', () => {
+        const isMaximized = win.dataset.maximized === 'true';
+        flipResize(win, () => {
+          if (isMaximized) {
+            if (originalParent) originalParent.insertBefore(win, originalNextSibling);
+            win.setAttribute('style', originalStyle);
+            win.dataset.maximized = 'false';
+          } else {
+            const portal = document.getElementById('maximize-portal');
+            if (portal) portal.appendChild(win);
+            win.style.position = 'fixed';
+            win.style.inset = '0';
+            win.style.width = '100vw';
+            win.style.height = '100dvh';
+            win.style.margin = '0';
+            win.style.zIndex = '900';
+            win.dataset.maximized = 'true';
+          }
+        });
+        // AppLayout's own script listens for this to slide the dock out of
+        // view — the maximized window's translucent background alone
+        // doesn't actually hide it, just fades it (see that listener for
+        // why). No dock exists on intro.astro (no maximize button there
+        // either), so this is a harmless no-op event on pages without one.
+        document.dispatchEvent(
+          new CustomEvent('appwindow:maximize', { detail: { maximized: !isMaximized } })
+        );
+      });
+    });
+  }
+
+  initWindowControls();
+  document.addEventListener('astro:page-load', initWindowControls);
+
+  // Dock.astro dispatches this when its own current-page icon is clicked
+  // while that page's window is minimized (see initDockRestore there for
+  // why this has to be event-based rather than Dock calling setMinimized
+  // directly — the minimized .window itself has pointer-events:none, so
+  // there's no in-window control left to click once it's gone; the Dock is
+  // the only thing still listening). Only one .window ever exists per page
+  // (every AppLayout page renders exactly one — see the transitionName prop
+  // comment above), so there's nothing to disambiguate here.
+  document.addEventListener('appwindow:restore-request', () => {
+    const win = document.querySelector('.window[data-minimized="true"]');
+    if (win instanceof HTMLElement) setMinimized(win, false);
+  });
+</script>
+
+<style>
+  .window {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.58);
+    border-radius: 15px;
+    box-shadow: 0px 12px 20px 0px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+  }
+
+  .window-titlebar {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+  }
+
+  .traffic-lights {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 7px;
+  }
+
+  .light {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+  }
+
+  a.light,
+  button.light {
+    cursor: pointer;
+  }
+
+  .light.red {
+    background: #ff736a;
+    text-decoration: none;
+  }
+
+  .light.yellow {
+    background: #febc2e;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .light.green {
+    background: #19c332;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .window-title {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+  }
+
+  .window-content {
+    position: relative;
+    width: 100%;
+    flex: 1 0 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+</style>

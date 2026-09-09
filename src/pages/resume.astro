@@ -1,0 +1,681 @@
+---
+// Standalone on purpose — not wrapped in Layout.astro/AppLayout. This is
+// a printable/shareable version of the résumé — every role's full bullet
+// list, both side projects, all leadership lines, all achievements, full
+// school history. Home's "View" mode panel (.home-cv in index.astro) is
+// the complete résumé too now (direct correction: "there is no such thing
+// as full resume, full resume hi dikhana hai view mode mei" — View mode
+// doesn't defer to this page as some fuller version, it just uses a
+// Highlights line to compress the leadership list instead of listing it
+// in full). This page exists as a plain, printable document for anyone
+// who wants a static link or a PDF — no scale-frame, no ClientRouter,
+// nothing that assumes a fixed desktop-sized canvas.
+//
+// Every fact below is the user's own resume text, pasted directly and
+// reproduced as given — not paraphrased, not invented, not trimmed except
+// where they corrected it (no "Minor in Management": "i am no longer in
+// minor in magement").
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Résumé · Ishan Rajpurohit</title>
+    <meta
+      name="description"
+      content="Ishan Rajpurohit, Product Designer &amp; Product Manager. Full résumé: experience, projects, leadership, achievements, and education."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page">
+      <a class="back-link" href="/">&larr; Full interactive portfolio</a>
+
+      <header class="header">
+        <div class="header-main">
+          <h1>Ishan Rajpurohit</h1>
+          <p class="title">Product + Design</p>
+        </div>
+        <div class="header-contact">
+          <span>+91 80004 60744</span>
+          <a href="mailto:ishanrajpurohit21@gmail.com">ishanrajpurohit21@gmail.com</a>
+          <a href="https://linkedin.com/in/ishanrajpurohit21" target="_blank" rel="noopener noreferrer">
+            linkedin.com/in/ishanrajpurohit21
+          </a>
+          <span>B.Tech., IIT Jodhpur</span>
+        </div>
+      </header>
+
+      <hr />
+
+      <section class="section">
+        <h2>Profile</h2>
+        <p class="summary">
+          Product designer who ships, pairing UX craft with product thinking to take ideas from
+          0&rarr;1. I've designed and launched flagship B2B platforms, networking products, and
+          AI-based experiences across early-stage startups, producing 200+ screens and wireframes
+          and turning user research into shipped features. Comfortable owning the full arc:
+          research, user flows, interface design, prototyping, and developer handoff. Currently
+          leading IIT Jodhpur's Design and Product Clubs, mentoring 500+ peers in design thinking,
+          UX, and product.
+        </p>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Experience</h2>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Optima Learn</span>
+            <span class="entry-meta">Oct 2025 – Dec 2025</span>
+          </div>
+          <p class="entry-role">Product Intern &middot; Noida, India (Remote)</p>
+          <ul>
+            <li>
+              Conducted user research and behavioral analysis to identify motivational and
+              psychological pain points, under the internal project of revising how the
+              curriculum is approached at a higher level by aspirants.
+            </li>
+            <li>
+              Defined the GTM and feature roadmap for unified customer acquisition through
+              Referral &amp; Campus programs, targeting scalable, low-cost user acquisition.
+            </li>
+            <li>
+              Collaborated cross-functionally with founders and marketing teams to align
+              AI-feature development with insights from user studies.
+            </li>
+            <li>
+              Delivered detailed PRD documentation, integrating business strategy, UX, and
+              analytics to support iterative product rollout.
+            </li>
+          </ul>
+        </div>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">D&amp;S International Pvt Ltd</span>
+            <span class="entry-meta">Feb 2025 – Jul 2025</span>
+          </div>
+          <p class="entry-role">
+            Product Design Intern &middot; In-Semester + Summer &middot; Noida, India (Remote)
+          </p>
+          <ul>
+            <li>Designed and launched 3 flagship platforms from scratch, producing 100+ wireframes across 6 modules.</li>
+            <li>
+              Delivered UnBroker MVP in under 10 days (PRD to wireframes to development
+              handoff), resulting in a product shipping ahead of schedule.
+            </li>
+            <li>
+              Worked directly with founders to define product roadmap, design user flows, and
+              integrate features; shipped demo-ready modules in under 2 weeks, accelerating
+              field testing.
+            </li>
+          </ul>
+        </div>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Discovercap</span>
+            <span class="entry-meta">Jan 2025 – Mar 2025</span>
+          </div>
+          <p class="entry-role">UI/UX Intern &middot; Bengaluru, India (Remote)</p>
+          <ul>
+            <li>
+              Curated the MVP roadmap for a networking platform for the startup ecosystem with
+              4–5 categories of stakeholders, pivoting strategy to adapt it as a professional
+              collaboration platform.
+            </li>
+            <li>
+              Led product design of 40+ mobile-first screens covering onboarding, profiles, and
+              collaboration flows, ensuring product–market alignment.
+            </li>
+            <li>
+              Delivered MVP-ready prototypes within 2 months, enabling rapid investor validation
+              and smoother development execution; streamlined design to developer handoff
+              through structured documentation of UI and design decisions.
+            </li>
+          </ul>
+        </div>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">WorldQuant</span>
+            <span class="entry-meta">May 2024 – Jan 2025</span>
+          </div>
+          <p class="entry-role">Research Consultant &middot; Remote</p>
+          <ul>
+            <li>Built and tested 20+ alpha models across U.S. and China equities, achieving Sharpe &gt; 1.0 in multiple signals.</li>
+            <li>
+              Combined fundamental (e.g. pretax income) and alternative (e.g. sentiment/buzz)
+              datasets into predictive signals, validated via OS/IS testing.
+            </li>
+            <li>
+              Earned Gold Level recognition by surpassing 10,000 BRAIN Points in the WorldQuant
+              Challenge for consistently high-performing signals.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Work Case Studies</h2>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title"><a href="/work/csite">CSite</a></span>
+            <span class="entry-meta">Case Study · Product Design · B2B Systems</span>
+          </div>
+          <p class="entry-role">
+            A mobile + web platform for India's unorganized construction sector. Sole designer:
+            research, information architecture, the design system, UI, and prototyping.
+          </p>
+        </div>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title"><a href="/work/photoshop-2030">Reimagining Photoshop 2030</a></span>
+            <span class="entry-meta">AI-Native · Interaction Design · Product Design</span>
+          </div>
+          <p class="entry-role">
+            A concept for a mobile, AI-first Photoshop for 2030, built to stay fast on
+            low-compute devices. Designer on a six-person team, owning the product vision, home
+            experience, Orby, and the interaction model.
+          </p>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Projects</h2>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Grove App &mdash; Green Fintech Hackathon (RBI &times; TISC)</span>
+            <span class="entry-meta">Jul 2024 – Sep 2024</span>
+          </div>
+          <p class="entry-role">A gamified platform to track and reward eco-friendly actions with real-world benefits</p>
+          <ul>
+            <li>
+              Introduced an eco-tracking mobile app bringing together 10+ sustainable measures
+              (green markets, bill consumption, EV adoption rates and more) into one app, giving
+              users a score (e.g. out of 100) that mapped to real benefits.
+            </li>
+            <li>
+              Presented the MVP design in the RBI–TISC Fintech Hackathon and reached the National
+              Pre-Finals, ranking among the Top 18.
+            </li>
+          </ul>
+        </div>
+
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Vend-Aid Telehealth Product Concept</span>
+            <span class="entry-meta">Aug 2023 – Oct 2023</span>
+          </div>
+          <p class="entry-role">Designed an end-to-end telehealth experience to improve rural medicine access</p>
+          <ul>
+            <li>
+              Designed the full service experience across a teleconsultation app, a digital
+              prescription flow, and an automated dispensing interface, mapping how patients,
+              doctors, and the machine interact at each step.
+            </li>
+            <li>
+              Created the prescription-to-dispense flow and screens that let the system read a
+              doctor's prescription and dispense 80+ medicines autonomously, cutting rural
+              medication access time by up to 70%.
+            </li>
+            <li>
+              Validated the concept beyond a class project: drew inbound interest from potential
+              clients in Australia and consulted vending supply-chain CEOs in India to
+              pressure-test the model and plan next steps.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Skills &amp; Tools</h2>
+        <div class="skills-grid">
+          <div>
+            <p class="skills-group-label">Design</p>
+            <p class="skills-list">Product &amp; UX Design, Interaction Design, User Research, Wireframing, Prototyping, Usability Testing</p>
+          </div>
+          <div>
+            <p class="skills-group-label">Product</p>
+            <p class="skills-list">Product Management, Product Strategy, Roadmapping, GTM, Stakeholder Collaboration</p>
+          </div>
+          <div>
+            <p class="skills-group-label">Tools</p>
+            <p class="skills-list">Figma, Claude Code, Sketch, Excalidraw, Adobe Creative Suite</p>
+          </div>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Leadership</h2>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Product Design &amp; Development Contingent Lead, Inter IIT Tech Meet 14.0</span>
+            <span class="entry-meta">Oct 2025 – Dec 2025</span>
+          </div>
+        </div>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Head, Product Club, IIT Jodhpur</span>
+            <span class="entry-meta">Aug 2025 – Present</span>
+          </div>
+        </div>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Joint Secretary, Design Club, IIT Jodhpur</span>
+            <span class="entry-meta">Aug 2024 – Aug 2025</span>
+          </div>
+        </div>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Head, Sandstone Summit 5.0, IIT Jodhpur</span>
+            <span class="entry-meta">Aug 2024 – Sep 2025</span>
+          </div>
+        </div>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Assistant Head, Prometeo'25, Technical &amp; Entrepreneurial Fest, IIT Jodhpur</span>
+            <span class="entry-meta">Oct 2024 – Jan 2025</span>
+          </div>
+        </div>
+        <div class="entry entry-compact">
+          <div class="entry-head">
+            <span class="entry-title">Assistant Head, TEDxIIT Jodhpur 2024</span>
+            <span class="entry-meta">Aug 2024 – Oct 2024</span>
+          </div>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Achievements</h2>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Domain Lead, Product Design &amp; Development, Inter IIT Tech Meet 14.0</span>
+            <span class="entry-meta">Dec 2025</span>
+          </div>
+          <p class="entry-role">
+            Led IITJ's contingent for Product Design &amp; Development; secured 3rd highest score
+            in Product Design &amp; UX and 6th rank overall in Product Development (Adobe PS)
+            among all 23 IITs.
+          </p>
+        </div>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Top 18 National Finalist, RBI Green Fintech Hackathon</span>
+            <span class="entry-meta">Jul 2024</span>
+          </div>
+          <p class="entry-role">Selected for the Pre-Finals at national level for our application concept, Grove App.</p>
+        </div>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Gold Level, WorldQuant Challenge</span>
+            <span class="entry-meta">Sep 2023</span>
+          </div>
+          <p class="entry-role">Ranked among top global participants in a real-time quantitative finance simulation.</p>
+        </div>
+        <div class="entry">
+          <div class="entry-head">
+            <span class="entry-title">Top 5%, JEE Advanced 2023</span>
+            <span class="entry-meta">Jun 2023</span>
+          </div>
+          <p class="entry-role">Ranked in the top 5% among over 1.8 lakh candidates.</p>
+        </div>
+      </section>
+
+      <hr />
+
+      <section class="section">
+        <h2>Education</h2>
+        <table class="education-table">
+          <thead>
+            <tr>
+              <th>Degree / Certificate</th>
+              <th>Institute / Board</th>
+              <th>Year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>B.Tech. (Chemical Engineering)</td>
+              <td>Indian Institute of Technology Jodhpur</td>
+              <td>Jul 2023 – Present</td>
+            </tr>
+            <tr>
+              <td>Senior Secondary (CBSE)</td>
+              <td>GIIS Jodhpur</td>
+              <td>Mar 2023</td>
+            </tr>
+            <tr>
+              <td>Secondary (CBSE)</td>
+              <td>Delhi Public School Jodhpur</td>
+              <td>Mar 2021</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer class="footer">
+        <span>Made with love</span>
+        <a href="/">View the full interactive portfolio &rarr;</a>
+      </footer>
+    </div>
+  </body>
+</html>
+
+<style>
+  :root {
+    --color-bg: #efe8dd;
+    --color-ink: #1a1a1a;
+    --color-muted: #6b6558;
+    --color-rule: rgba(26, 26, 26, 0.18);
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 32px 80px;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 40px;
+    font-size: 13px;
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .header-main h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .title {
+    margin: 6px 0 0;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--color-muted);
+  }
+
+  .header-contact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    font-size: 12.5px;
+    color: var(--color-muted);
+    text-align: right;
+  }
+
+  .header-contact a {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .header-contact a:hover {
+    text-decoration: underline;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-rule);
+    margin: 28px 0;
+  }
+
+  .section h2 {
+    margin: 0 0 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+  }
+
+  .summary {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--color-ink);
+  }
+
+  .entry {
+    margin-bottom: 22px;
+  }
+
+  .entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .entry-compact {
+    margin-bottom: 10px;
+  }
+
+  .entry-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .entry-title {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .entry-title a {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .entry-meta {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .entry-role {
+    margin: 6px 0 0;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .entry ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+  }
+
+  .entry li {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--color-ink);
+  }
+
+  .entry li:last-child {
+    margin-bottom: 0;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+  }
+
+  .skills-group-label {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .skills-list {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--color-ink);
+  }
+
+  .education-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .education-table th {
+    text-align: left;
+    padding: 0 12px 8px 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .education-table td {
+    padding: 10px 12px 10px 0;
+    font-weight: 300;
+    color: var(--color-ink);
+    border-bottom: 1px solid var(--color-rule);
+    vertical-align: top;
+  }
+
+  .education-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+
+  .footer a {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .page {
+      padding: 40px 20px 60px;
+    }
+
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .header-contact {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .header-main h1 {
+      font-size: 26px;
+    }
+
+    .education-table {
+      font-size: 12px;
+    }
+  }
+
+  /* A recruiter reading the full résumé is exactly the kind of visitor
+     likely to print it or save it as a PDF — worth making that look right,
+     not just readable on-screen. */
+  @media print {
+    body {
+      background: #fff;
+    }
+
+    .back-link,
+    .footer a[href='/'] {
+      display: none;
+    }
+
+    a {
+      color: var(--color-ink) !important;
+      text-decoration: none !important;
+    }
+
+    .entry,
+    .section {
+      break-inside: avoid;
+    }
+  }
+</style>

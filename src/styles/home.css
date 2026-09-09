@@ -1,0 +1,489 @@
+/* Content cluster */
+
+.hero-content {
+  position: relative;
+  width: 1440px;
+  height: 902px;
+  overflow: hidden;
+}
+
+.hero-headline {
+  position: absolute;
+  left: 500px;
+  top: 18px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-headline p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 96px;
+  color: #000;
+  white-space: nowrap;
+}
+
+/* Typewriter cursor — a thin bar after the text, blinking while typing
+   (.typewriter-active), then held solid for a beat and faded out once
+   done (.typewriter-done) rather than left blinking forever, which reads
+   as unfinished/naggy on a page that isn't actually waiting for input. */
+.hero-headline p.typewriter-active::after,
+.hero-headline p.typewriter-done::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 0.8em;
+  margin-left: 6px;
+  background: currentColor;
+  vertical-align: -0.05em;
+}
+
+.hero-headline p.typewriter-active::after {
+  animation: typewriter-blink 0.8s step-end infinite;
+}
+
+.hero-headline p.typewriter-done::after {
+  opacity: 0;
+  transition: opacity 0.4s ease-out 0.3s;
+}
+
+@keyframes typewriter-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.hero-subtext {
+  position: absolute;
+  inset: 16.52% 30.56% 69.62% 30.56%;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 20px;
+  color: #000;
+  text-align: center;
+}
+
+.hero-subtext p {
+  margin: 0;
+  line-height: normal;
+}
+
+/* Illustration cluster */
+
+.illustration {
+  position: absolute;
+  display: block;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Tap/click feedback. opacity rather than transform or filter: several
+   illustration items already own one of those two properties for their
+   real positioning (translateX centering on mac-base/mac-zoom) or their
+   drop-shadow (turntable/books/moleskine/ball) — a same-property rule
+   here would replace those per-item values outright rather than combine
+   with them. opacity is untouched by any existing rule, so it layers
+   cleanly on every item regardless of what else it's doing. Desktop gets
+   this too (not just mobile): it had no press feedback of its own before,
+   only :hover, and hover doesn't fire on a touch tap at all — this is
+   what makes the desk items read as tappable on a phone or tablet with no
+   hover equivalent. */
+.illustration:active,
+.illustration-racket-wrap:active {
+  opacity: 0.72;
+  transition: opacity 0.1s ease-out;
+}
+
+.illustration-crop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.illustration-crop img {
+  position: absolute;
+  max-width: none;
+}
+
+.illustration img.illustration-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-width: none;
+  pointer-events: none;
+}
+
+.illustration-turntable {
+  left: 841px;
+  top: 425px;
+  width: 376px;
+  height: 300px;
+  filter: drop-shadow(0px 7px 14.1px rgba(0, 0, 0, 0.33));
+}
+
+.illustration-racket-wrap {
+  position: absolute;
+  left: 114px;
+  top: 261px;
+  width: 391.232px;
+  height: 467.503px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.illustration-racket-rotate {
+  flex: none;
+  transform: rotate(30.21deg);
+}
+
+.illustration-racket-frame {
+  position: relative;
+  width: 208.34px;
+  height: 419.672px;
+  overflow: hidden;
+}
+
+.illustration-racket-frame img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 134.29%;
+  height: 100%;
+  max-width: none;
+}
+
+.illustration-books {
+  left: 349px;
+  top: 508px;
+  width: 230px;
+  height: 176px;
+  filter: drop-shadow(0px 7px 14.1px rgba(0, 0, 0, 0.33));
+}
+
+.illustration-books .illustration-crop img {
+  left: -24.87%;
+  top: -27.27%;
+  width: 146.69%;
+  height: 153.41%;
+}
+
+.illustration-mac-base {
+  left: calc(50% + 10.5px);
+  top: 254px;
+  transform: translateX(-50%);
+  width: 617px;
+  height: 494px;
+  filter: drop-shadow(0px 1px 14.1px rgba(0, 0, 0, 0.33));
+  /* Purely decorative (illustration-mac-zoom is the real click target for
+     the Mac) but its box overlaps the turntable's, and it comes later in
+     DOM order — without this, that overlap silently swallows clicks meant
+     for the turntable. Barely matters at desktop scale; at a phone's
+     miniaturized scale the dead zone is proportionally much bigger. */
+  pointer-events: none;
+}
+
+.illustration-mac-zoom {
+  left: calc(50% + 13.5px);
+  top: 297px;
+  transform: translateX(-50%);
+  width: 309px;
+  height: 408px;
+}
+
+.illustration-mac-zoom .illustration-crop img {
+  left: -50.85%;
+  top: -10.54%;
+  width: 199.77%;
+  height: 121.08%;
+}
+
+.illustration-ball {
+  left: 258px;
+  top: 660px;
+  width: 67px;
+  height: 45px;
+  filter: drop-shadow(0px 6px 3.5px rgba(0, 0, 0, 0.25));
+  /* Purely decorative, but overlaps the racket link's box and comes later
+     in DOM order — same dead-click issue as illustration-mac-base above. */
+  pointer-events: none;
+}
+
+.illustration-moleskine {
+  left: 826px;
+  top: 660px;
+  width: 396px;
+  height: 166px;
+  filter: drop-shadow(-6px 6px 11.2px rgba(0, 0, 0, 0.37));
+}
+
+.illustration-moleskine .illustration-crop img {
+  left: -0.01%;
+  top: -45.18%;
+  width: 100.03%;
+  height: 190.96%;
+}
+
+/* "View" mode — the resume/CV pass (see index.astro's own comment on
+   .home-cv for why this replaced a project-card list + resume-button).
+   Typewriter font throughout (var(--font-mono), same JetBrains Mono
+   /resume.astro uses) — direct instruction across both: "typwrite font...
+   design cv type design... formal".
+
+   Every font-size/spacing value below is wrapped in
+   calc(Npx / var(--frame-scale, 1)) rather than a plain px value. Home
+   renders inside .scale-frame (scaleMode="fit-both" in index.astro), which
+   applies transform:scale(var(--frame-scale)) to fit the whole 1440x1024
+   composition within the viewport on BOTH axes — on any browser window
+   shorter than 1024px tall (i.e. most real windows), that scale is well
+   under 1, so plain px values here would render visually smaller than
+   written, which is exactly what made this panel's actual body text read
+   as illegibly tiny ("the text also is small") despite the CSS saying
+   13px. Dividing by the same --frame-scale the ancestor multiplies by
+   cancels it out, landing on the literal px value in true screen pixels
+   regardless of how compressed the ambient frame is — the fix is scoped to
+   spacing/type only, not .home-cv-inner's max-width, which deliberately
+   stays in the frame's own 1440-wide coordinate space (dividing width by
+   the same factor would make wide columns exceed .scale-frame's own
+   1440-unit overflow:hidden clipping box on short/compact windows and get
+   cropped at the edges). */
+.home-cv {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.home-cv-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: calc(56px / var(--frame-scale, 1)) calc(32px / var(--frame-scale, 1))
+    calc(48px / var(--frame-scale, 1));
+  font-family: var(--font-mono);
+  color: #1a1a1a;
+}
+
+.home-cv-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(24px / var(--frame-scale, 1));
+  flex-wrap: wrap;
+}
+
+.home-cv-header h2 {
+  margin: 0;
+  font-size: calc(26px / var(--frame-scale, 1));
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.home-cv-title {
+  margin: calc(6px / var(--frame-scale, 1)) 0 0;
+  font-size: calc(13px / var(--frame-scale, 1));
+  font-weight: 300;
+  color: #6b6558;
+}
+
+.home-cv-links {
+  display: flex;
+  align-items: center;
+  gap: calc(8px / var(--frame-scale, 1));
+  margin-top: calc(10px / var(--frame-scale, 1));
+  font-size: calc(12px / var(--frame-scale, 1));
+}
+
+.home-cv-links a {
+  color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.home-cv-links span {
+  color: #a39c8c;
+}
+
+.home-cv-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(4px / var(--frame-scale, 1));
+  font-size: calc(12px / var(--frame-scale, 1));
+  color: #6b6558;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.home-cv-contact a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.home-cv-contact a:hover {
+  text-decoration: underline;
+}
+
+.home-cv-inner hr {
+  border: none;
+  border-top: 1px solid rgba(26, 26, 26, 0.15);
+  margin: calc(22px / var(--frame-scale, 1)) 0;
+}
+
+.home-cv-summary {
+  margin: 0;
+  font-size: calc(13px / var(--frame-scale, 1));
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.home-cv-section h3 {
+  margin: 0 0 calc(14px / var(--frame-scale, 1));
+  font-size: calc(11px / var(--frame-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-cv-entry {
+  margin-bottom: calc(14px / var(--frame-scale, 1));
+}
+
+.home-cv-entry:last-child {
+  margin-bottom: 0;
+}
+
+.home-cv-entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(12px / var(--frame-scale, 1));
+  flex-wrap: wrap;
+}
+
+.home-cv-entry-title {
+  font-size: calc(13px / var(--frame-scale, 1));
+  font-weight: 500;
+}
+
+.home-cv-entry-title a {
+  color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.home-cv-entry-meta {
+  font-size: calc(11px / var(--frame-scale, 1));
+  font-weight: 300;
+  color: #6b6558;
+  white-space: nowrap;
+}
+
+.home-cv-entry-org {
+  margin: calc(4px / var(--frame-scale, 1)) 0 0;
+  font-size: calc(12px / var(--frame-scale, 1));
+  font-weight: 300;
+  line-height: 1.6;
+  color: #6b6558;
+}
+
+.home-cv-entry-highlights {
+  margin: calc(6px / var(--frame-scale, 1)) 0 0;
+  font-size: calc(11px / var(--frame-scale, 1));
+  font-weight: 300;
+  line-height: 1.6;
+  color: #a39c8c;
+}
+
+.home-cv-skills {
+  margin: 0;
+  font-size: calc(12px / var(--frame-scale, 1));
+  font-weight: 300;
+  line-height: 1.8;
+}
+
+.home-cv-footer {
+  margin-top: calc(32px / var(--frame-scale, 1));
+  padding-top: calc(20px / var(--frame-scale, 1));
+  border-top: 1px solid rgba(26, 26, 26, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(16px / var(--frame-scale, 1));
+  font-size: calc(11px / var(--frame-scale, 1));
+  color: #6b6558;
+}
+
+.home-cv-footer a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.home-cv-footer a:hover {
+  text-decoration: underline;
+}
+
+/* View / Play mode toggle: two alternate full-screen states of Home, crossfaded
+   (matches the Figma prototype's Smart Animate reaction on this toggle: 0.3s ease-out) */
+
+.panel-stack {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+  /* Fixed to the same 902px content height every other inner page uses (see
+     AppLayout's .app-content) — NOT CSS-grid auto-sizing to the taller of the
+     two panels. Grid auto-sizing counted the hidden panel's own layout height
+     toward the frame's natural height even while invisible, so Home rendered
+     at a different .scale-frame scale than every page it links to (e.g. the
+     Mac icon here vs. /intro): the same 1440-space element came out two
+     different on-screen sizes, which read as a jump + doubled "hello." during
+     the page-transition crossfade. Both panels now absolutely fill this fixed
+     box instead, so Home's scale always matches its destinations. */
+  height: 902px;
+}
+
+.panel-stack > .panel-play,
+.panel-stack > .panel-view {
+  position: absolute;
+  inset: 0;
+}
+
+.panel-view {
+  overflow-y: auto;
+}
+
+.panel-play {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+}
+
+.panel-view {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+}
+
+.page-shell:has(#mode-toggle:not(:checked)) .panel-play {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+}
+
+.page-shell:has(#mode-toggle:not(:checked)) .panel-view {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+}
+

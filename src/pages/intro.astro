@@ -1,0 +1,908 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Window from '../components/Window.astro';
+import Dock from '../components/Dock.astro';
+---
+
+<Layout
+  title="Ishan Rajpurohit · Product Designer"
+  description="Portfolio of Ishan Rajpurohit, a Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences."
+  scaleMode="fit-both"
+  backdrop={true}
+>
+  <div class="intro-stage" id="intro-stage" data-beat="1">
+    <!-- Matches every inner page's .app-content: the hero/content area sits
+         122px down (Home's 112px nav row + 10px flex gap), so anything
+         positioned inside here uses the exact same top/left values Figma
+         gives relative to that content area — no manual offset needed. -->
+    <div class="intro-content">
+      <div class="intro-window">
+        <Window title="Work" height={738} transitionName="active-window" />
+      </div>
+
+      <div class="intro-mac">
+        <img src="/images/home/illustration-mac.png" alt="" />
+      </div>
+
+      <!-- Same source image (uncropped) at Figma's own two sizes: small and
+           positioned so its baked-in "hello." ink lines up exactly with the
+           "hello." already showing on the Mac screen (measured pixel-for-pixel
+           from illustration-mac.png), then Figma's exact in-window size/position. -->
+      <div class="intro-hello">
+        <img src="/images/intro/hello-zoom.png" alt="" />
+      </div>
+    </div>
+
+    <div class="intro-dock floating-dock-anchor" transition:name="app-dock" transition:persist>
+      <Dock />
+    </div>
+  </div>
+
+  <!-- Mobile never had this at all — .intro-stage above lives inside
+       .scale-viewport, which is display:none below the 1024px breakpoint
+       (see Layout.astro's .mobile-shell comment), so the mobile fragment
+       rendered NOTHING here. The desktop beat-sequencer script below still
+       ran regardless (nothing gated it to desktop only), so tapping the
+       Mac carousel slide on mobile produced exactly what got reported: a
+       blank screen for the sequence's ~4.2s, then a hard landing on /work
+       ("Selected Projects", /work's own heading — easy to misread as
+       having jumped straight there with nothing in between). Simpler than
+       desktop's version (no separate window-scale beat — mobile's /work
+       already plays its own arrival animation via Layout.astro's
+       mobile-sheet-open, so there's nothing to hand off to here beyond
+       hello itself) but the same underlying shape: Mac with "hello." on
+       screen -> Mac fades, hello reappears standalone -> hello scales up,
+       evoking becoming the destination -> navigate. See the shared
+       playIntro/playMobileIntro dispatch in the script below for why each
+       version only ever runs on its own matching viewport now. -->
+  <!-- Rebuilt to match Figma node 2397:10677 ("phone flow new") exactly,
+       pixel-for-pixel — direct instruction after the first two versions
+       both improvised instead of implementing what was actually designed
+       there. That file duplicates Home's own Play-panel layout (Toggle,
+       Hero, Carousel — literal same structure/position) three times as
+       Beat 1/2/3, with Toggle and Hero both set to opacity:0 throughout —
+       keeping the exact same skeleton Home uses (not a blank stage) so
+       arriving here from tapping the Mac carousel item is a same-position
+       handoff, only the toggle/hero text ever disappearing. Mac and Hello
+       sit at the designer's own exact coordinates inside that same 350x300
+       Carousel box: Mac stays fully visible through Beats 1 AND 2 (matches
+       the file — its opacity:0 only appears in Beat 3's export), with
+       Hello fading in already aligned to the same small size/position
+       (126,87,93x41) DURING beat 2, so it overlaps invisibly-close to
+       where Mac's own baked-in "hello." sits — same double-image-avoidance
+       precision as desktop's own intro, just verified against the
+       designer's numbers instead of measuring pixels by hand again. Beat 3
+       fades Mac out and grows Hello to (-27,38,403x178) — deliberately
+       overflowing the Carousel's own left edge and covering the chevrons,
+       exactly as drawn (chevrons never move or fade in the Figma file
+       either). -->
+  <Fragment slot="mobile">
+    <div class="m-intro-stage" id="m-intro-stage" data-beat="1">
+      <div class="m-intro-toggle">
+        <span class="m-intro-toggle-label">View</span>
+        <div class="m-intro-toggle-switch"><div class="m-intro-toggle-thumb"></div></div>
+        <span class="m-intro-toggle-label">Play</span>
+      </div>
+      <header class="m-intro-hero">
+        <h1>Hi, I&rsquo;m Ishan</h1>
+        <p>A Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences.</p>
+        <p class="m-intro-hero-meta">Currently at IIT Jodhpur</p>
+      </header>
+      <!-- .m-intro-window is the REAL Work window, at the REAL scale
+           /work's own .mobile-content:has(.m-titlebar) resolves to
+           (Layout.astro) — not a small decorative box living inside the
+           350x300 Carousel. Direct correction: "the window should be of
+           the same scale as the work window for selected projects." A
+           DIRECT CHILD of .m-intro-stage now, NOT nested inside
+           .m-intro-carousel — it was originally placed there, which made
+           its position:absolute resolve against the CAROUSEL's own small
+           350x300 box (the nearest positioned ancestor) instead of the
+           full stage, silently squashing it into a ~318x120 box no
+           bigger than the carousel itself. Its base CSS IS the final
+           position/size (same margin formula Layout.astro's real window
+           rule uses) so once hello fades and this stays on screen, then
+           navigates to /work, there's no jump — the real page's own
+           window resolves to the exact same box this one already
+           occupies. Getting there from small needs a real FLIP (see
+           playMobileIntro's own JS below), not a static CSS transform,
+           since the target size depends on runtime viewport/safe-area
+           values a precomputed transform can't express. Placed BEFORE
+           .m-intro-carousel so it still paints underneath Mac/Hello
+           (same DOM-order-is-paint-order logic as before), even though
+           it's no longer nested inside that box. -->
+      <div class="m-intro-window">
+        <div class="m-intro-window-titlebar">
+          <div class="m-intro-window-lights">
+            <span class="m-intro-window-light m-intro-window-light-red"></span>
+            <span class="m-intro-window-light m-intro-window-light-yellow"></span>
+            <span class="m-intro-window-light m-intro-window-light-green"></span>
+          </div>
+          <div class="m-intro-window-title">
+            <img src="/images/shared/window-title-icon.png" alt="" />
+            <span>Work</span>
+          </div>
+        </div>
+      </div>
+      <div class="m-intro-carousel">
+        <!-- Chevrons come FIRST in the DOM now, before Mac/Hello — the
+           Figma file paints Hello's big Beat-3 box AFTER (on top of) the
+           chevrons, which is what actually covers them once Hello grows
+           over their position; they never fade or move themselves. The
+           earlier version had chevrons LAST, so they stayed on top of
+           Hello instead of getting covered by it — direct feedback: "the
+           carousel arrows are still visible!". -->
+        <button type="button" class="m-hero-chevron m-hero-chevron-prev" disabled aria-label="Previous">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 5L7.5 10L12.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button type="button" class="m-hero-chevron m-hero-chevron-next" aria-label="Next">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M7.5 5L12.5 10L7.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <div class="m-intro-mac">
+          <img src="/images/home/illustration-mac.png" alt="" />
+        </div>
+        <div class="m-intro-hello">
+          <img src="/images/intro/hello-zoom.png" alt="" />
+        </div>
+      </div>
+    </div>
+  </Fragment>
+</Layout>
+
+<style>
+  /* Same skeleton/spacing as .m-home in index.astro (pt-48, gap-64
+     between the toggle and the hero+carousel group, per Figma node
+     2397:10619) — duplicated rather than shared since Astro scopes
+     <style> per file; keep these two in sync if Home's own spacing
+     changes. A single `gap` can't express the DIFFERENT gap Home actually
+     needs between hero and carousel (8px, not 64) — margin-top on
+     .m-intro-hero below carries that instead of gap here. */
+  .m-intro-stage {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: calc(48px + env(safe-area-inset-top, 0px)) 20px 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .m-intro-toggle + .m-intro-hero {
+    margin-top: 64px;
+  }
+
+  .m-intro-toggle {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+  }
+
+  .m-intro-toggle-label {
+    font-family: var(--font-mono);
+    font-weight: 100;
+    font-size: 14px;
+    color: #000;
+  }
+
+  .m-intro-toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    border-radius: 12px;
+    background: #4dbf5e;
+  }
+
+  .m-intro-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 27px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #fefaf5, #ebe3d6);
+  }
+
+  .m-intro-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    opacity: 0;
+  }
+
+  .m-intro-hero h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .m-intro-hero p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #000;
+    width: 350px;
+  }
+
+  .m-intro-hero-meta {
+    width: auto !important;
+    font-size: 14px;
+    color: #8b8b8b;
+  }
+
+  /* Exact box the designer positioned Mac/Hello/chevrons inside —
+     identical 350x300 size to .m-hero-carousel in index.astro, so the
+     numbers below (42,38 / 126,87 / -27,38 etc.) are usable verbatim,
+     no rescaling needed. */
+  .m-intro-carousel {
+    position: relative;
+    width: 350px;
+    height: 300px;
+  }
+
+  .m-intro-mac {
+    position: absolute;
+    left: 42px;
+    top: 38px;
+    width: 266px;
+    height: 213px;
+    filter: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.22));
+    transition: opacity 0.3s ease-out;
+  }
+
+  .m-intro-mac img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Mac only fades starting Beat 3 — it stays fully visible through Beat 2
+     (matches the Figma export: no opacity-0 on Mac until the Beat 3 frame),
+     overlapping with Hello fading in first rather than fading out before
+     Hello appears. */
+  [data-beat='3'] .m-intro-mac,
+  [data-beat='4'] .m-intro-mac,
+  [data-beat='5'] .m-intro-mac {
+    opacity: 0;
+  }
+
+  /* .m-intro-window's base CSS IS its real, final position — the exact
+     same margin formula /work's own .mobile-content:has(.m-titlebar) rule
+     resolves to (Layout.astro), not a small box inside the Carousel.
+     position:fixed escapes .m-intro-stage's own overflow:hidden cleanly
+     (fixed positioning isn't affected by an ancestor's overflow — only a
+     transformed/filtered ancestor would change that, and this page has
+     neither), so it reaches the real viewport edges the same way the real
+     window does. Starts invisible (opacity:0, no transform) — getting it
+     to LOOK small first, then grow, is handled by a real FLIP in
+     playMobileIntro's own JS (below), not a static CSS transform: the
+     target size here depends on runtime viewport/safe-area values, which
+     a precomputed transform can't express (this is exactly why desktop's
+     own .intro-window/.intro-hello numbers are hardcoded — its target is
+     a FIXED 1440x1024 canvas; mobile's isn't). */
+  .m-intro-window {
+    /* position:absolute (not fixed) against .m-intro-stage (position:
+       relative) — fixed would resolve against the TRUE browser viewport,
+       which only matters for testing (a CSS-forced "look like mobile"
+       width on a real desktop browser doesn't change what innerWidth
+       actually is, so a fixed element ignores the illusion entirely and
+       reads the real, wide viewport) but is still the more correct
+       choice regardless: .mobile-content's own real window rule doesn't
+       use fixed either, it insets via margin against its actual parent,
+       same as this now does against .m-intro-stage. */
+    position: absolute;
+    top: max(70px, env(safe-area-inset-top, 0px));
+    left: 16px;
+    right: 16px;
+    bottom: max(110px, calc(env(safe-area-inset-bottom, 0px) + 100px));
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  /* Real MobileTitlebar scale now (40px/11px dots/13px font, matching that
+     component exactly) — the mini scaled-down titlebar from the previous
+     version was sized for the old small decorative window, which this no
+     longer is. */
+  .m-intro-window-titlebar {
+    position: relative;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+  }
+
+  .m-intro-window-lights {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .m-intro-window-light {
+    display: block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+  }
+
+  .m-intro-window-light-red {
+    background: #ff736a;
+  }
+
+  .m-intro-window-light-yellow {
+    background: #febc2e;
+  }
+
+  .m-intro-window-light-green {
+    background: #19c332;
+  }
+
+  .m-intro-window-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+  }
+
+  .m-intro-window-title img {
+    display: block;
+    width: 13px;
+    height: 14px;
+  }
+
+  /* Base box is the big Beat-4 size, fully inside the Carousel's own
+     350x300 bounds (26.5,51,297x198 — nothing overflows the carousel
+     edges this time); the small Beat-1/2 appearance is a transform on
+     top, computed once here rather than measured at runtime (same
+     approach as desktop's own .intro-hello).
+     scaleX and scaleY MUST match (uniform scale) — the previous version
+     solved dx/dy/sx/sy against a small target box (93x41) with a
+     DIFFERENT aspect ratio than the big box (297x198), so sx≠sy, which
+     visibly stretched/skewed the image unevenly while small (direct
+     feedback: "the small hello is getting skewed in height weirdly").
+     Small target here is instead the same 297x198 aspect (1.5), same
+     width (93) and same center as before — just recomputed height
+     (93/1.5=62) so the scale factor is identical on both axes:
+     sx=sy=93/297=0.313131. dx=126-26.5, dy solved from the new small
+     box's top (76.5, keeping the same vertical center as the old 87,41
+     box) minus 51. Center stays aligned with Mac's own baked-in "hello."
+     ink; only the aspect ratio changed, not the position it reads at. */
+  /* Full recenter (was a halfway nudge, -8px) — direct feedback: hello's
+     big box now sits truly centered within the Window's own real bounds
+     (window spans y:70-654 in this viewport, center 362; hello's 198px-
+     tall box centered there needs top=263 absolute, which is -67.6px
+     relative to the Carousel's own 330.59 absolute top). Growth motion is
+     now a real diagonal — scale + a genuine ~144px upward drift — rather
+     than a clean grow-in-place; accepted per direct instruction after the
+     halfway version was tried first. Small transform's dy recomputed to
+     match (144.09, was 84.5) — dx/scale unchanged since only the
+     vertical target moved again. */
+  .m-intro-hello {
+    position: absolute;
+    left: 26.5px;
+    top: -67.6px;
+    width: 297px;
+    height: 198px;
+    border-radius: 14px;
+    overflow: hidden;
+    transform-origin: top left;
+    transform: translate(99.5px, 144.09px) scale(0.313131, 0.313131);
+    opacity: 0;
+    /* Plain ease-out, not a springy overshoot curve — matches desktop's
+       own .intro-hello transition exactly (direct feedback: match style,
+       not just speed). */
+    transition: opacity 0.3s ease-out, transform 0.5s ease-out;
+  }
+
+  .m-intro-hello img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Hello fades in already at its small transform (Beat 2), aligned over
+     Mac's own screen — same double-image-avoidance precision as before —
+     and STAYS small through Beat 3 too: direct feedback — "the small
+     hello should stay for a while after mac goes away, before it scales
+     up, don't rush that part." Mac finishes fading during Beat 3 (see
+     above) while Hello just sits there small, unscaled, for that beat's
+     own hold duration (see the JS timing below) — the scale-up doesn't
+     start until Beat 4. */
+  [data-beat='2'] .m-intro-hello,
+  [data-beat='3'] .m-intro-hello,
+  [data-beat='4'] .m-intro-hello {
+    opacity: 1;
+  }
+
+  /* Beat 4 — NOW it scales up to its real (contained) big size. */
+  [data-beat='4'] .m-intro-hello,
+  [data-beat='5'] .m-intro-hello {
+    transform: none;
+  }
+
+  /* Beat 5 — settled fade-out right before navigating. */
+  [data-beat='5'] .m-intro-hello {
+    opacity: 0;
+  }
+
+  /* Hidden throughout, same as .m-intro-toggle/.m-intro-hero — direct
+     feedback: "why are the carousel arrows still visible while hello is
+     scaling, they should disappear right with hi im ishan and other
+     text". Not conditional on any beat: they're part of the same "this
+     is Home's chrome, not part of the intro moment" set as the toggle and
+     hero text, hidden from Beat 1 onward exactly like those two — not
+     something that only needs covering once Hello grows over them. The
+     :disabled rule is overridden to the same 0 rather than left at its
+     normal 0.3 dimmed look, which would otherwise win on specificity. */
+  .m-intro-carousel .m-hero-chevron {
+    position: absolute;
+    top: 140px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .m-intro-carousel .m-hero-chevron-prev {
+    left: 12px;
+  }
+
+  .m-intro-carousel .m-hero-chevron-next {
+    left: 318px;
+  }
+
+  .m-intro-carousel .m-hero-chevron:disabled {
+    opacity: 0;
+  }
+</style>
+
+<style>
+  .intro-stage {
+    position: relative;
+    width: 1440px;
+    height: 1024px;
+  }
+
+  .intro-content {
+    position: absolute;
+    left: 0;
+    top: 122px;
+    width: 1440px;
+    height: 902px;
+    overflow: hidden;
+  }
+
+  .intro-mac {
+    position: absolute;
+    left: calc(50% + 10.5px);
+    top: 254px;
+    transform: translateX(-50%);
+    width: 617px;
+    height: 494px;
+    filter: drop-shadow(0px 1px 14.1px rgba(0, 0, 0, 0.33));
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .intro-mac img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* The element's own box is permanently sized/positioned at its BIG,
+     in-window state — Figma's node 75:1286 on Desktop-5 gives 446×297, but
+     its raw x/y (491,265) is NOT actually centered in the window's content
+     area (measured against the window's own real geometry: off by -6px
+     horizontally, +20.5px vertically) — a small designer imprecision in the
+     source file, not intentional. Repositioned here to 497,244.5, the true
+     mathematical center of the window's content area (below its 24px
+     titlebar) at the window's own real size/position (128,12,1184,738) —
+     verified extensively against the Figma file itself this pass, not
+     eyeballed. The small state (beats 1–2, sitting exactly where "hello."
+     shows on the Mac screen) is a `transform: translate() scale()` applied
+     on top, computed once here at build time from that fixed on-screen
+     target and this (now-corrected) big position — not measured at
+     runtime. Beat 3 simply transitions that transform back to `none`, the
+     same plain-CSS transition mechanism already driving every other fade
+     on this page (mac/window/dock/backdrop), instead of a bespoke JS
+     animation.
+
+     (Three different JS approaches were tried here first — a CSS transition
+     primed with a forced-reflow trick, the same primed with a double-rAF,
+     and the Web Animations API driving the same translate/scale by hand —
+     all landed on the same numbers via runtime getBoundingClientRect()
+     measurement, and none animated reliably. Precomputing the transform
+     removes the measurement step and the JS orchestration entirely; only
+     the already-proven plain-CSS-transition mechanism remains.)
+
+     transform-origin: top left matches the corner the translate/scale below
+     is computed against — same corner .intro-window (see below) scales
+     from, so both move as one coordinated unit instead of hello resizing
+     inside a window that just pops in at full size undersized around it,
+     which is what Figma's own Desktop-8 (small window + small hello,
+     699×436 at 365,169) → Desktop-5 (both at full size) transition
+     actually shows: the window itself scales up together with hello, not
+     just hello alone.
+
+     This used to stay at opacity:1 the entire time, on the theory that a
+     pixel-perfect stand-in would make the Mac's fade-out invisible — in
+     practice the two "hello."s don't composite seamlessly (antialiasing
+     differs between the two source images), so the overlap read as a visible
+     double-image/ghosting instead of a clean handoff. Sequencing it instead —
+     opacity:0 until the Mac has (almost) finished fading, then a quick snap
+     in — guarantees no overlap ever exists to be seen. First pass used a
+     0.45s delay matched to the Mac's full 0.5s fade duration; still read as
+     a dead gap/stall. Slowed the whole thing down 10x to actually watch it
+     frame by frame — turns out `ease-out` opacity fades are heavily
+     front-loaded: the Mac reads as visually gone well before its transition
+     technically finishes, so waiting for the full duration was pure dead
+     air. Delay is now just enough to clear the first instant (both starting
+     at full opacity at the exact same frame is the only genuinely jarring
+     case), not the whole fade. See the [data-beat='1']/='2'] opacity rules
+     below for the actual timing. */
+  .intro-hello {
+    position: absolute;
+    left: 497px;
+    top: 244.5px;
+    width: 446px;
+    height: 297px;
+    transform-origin: top left;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition: opacity 0.12s ease-out 0.08s, transform 0.5s ease-out;
+  }
+
+  .intro-hello img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* 128,12 is the literal resolved position of AppLayout's own window
+     (left:50%, top:calc(50% - 70px), transform:translate(-50%,-50%) inside
+     the same 1440×902 content area) — switched from that centering-transform
+     formula to an absolute position so a transform-origin:top-left FLIP scale
+     can be layered on top for the small state, exactly like .intro-hello.
+     Landing on the identical pixel position AppLayout resolves to also
+     matters for the final handoff to the real /work page: any discrepancy
+     between how this window is positioned here versus there would show up
+     as a visible jump during that page's own crossfade in. */
+  .intro-window {
+    position: absolute;
+    left: 128px;
+    top: 12px;
+    transform-origin: top left;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  /* Reuses AppLayout's own dock entrance (see .app-dock in AppLayout.astro)
+     rather than a plain opacity fade, so the intro sequence's dock arrives
+     the same way every other page's does. 112px is the same Figma-measured
+     gap used there. animation-delay is keyed to when .intro-window/.intro-hello
+     finish their own 0.5s scale-up (triggered by the same [data-beat='3']),
+     so the dock only starts floating in once the window has actually
+     finished scaling, not simultaneously with it — "both" fill-mode holds
+     it at the invisible/offset starting frame for that whole delay instead
+     of flashing to its mid-animation state immediately.
+
+     transition:name="app-dock" + transition:persist match AppLayout's own
+     dock exactly, so navigating from here into /work carries this literal
+     DOM node over instead of unmounting it and mounting AppLayout's fresh
+     one — otherwise the dock replayed its float-in a second time right
+     after already finishing it here. The .floating-dock-anchor class (see
+     global.css) duplicates this rule's position/transform in an UNSCOPED
+     stylesheet: on that same navigation Astro's page swap drops this
+     component's own <style> tag entirely (it's not the persisted node's
+     origin document anymore), so the resting position has to come from
+     something that survives the swap rather than this scoped rule. */
+  @keyframes intro-dock-float-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(112px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  .intro-dock {
+    position: absolute;
+    left: calc(50% + 0.5px);
+    bottom: 40px;
+    transform: translateX(-50%) translateY(112px);
+    opacity: 0;
+  }
+
+  [data-beat='3'] .intro-dock,
+  [data-beat='4'] .intro-dock {
+    animation: intro-dock-float-in 0.5s ease-out 0.5s both;
+  }
+
+  /* #page-backdrop (Layout.astro) is a sibling of .scale-frame, not a
+     descendant of #intro-stage, so it can't be reached by the ordinary
+     [data-beat='N'] .intro-x descendant selectors below — :has() reaches
+     up instead. Driving this from JS was the other option, but the
+     View Transition into this page (Home's Mac icon → here) can capture
+     its "new page" snapshot before an astro:page-load script has run,
+     risking a flash of full opacity; this way beat 1's invisible state is
+     the actual CSS default from the first rendered frame, same as every
+     other beat rule here. */
+  :global(body:has(#intro-stage[data-beat='1']) #page-backdrop),
+  :global(body:has(#intro-stage[data-beat='2']) #page-backdrop) {
+    opacity: 0;
+  }
+  :global(#page-backdrop) {
+    transition: opacity 0.5s ease-out;
+  }
+
+  /* Beat 1 — the Mac alone, screen showing "hello." Everything else absent.
+     "hello." is already parked at its small transform even while invisible,
+     so beat 2's fade-in never has to also start a transform transition from
+     scratch at the same moment. */
+  [data-beat='1'] .intro-mac {
+    opacity: 1;
+  }
+  [data-beat='1'] .intro-hello,
+  [data-beat='2'] .intro-hello {
+    /* translate computed from the actual ink pixels in both source PNGs
+       (dark-pixel bounding box in each, scaled/positioned through the same
+       math the browser uses), not eyeballed from a rendered screenshot —
+       verified by compositing the two images directly at this position and
+       checking for zero double-stroke ghosting at 3x nearest-neighbor zoom.
+       Recomputed from the same fixed on-screen target after .intro-hello's
+       big position moved to 497,244.5 (see that rule for why) — the target
+       itself hasn't changed, only its offset from the now-different big
+       position. */
+    transform: translate(117.44px, 97.45px) scale(0.4943946188340807, 0.494949494949495);
+  }
+  /* Figma's Desktop-8: a small (699×436 at 365,169) window sits behind the
+     small hello, invisible (opacity:0, same as hello's own small-state
+     invisibility below) until beat 3 reveals and scales both together —
+     see .intro-window above for why this is a transform rather than a
+     literal width/height change. */
+  [data-beat='1'] .intro-window,
+  [data-beat='2'] .intro-window {
+    transform: translate(237px, 157px) scale(0.5903716216216216, 0.5907859078590786);
+  }
+  [data-beat='1'] .intro-hello,
+  [data-beat='1'] .intro-window {
+    opacity: 0;
+  }
+
+  /* Beat 2 onward — the Mac has disappeared for good. The standalone
+     "hello." only fades in 0.45s into this beat (see .intro-hello's own
+     transition-delay) — right as the Mac's 0.5s fade-out is essentially
+     finished — so the two never overlap enough to be seen as two things,
+     then it goes on to scale up on its own in later beats. */
+  [data-beat='2'] .intro-mac,
+  [data-beat='3'] .intro-mac,
+  [data-beat='4'] .intro-mac {
+    opacity: 0;
+  }
+  [data-beat='2'] .intro-hello,
+  [data-beat='3'] .intro-hello {
+    opacity: 1;
+  }
+  [data-beat='2'] .intro-window {
+    opacity: 0;
+  }
+
+  /* Beat 3 — hello and the window scale up together (Figma's Desktop-8 →
+     Desktop-5/9: both go from their small transform to none over the same
+     0.5s, not hello resizing inside a window that's already full size —
+     see .intro-window and .intro-hello above); backdrop arrives at the same
+     time. The dock's own entrance (see [data-beat='3'] .intro-dock below)
+     is delayed 0.5s past this so it only starts floating in once this scale
+     has actually finished, not simultaneously with it. */
+  [data-beat='3'] .intro-hello,
+  [data-beat='4'] .intro-hello,
+  [data-beat='3'] .intro-window,
+  [data-beat='4'] .intro-window {
+    transform: none;
+    opacity: 1;
+  }
+
+  /* Beat 4 — fires only once the dock has finished floating in (see the
+     JS timing below), so hello doesn't fade out while the dock is still
+     mid-entrance — one thing settles before the next starts, rather than
+     three things moving at once. The window sits blank just before the
+     real page content (the /work page, via the existing transition)
+     arrives. Overrides .intro-hello's base transition so this fade-out
+     starts immediately — the 0.45s delay baked into that base rule exists
+     only to hold off the beat-2 fade-*in* until the Mac has cleared.
+     transform is already settled to none by now, so dropping its
+     transition here costs nothing. */
+  [data-beat='4'] .intro-hello {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+</style>
+
+<script>
+  // slow=true (desktop's own call, default) marks data-transition-slow for
+  // the 1s root crossfade Layout.astro's isSlow handling gives it — needed
+  // there because desktop's real <Window> literally persists across this
+  // navigation (transition:persist/name="active-window" on both sides),
+  // so 1s is how long everything ELSE around that surviving window takes
+  // to settle. Mobile has no equivalent persisted node (.mobile-content
+  // never persists, a fresh instance mounts every navigation) — direct
+  // feedback: the handoff from the fake Work window intro.astro scales up
+  // to /work's own real one still read as "a big switch" even after
+  // pixel-matching its position, because the 1s duration alone (on top of
+  // /work's own entrance animation — see Layout.astro's introToWork
+  // handling for the other half of that fix) made it linger far longer
+  // than a page that's supposedly "already there" should. slow=false here
+  // just falls through to the site's normal 0.3s crossfade instead.
+  function navigateToWork(slow = true) {
+    const link = document.createElement('a');
+    link.href = '/work';
+    if (slow) link.setAttribute('data-transition-slow', '');
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+  }
+
+  // Beat sequencer only — "hello."'s small→big move is a plain CSS
+  // `transform` transition now (see .intro-hello in the <style> above), the
+  // same mechanism already driving the mac/window/dock/backdrop fades, so
+  // there's no JS animation logic left here at all.
+  function playIntro() {
+    const stage = document.getElementById('intro-stage');
+    if (!stage) return;
+
+    const setBeat = (n) => {
+      stage.dataset.beat = String(n);
+    };
+
+    // One thing settles before the next starts: window+hello scale up
+    // together (0.5s) -> once that's done, the dock floats in (0.5s,
+    // delayed via CSS animation-delay rather than a separate beat here) ->
+    // once *that's* settled, hello fades out (0.3s) -> a short beat to let
+    // the now-empty, fully-arrived window register -> navigate.
+    const BEAT3 = 1000 + 500 + 1000;
+    const SCALE_DURATION = 500;
+    const DOCK_FLOAT_DURATION = 500;
+    const BEAT4 = BEAT3 + SCALE_DURATION + DOCK_FLOAT_DURATION;
+    const HELLO_FADE_OUT = 300;
+    const NAVIGATE = BEAT4 + HELLO_FADE_OUT + 400;
+
+    setBeat(1);
+    setTimeout(() => setBeat(2), 1000);
+    setTimeout(() => setBeat(3), BEAT3);
+    setTimeout(() => setBeat(4), BEAT4);
+    setTimeout(navigateToWork, NAVIGATE);
+  }
+
+  // Mobile's own, simpler sequencer — see the markup comment above
+  // .m-intro-stage for why this exists as a separate, shorter sequence
+  // rather than reusing desktop's. No dock-float beat: MobileDock is
+  // already sitting there, visible, before you ever tap into this page
+  // (unlike desktop's dock, which only starts floating in as part of THIS
+  // sequence) — nothing to wait on.
+  // Real FLIP for the window: its own CSS is already at its true final
+  // position/size (position:fixed, matching /work's real window bounds —
+  // see .m-intro-window's own comment for why a static transform can't
+  // express this target). Measures a small reference rect (hello's own
+  // current rect — it's already sitting at its small transformed state
+  // when this runs), snapshots the window's real rect, computes the
+  // invert transform that makes the real box LOOK like it's at the small
+  // rect, applies it instantly, forces a reflow, then animates back to
+  // `none` — same technique as Window.astro's flipResize and
+  // MobileTitlebar.astro's flip, just inlined here since this is a
+  // one-shot animation with no toggle-back state to manage.
+  function flipIntroWindow(win, smallRectSource) {
+    const small = smallRectSource.getBoundingClientRect();
+    win.style.transition = 'none';
+    win.style.opacity = '1';
+    const real = win.getBoundingClientRect();
+    const dx = small.left - real.left;
+    const dy = small.top - real.top;
+    const scaleX = small.width / real.width;
+    const scaleY = small.height / real.height;
+    win.style.transformOrigin = 'top left';
+    win.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+
+    win.getBoundingClientRect(); // force reflow so the inverted transform paints first
+
+    // Plain ease-out, not a springy curve — matches desktop's own
+    // .intro-window transition exactly (direct feedback: match style,
+    // not just speed).
+    win.style.transition = 'transform 0.5s ease-out';
+    win.style.transform = 'none';
+  }
+
+  function playMobileIntro() {
+    const stage = document.getElementById('m-intro-stage');
+    if (!stage) return;
+
+    const setBeat = (n) => {
+      stage.dataset.beat = String(n);
+    };
+
+    // Timing remapped 1:1 from desktop's own real numbers (playIntro,
+    // just above) rather than invented independently — direct feedback:
+    // "match the animations and transitions style and speeds to what we
+    // did for the desktop version." Desktop: mac alone for 1000ms, mac
+    // starts fading (and hello starts appearing ~80ms later) at 1000ms,
+    // then holds — small and mostly static — for a full 1500ms window
+    // before its own Beat 3 (scale-up) fires at 2500ms, scales for 500ms,
+    // settles another 500ms, Beat 4 (hello fade-out) fires at 3500ms,
+    // fades 300ms, then a final 400ms pause before navigating at 4200ms.
+    // Same five numbers here, just renumbered onto this 5-beat structure
+    // (mobile's own Beat 3 is desktop's mid-Beat-2 hold, not a beat
+    // desktop names separately — same wall-clock window either way).
+    const BEAT2 = 1000; // mac starts fading, hello starts appearing (matches desktop's Beat 2 trigger)
+    const BEAT3 = BEAT2 + 100; // both transitions basically already running; this beat is just the hold starting
+    const BEAT4 = BEAT2 + 1500; // = 2500, matches desktop's own Beat 3 trigger exactly
+    const SCALE_DURATION = 500; // matches desktop's own scale duration exactly
+    const BEAT5 = BEAT4 + SCALE_DURATION + 500; // = 3500, matches desktop's own Beat 4 trigger exactly
+    const HELLO_FADE_OUT = 300; // matches desktop's own fade-out duration exactly
+    const NAVIGATE = BEAT5 + HELLO_FADE_OUT + 400; // = 4200, matches desktop's own total exactly
+
+    setBeat(1);
+    setTimeout(() => setBeat(2), BEAT2);
+    setTimeout(() => setBeat(3), BEAT3);
+    setTimeout(() => {
+      setBeat(4);
+      const win = stage.querySelector('.m-intro-window');
+      const hello = stage.querySelector('.m-intro-hello');
+      if (win && hello) flipIntroWindow(win, hello);
+    }, BEAT4);
+    setTimeout(() => setBeat(5), BEAT5);
+    setTimeout(() => navigateToWork(false), NAVIGATE);
+  }
+
+  // Dispatches to whichever sequence actually matches what's on screen —
+  // previously playIntro() ran unconditionally regardless of viewport,
+  // which is exactly how mobile ended up with a several-second blank
+  // screen: #intro-stage lives inside .scale-viewport (display:none below
+  // the 1024px breakpoint, see Layout.astro), so its whole beat sequence
+  // ran fully invisible, then still navigated to /work right on schedule —
+  // nothing to look at, but not actually stuck either. 1024px matches
+  // Layout.astro's own .mobile-shell breakpoint exactly, not re-derived.
+  function playMatchingIntro() {
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+      playMobileIntro();
+    } else {
+      playIntro();
+    }
+  }
+
+  document.addEventListener('astro:page-load', playMatchingIntro);
+</script>

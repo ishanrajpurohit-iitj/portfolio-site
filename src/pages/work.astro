@@ -1,0 +1,1344 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Window from '../components/Window.astro';
+import MobileTitlebar from '../components/MobileTitlebar.astro';
+
+// Case-study cards restyled to match the Other Work tile format (bigger
+// cover, caption + tags below instead of an overlay bar on top of the
+// image) — direct instruction: "replacing case studies cards with similar
+// format." Still plain links to the full case-study pages though, not the
+// click-to-open filmstrip viewer: these are full written case studies
+// (research, IA, process), not a self-contained image/deck/reel, so they
+// need their own page, not a quick-look overlay — confirmed with the user
+// before building. ProjectCard.astro itself is untouched (still used by
+// index.astro's Home "View" panel).
+const caseStudies = [
+  {
+    image: '/images/work/card-csite.png',
+    imageStyle: 'left:0.09%; top:-107.91%; width:100%; height:315.81%;',
+    title: 'Digitizing construction-site management across three roles',
+    description: "A mobile + web platform for India's unorganized construction sector. I was the only designer: research, information architecture, the design system, UI, and prototyping.",
+    tags: ['Case Study', 'Product Design', 'B2B Systems'],
+    href: '/work/csite',
+  },
+  {
+    image: '/images/work/card-photoshop2030.png',
+    title: 'Reimagining Photoshop as a 2030 AI editor you can talk to',
+    description: 'A concept for a mobile, AI-first Photoshop for 2030, built to stay fast on low-compute devices. I was the designer on a six-person team, owning the product vision, the home experience, Orby, and the interaction model.',
+    tags: ['AI-Native', 'Interaction Design', 'Product Design'],
+    href: '/work/photoshop-2030',
+  },
+];
+
+// Second tab alongside the existing case studies — direct instruction:
+// "we are adding another tab in work... case studies, and other work."
+// Same tabs-wrap/radio/:has() pattern already used on /reading and
+// /writings for exactly this "two different content shapes under one
+// heading" situation (a short curated list next to a longer scrollable
+// grid) — not a new pattern, reused wholesale.
+//
+// title/caption/tags below are my own read of the actual uploaded files
+// (public/images/work/other-work/<slug>/), not invented — direct
+// instruction: "figure out the title tags and caption by yourself."
+// `type` drives the on-click viewer: 'gallery' pages through `items` as
+// images (covers both plain image sets and the ARKA deck — a deck is just
+// a gallery of slide images, no separate viewer needed), 'reel' plays
+// through `items` as vertical video clips instead — direct instruction:
+// "decks anda all whatever is the pattern of that specific work. present
+// accordingly."
+//
+// Order is direct instruction (explicit numbered list) — tags avoid the
+// word "Graphics" (direct instruction) in favor of naming what the piece
+// actually is.
+const otherWork = [
+  {
+    id: 'adobe-inter-iit-reels',
+    title: 'Adobe × Inter IIT - Behind the Build',
+    caption: 'Story reels from building the Adobe problem statement at Inter IIT Tech Meet 14.0.',
+    tags: ['Product', 'Process'],
+    type: 'reel',
+    folder: 'adobe-inter-iit-reels',
+    count: 9,
+    ext: 'mp4',
+    cover: 'adobe-inter-iit-reels/cover.jpg',
+  },
+  {
+    id: 'arka-techpark',
+    title: 'ARKA - IIT Jodhpur Technology Park',
+    caption: 'A full brand identity for IIT Jodhpur’s proposed technology park - logo system, signage, and architecture, presented as a real pitch deck.',
+    tags: ['Branding', 'Pitch Deck'],
+    type: 'gallery',
+    folder: 'arka-techpark',
+    count: 9,
+    ext: 'jpg',
+  },
+  {
+    id: 'guru-dhanji',
+    title: 'Guru Dhanji',
+    caption: 'A vintage banknote-and-postage-stamp pastiche portrait.',
+    tags: ['Poster', 'Concept'],
+    type: 'gallery',
+    folder: 'guru-dhanji',
+    count: 5,
+    ext: 'jpg',
+  },
+  {
+    id: 'kurt-cobain',
+    title: 'Kurt Cobain',
+    caption: 'A tribute poster built entirely from Kurt Cobain’s own handwriting, quote, and signature.',
+    tags: ['Poster', 'Typography'],
+    type: 'gallery',
+    folder: 'kurt-cobain',
+    count: 5,
+    ext: 'jpg',
+  },
+  {
+    id: 'boat-packaging',
+    title: 'boAt Rockerz 255 Pro+',
+    caption: 'Packaging design concept for boAt’s wireless neckband earphones - “Plug into Nirvana.”',
+    tags: ['Packaging', 'Product Design'],
+    type: 'gallery',
+    folder: 'boat-packaging',
+    count: 5,
+    ext: 'jpg',
+  },
+  {
+    id: 'perfect-days-poster',
+    title: 'Perfect Days',
+    caption: 'An editorial poster series for Wim Wenders’s Perfect Days.',
+    tags: ['Poster', 'Editorial'],
+    type: 'gallery',
+    folder: 'perfect-days-poster',
+    count: 5,
+    ext: 'jpg',
+  },
+  {
+    id: 'se7en-poster',
+    title: 'Se7en',
+    caption: 'A seven-deadly-sins poster for David Fincher’s Se7en.',
+    tags: ['Poster', 'Editorial'],
+    type: 'gallery',
+    folder: 'se7en-poster',
+    count: 3,
+    ext: 'jpg',
+  },
+  {
+    id: 'big-dawgs-hanumankind',
+    title: 'Big Dawgs - Hanumankind',
+    caption: 'A grunge, halftone poster series for Hanumankind’s “Big Dawgs.”',
+    tags: ['Poster', 'Album Art'],
+    type: 'gallery',
+    folder: 'big-dawgs-hanumankind',
+    count: 5,
+    ext: 'jpg',
+  },
+  {
+    id: 'vedavriksha',
+    title: 'Veda Vriksha',
+    caption: 'Brand identity and packaging for an Ayurvedic anti-hairfall haircare label - logo, bottle label, and out-of-home signage.',
+    tags: ['Branding', 'Packaging'],
+    type: 'gallery',
+    folder: 'vedavriksha',
+    count: 8,
+    ext: 'jpg',
+  },
+];
+
+// Expands folder/count/ext into a real items[] list + resolves cover —
+// keeps the array above short/hand-writable instead of listing every
+// filename per piece.
+const otherWorkResolved = otherWork.map((w) => ({
+  ...w,
+  cover: w.cover ?? `${w.folder}/01.${w.ext === 'mp4' ? 'jpg' : w.ext}`,
+  items: Array.from({ length: w.count }, (_, i) => `${w.folder}/${String(i + 1).padStart(2, '0')}.${w.ext}`),
+}));
+---
+
+<AppLayout
+  title="Work · Ishan Rajpurohit"
+  description="Selected product, brand and interaction design projects by Ishan Rajpurohit, including CSite, Reimagining Photoshop 2030, and a curated grid of other design work."
+>
+  <Window title="Work" height={738} transitionName="active-window">
+    <div class="w-page">
+      <div class="tabs-wrap">
+        <input type="radio" name="work-tab" id="tab-case-studies" class="tab-radio" checked />
+        <input type="radio" name="work-tab" id="tab-other-work" class="tab-radio" />
+
+        <div class="tab-panel panel-case-studies">
+          <div class="panel-header">
+            <div class="panel-heading">
+              <h1>Selected Case Studies</h1>
+              <p>Product and interaction design across startups and national-level events.</p>
+            </div>
+            <div class="tab-switcher">
+              <label for="tab-case-studies" class="tab-pill">Case Studies</label>
+              <label for="tab-other-work" class="tab-pill">Other Work</label>
+            </div>
+          </div>
+          <div class="cs-grid">
+            {
+              caseStudies.map((c) => (
+                <a class="cs-item" href={c.href}>
+                  <span class="cs-item-cover">
+                    <img src={c.image} alt={c.title} style={c.imageStyle} />
+                  </span>
+                  <span class="cs-item-title">{c.title}</span>
+                  <span class="cs-item-desc">{c.description}</span>
+                  <span class="cs-item-tags">
+                    {c.tags.map((t) => (
+                      <span class="ow-tag">{t}</span>
+                    ))}
+                  </span>
+                </a>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="tab-panel panel-other-work">
+          <div class="panel-header">
+            <div class="panel-heading">
+              <h1>Everything else.</h1>
+              <p>Branding, packaging, and posters - the design work outside the case studies.</p>
+            </div>
+            <div class="tab-switcher">
+              <label for="tab-case-studies" class="tab-pill">Case Studies</label>
+              <label for="tab-other-work" class="tab-pill">Other Work</label>
+            </div>
+          </div>
+          <div class="other-work-grid">
+            {
+              otherWorkResolved.map((w, i) => (
+                <button
+                  type="button"
+                  class="ow-item"
+                  data-ow-index={i}
+                  aria-haspopup="dialog"
+                  aria-label={`${w.title} - view`}
+                >
+                  <span class="ow-item-cover">
+                    <img src={`/images/work/other-work/${w.cover}`} alt={w.title} loading="lazy" />
+                    {w.type === 'reel' && (
+                      <span class="ow-play-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="white">
+                          <path d="M8 5.5v13l11-6.5-11-6.5z" />
+                        </svg>
+                      </span>
+                    )}
+                  </span>
+                  <span class="ow-item-caption">{w.caption}</span>
+                  <span class="ow-item-tags">
+                    {w.tags.map((t) => (
+                      <span class="ow-tag">{t}</span>
+                    ))}
+                  </span>
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Work" />
+    <div class="m-work">
+      <input type="radio" name="m-work-tab" id="m-tab-case-studies" class="m-tab-radio" checked />
+      <input type="radio" name="m-work-tab" id="m-tab-other-work" class="m-tab-radio" />
+
+      <div class="m-work-switcher">
+        <label for="m-tab-case-studies" class="m-tab-pill">Case Studies</label>
+        <label for="m-tab-other-work" class="m-tab-pill">Other Work</label>
+      </div>
+
+      <div class="m-tab-panel m-panel-case-studies">
+        <header class="m-work-heading">
+          <h1>Selected Case Studies</h1>
+          <p>Product and interaction design across startups and national-level events.</p>
+        </header>
+        <div class="m-cs-list">
+          {
+            caseStudies.map((c) => (
+              <a class="m-cs-item" href={c.href}>
+                <span class="m-cs-item-cover">
+                  <img src={c.image} alt={c.title} style={c.imageStyle} />
+                </span>
+                <span class="m-cs-item-title">{c.title}</span>
+                <span class="m-cs-item-desc">{c.description}</span>
+                <span class="m-cs-item-tags">
+                  {c.tags.map((t) => (
+                    <span class="ow-tag">{t}</span>
+                  ))}
+                </span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="m-tab-panel m-panel-other-work">
+        <header class="m-work-heading">
+          <h1>Everything else.</h1>
+          <p>Branding, packaging, and posters - the design work outside the case studies.</p>
+        </header>
+        <div class="m-other-work-grid">
+          {
+            otherWorkResolved.map((w, i) => (
+              <button
+                type="button"
+                class="m-ow-item"
+                data-ow-index={i}
+                aria-haspopup="dialog"
+                aria-label={`${w.title} - view`}
+              >
+                <span class="m-ow-item-cover">
+                  <img src={`/images/work/other-work/${w.cover}`} alt={w.title} loading="lazy" />
+                  {w.type === 'reel' && (
+                    <span class="ow-play-badge" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M8 5.5v13l11-6.5-11-6.5z" />
+                      </svg>
+                    </span>
+                  )}
+                </span>
+                <span class="m-ow-item-caption">{w.caption}</span>
+                <span class="m-ow-item-tags">
+                  {w.tags.map((t) => (
+                    <span class="ow-tag">{t}</span>
+                  ))}
+                </span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<!-- Other-Work item viewer — a cinematic filmstrip, not a small dialog box:
+     the active slide sits large and sharp in the center with the previous/
+     next slide receding, hazy, and partly hidden behind it on either side
+     (direct instruction: "build something like this with bigger displays,
+     bigger overlays" + reference screenshot of a filmstrip/timeline
+     viewer). Tapping a neighbor pages to it. A tick-mark scrubber below —
+     one tick per slide, the active one tall and dark — replaces the old
+     plain "1 / 9" counter and doubles as a jump-to-slide control. Same
+     escape-.scale-frame reasoning as every other overlay this site already
+     has (music.astro's .album-overlay, reading.astro's .film-overlay):
+     AppLayout hardcodes scaleMode="fit-both", so left inside that subtree
+     this would inherit the ambient scale-down and center against the
+     shrunk frame instead of the real viewport. -->
+<div class="ow-overlay" id="ow-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Work item viewer">
+  <button type="button" class="ow-overlay-close" id="ow-overlay-close" aria-label="Close">&times;</button>
+  <div class="ow-stage" id="ow-stage">
+    <button type="button" class="ow-neighbor ow-neighbor-prev" id="ow-overlay-prev" aria-label="Previous"></button>
+    <div class="ow-hero-wrap">
+      <div class="ow-overlay-frame" id="ow-overlay-frame"></div>
+    </div>
+    <button type="button" class="ow-neighbor ow-neighbor-next" id="ow-overlay-next" aria-label="Next"></button>
+  </div>
+  <div class="ow-overlay-meta">
+    <p class="ow-overlay-title" id="ow-overlay-title"></p>
+    <p class="ow-overlay-caption" id="ow-overlay-caption"></p>
+    <div class="ow-overlay-tags" id="ow-overlay-tags"></div>
+  </div>
+  <div class="ow-scrub" id="ow-scrub" role="slider" aria-label="Slide position"></div>
+  <div class="ow-counter-row">
+    <button type="button" class="ow-chevron ow-chevron-prev" id="ow-chevron-prev" aria-label="Previous slide">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+        <path d="M12.5 5L7.5 10L12.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <p class="ow-overlay-counter" id="ow-overlay-counter"></p>
+    <button type="button" class="ow-chevron ow-chevron-next" id="ow-chevron-next" aria-label="Next slide">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+        <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script define:vars={{ otherWork: otherWorkResolved }}>
+  (function () {
+    const overlay = document.getElementById('ow-overlay');
+    if (!overlay) return;
+
+    // Escape .scale-frame's transform — see the markup comment above.
+    document.body.appendChild(overlay);
+
+    const frame = document.getElementById('ow-overlay-frame');
+    const counterEl = document.getElementById('ow-overlay-counter');
+    const titleEl = document.getElementById('ow-overlay-title');
+    const captionEl = document.getElementById('ow-overlay-caption');
+    const tagsEl = document.getElementById('ow-overlay-tags');
+    const closeBtn = document.getElementById('ow-overlay-close');
+    const prevBtn = document.getElementById('ow-overlay-prev');
+    const nextBtn = document.getElementById('ow-overlay-next');
+    const chevronPrevBtn = document.getElementById('ow-chevron-prev');
+    const chevronNextBtn = document.getElementById('ow-chevron-next');
+    const scrubEl = document.getElementById('ow-scrub');
+
+    let activePiece = null;
+    let activeIndex = 0;
+    let lastTrigger = null;
+
+    // Inline sizing (not scoped CSS): elements created via document.createElement
+    // never receive Astro's data-astro-cid-* scoping attribute, so a scoped
+    // selector targeting them in <style> would silently fail to match.
+    const HERO_BASE = 'display:block; height:100%; max-width:100%; width:auto; object-fit:contain; border-radius:20px;';
+    const NEIGHBOR_STYLE = 'display:block; width:100%; height:100%; object-fit:cover; animation: ow-neighbor-in 0.55s ease-out;';
+
+    // Direction-aware entrance: on prev/next the incoming hero starts from
+    // roughly the neighbor's own look (scaled down, hazy, blurred, offset
+    // to the side it's coming from) and animates up into the sharp,
+    // full-size, centered hero — reads as that side card physically
+    // stepping forward to become the new center, not just a plain fade
+    // (direct instruction: "that inactive card behind should feel like
+    // coming forward"). Plain centered fade/scale on first open, where
+    // there's no "side" for it to come from.
+    function heroStyle(direction) {
+      const anim =
+        direction === 'next'
+          ? 'ow-hero-in-next 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
+          : direction === 'prev'
+            ? 'ow-hero-in-prev 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'ow-hero-in 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+      return `${HERO_BASE} animation: ${anim};`;
+    }
+
+    function buildMedia(piece, idx, hero, direction) {
+      const src = `/images/work/other-work/${piece.items[idx]}`;
+      const style = hero ? heroStyle(direction) : NEIGHBOR_STYLE;
+      if (piece.type === 'reel') {
+        const video = document.createElement('video');
+        video.src = src;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.style.cssText = style;
+        if (hero) {
+          video.autoplay = true;
+          video.loop = true;
+        } else {
+          // Neighbor clips never play — just force the first frame to
+          // paint instead of sitting on a black rectangle.
+          video.addEventListener('loadedmetadata', () => {
+            video.currentTime = 0.1;
+          });
+        }
+        return video;
+      }
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `${piece.title} - ${idx + 1} of ${piece.items.length}`;
+      img.loading = hero ? 'eager' : 'lazy';
+      img.style.cssText = style;
+      return img;
+    }
+
+    function updateScrub() {
+      Array.from(scrubEl.children).forEach((tick, i) => {
+        tick.classList.toggle('is-active', i === activeIndex);
+      });
+    }
+
+    function buildScrub() {
+      scrubEl.innerHTML = '';
+      activePiece.items.forEach((_, i) => {
+        const tick = document.createElement('button');
+        tick.type = 'button';
+        tick.className = 'ow-scrub-tick';
+        tick.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        tick.addEventListener('click', () => go(i));
+        scrubEl.appendChild(tick);
+      });
+      updateScrub();
+    }
+
+    function renderStage(direction) {
+      if (!activePiece) return;
+      const n = activePiece.items.length;
+      const prevIdx = (activeIndex - 1 + n) % n;
+      const nextIdx = (activeIndex + 1) % n;
+
+      frame.innerHTML = '';
+      frame.appendChild(buildMedia(activePiece, activeIndex, true, direction));
+
+      prevBtn.innerHTML = '';
+      prevBtn.appendChild(buildMedia(activePiece, prevIdx, false));
+
+      nextBtn.innerHTML = '';
+      nextBtn.appendChild(buildMedia(activePiece, nextIdx, false));
+
+      counterEl.textContent = `${activeIndex + 1} / ${n}`;
+      updateScrub();
+    }
+
+    function go(newIndex, direction) {
+      if (!activePiece) return;
+      const n = activePiece.items.length;
+      const resolvedDirection = direction || (((newIndex % n) + n) % n > activeIndex ? 'next' : 'prev');
+      activeIndex = ((newIndex % n) + n) % n;
+      renderStage(resolvedDirection);
+    }
+
+    function openPiece(index, trigger) {
+      const piece = otherWork[index];
+      if (!piece) return;
+      activePiece = piece;
+      activeIndex = 0;
+      lastTrigger = trigger || null;
+
+      titleEl.textContent = piece.title;
+      captionEl.textContent = piece.caption;
+      tagsEl.innerHTML = '';
+      piece.tags.forEach((t) => {
+        const span = document.createElement('span');
+        span.className = 'ow-tag';
+        span.textContent = t;
+        tagsEl.appendChild(span);
+      });
+
+      buildScrub();
+      renderStage();
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus();
+    }
+
+    function closePiece() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      frame.innerHTML = '';
+      prevBtn.innerHTML = '';
+      nextBtn.innerHTML = '';
+      activePiece = null;
+      if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
+      lastTrigger = null;
+    }
+
+    document.querySelectorAll('[data-ow-index]').forEach((el) => {
+      el.addEventListener('click', () => openPiece(Number(el.dataset.owIndex), el));
+    });
+
+    prevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
+    nextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
+    chevronPrevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
+    chevronNextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
+
+    closeBtn.addEventListener('click', closePiece);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closePiece();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!overlay.classList.contains('is-open')) return;
+      if (e.key === 'Escape') closePiece();
+      if (e.key === 'ArrowLeft') prevBtn.click();
+      if (e.key === 'ArrowRight') nextBtn.click();
+    });
+  })();
+</script>
+
+<style>
+  .w-page {
+    width: 100%;
+  }
+
+  .tabs-wrap {
+    width: 100%;
+    padding: 56px 64px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tab-panel {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    width: 100%;
+  }
+
+  @keyframes tab-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  #tab-case-studies:checked ~ .panel-case-studies {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  #tab-other-work:checked ~ .panel-other-work {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .panel-header {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1184px;
+  }
+
+  .panel-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 0 0;
+    min-width: 0;
+  }
+
+  .panel-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .panel-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 22px;
+    color: #8b8b8b;
+  }
+
+  .tab-switcher {
+    display: flex;
+    flex-shrink: 0;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #tab-case-studies:checked ~ .panel-case-studies .tab-pill[for='tab-case-studies'],
+  #tab-other-work:checked ~ .panel-other-work .tab-pill[for='tab-other-work'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  /* Case-study tiles — same visual language as .ow-item below (big cover,
+     caption + tags underneath, hover scale) rather than ProjectCard's
+     info-bar-overlaid-on-the-image look. Still a plain <a> per card (not
+     data-ow-index/aria-haspopup) since these open the real case-study
+     pages, not the filmstrip viewer. .cs-item-cover keeps ProjectCard's
+     old fixed aspect-ratio + absolute-positioned img so the existing
+     imageStyle crop offset (CSite's tall screenshot) keeps working
+     unchanged. */
+  .cs-grid {
+    display: flex;
+    gap: 40px;
+    width: 100%;
+    max-width: 1184px;
+    padding: 0 20px 20px;
+    box-sizing: border-box;
+  }
+
+  .cs-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 0;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .cs-item-cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 488 / 335;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      0px 2px 6px rgba(0, 0, 0, 0.08),
+      0px 14px 32px rgba(0, 0, 0, 0.14);
+    transition: box-shadow 0.3s ease-out;
+  }
+
+  .cs-item:hover .cs-item-cover {
+    box-shadow:
+      0px 4px 10px rgba(0, 0, 0, 0.1),
+      0px 22px 44px rgba(0, 0, 0, 0.18);
+  }
+
+  .cs-item-cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left center;
+    max-width: none;
+    transform: scale(1);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .cs-item:hover .cs-item-cover img {
+    transform: scale(1.045);
+  }
+
+  .cs-item-title {
+    display: block;
+    margin-top: 20px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  .cs-item-desc {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: #6b6b6b;
+  }
+
+  .cs-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  /* Reuses writings.astro's Captures masonry technique verbatim — CSS
+     multi-column, natural aspect ratios, break-inside:avoid so a single
+     image never splits across columns. Two columns (not three) so each
+     piece reads at a bigger, more generous size while browsing. */
+  .other-work-grid {
+    columns: 2;
+    column-gap: 36px;
+    width: 100%;
+    max-width: 1184px;
+    padding: 0 20px 20px;
+    box-sizing: border-box;
+  }
+
+  .ow-item {
+    display: block;
+    width: 100%;
+    margin: 0 0 36px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    break-inside: avoid;
+  }
+
+  .ow-item-cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    box-shadow:
+      0px 2px 6px rgba(0, 0, 0, 0.08),
+      0px 14px 32px rgba(0, 0, 0, 0.14);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease-out;
+  }
+
+  .ow-item-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: scale(1);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ow-item:hover .ow-item-cover {
+    box-shadow:
+      0px 4px 10px rgba(0, 0, 0, 0.1),
+      0px 22px 44px rgba(0, 0, 0, 0.18);
+  }
+
+  .ow-item:hover .ow-item-cover img {
+    transform: scale(1.045);
+  }
+
+  .ow-play-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .ow-play-badge svg {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  .ow-item-caption {
+    display: block;
+    margin-top: 16px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: #443a3a;
+  }
+
+  .ow-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .ow-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #f0ebe2;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #8b8b8b;
+  }
+
+  .m-work {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .m-tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .m-work-switcher {
+    display: flex;
+    align-self: flex-start;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .m-tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 15px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #m-tab-case-studies:checked ~ .m-work-switcher .m-tab-pill[for='m-tab-case-studies'],
+  #m-tab-other-work:checked ~ .m-work-switcher .m-tab-pill[for='m-tab-other-work'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  .m-tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  #m-tab-case-studies:checked ~ .m-panel-case-studies,
+  #m-tab-other-work:checked ~ .m-panel-other-work {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .m-work-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .m-work-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 32px;
+    color: #000;
+  }
+
+  .m-work-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #8b8b8b;
+  }
+
+  .m-cs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .m-cs-item {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .m-cs-item-cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 488 / 335;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+      0px 2px 6px rgba(0, 0, 0, 0.08),
+      0px 14px 32px rgba(0, 0, 0, 0.14);
+  }
+
+  .m-cs-item-cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left center;
+    max-width: none;
+  }
+
+  .m-cs-item-title {
+    display: block;
+    margin-top: 14px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  .m-cs-item-desc {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6b6b6b;
+  }
+
+  .m-cs-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .m-other-work-grid {
+    columns: 2;
+    column-gap: 16px;
+  }
+
+  .m-ow-item {
+    display: block;
+    width: 100%;
+    margin: 0 0 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    break-inside: avoid;
+  }
+
+  .m-ow-item-cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    box-shadow:
+      0px 2px 6px rgba(0, 0, 0, 0.08),
+      0px 14px 32px rgba(0, 0, 0, 0.14);
+    overflow: hidden;
+  }
+
+  .m-ow-item-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .m-ow-item-caption {
+    display: block;
+    margin-top: 10px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #443a3a;
+  }
+
+  .m-ow-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  /* Other-Work item viewer — a cinematic filmstrip, not a boxed-in dialog:
+     content floats directly on the blurred backdrop (no card boundary),
+     the active slide is large and sharp, and the previous/next slide
+     recede — hazy, dimmed, half-hidden behind it — via negative margin
+     overlap + reduced opacity/scale/blur on .ow-neighbor. Direct
+     instruction: "bigger displays, bigger overlays... build something
+     like this" (reference: a filmstrip/timeline viewer). */
+  .ow-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9400;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 40px 24px;
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: rgba(239, 232, 221, 0.7);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+  }
+
+  .ow-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+  }
+
+  .ow-overlay-close {
+    position: absolute;
+    top: 28px;
+    right: 32px;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .ow-overlay-close:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: scale(1.06);
+  }
+
+  .ow-stage {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    height: min(64vh, 620px);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ow-hero-wrap {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0px 24px 48px rgba(0, 0, 0, 0.22));
+  }
+
+  /* Explicit chevrons alongside the clickable hazy neighbors — the
+     neighbors alone are a thin, easy-to-miss tap target on mobile, so
+     these give an unambiguous prev/next control everywhere. Kept minimal
+     and tucked into the counter row rather than on the hero itself
+     (direct instruction: "keep minimal chevrons near the 2/9 footer" —
+     plain icon, no glass-button chrome, so it reads as part of the quiet
+     mono counter rather than a separate floating control). */
+  .ow-counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .ow-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #a39a8f;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .ow-chevron:hover {
+    color: #000;
+  }
+
+  /* Applied inline (not here) on the hero/neighbor media elements
+     themselves — they're document.createElement'd fresh on every
+     open AND on every prev/next, so putting the animation on THEM
+     (not on .ow-hero-wrap, which is a static element that only paints
+     once) is what makes it replay on every slide switch, not just the
+     first open (direct instruction: "some transition animation for the
+     next/prev switch"). */
+  @keyframes ow-hero-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes ow-neighbor-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* "from" here matches .ow-neighbor's own resting look (opacity 0.4,
+     scale 0.86, blur+desaturate) offset toward the side it's coming
+     from, so the incoming hero visually picks up right where that
+     hazy side card left off and steps forward into focus. */
+  @keyframes ow-hero-in-next {
+    from {
+      opacity: 0.4;
+      transform: scale(0.86) translateX(48px);
+      filter: blur(1px) saturate(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+      filter: blur(0) saturate(1);
+    }
+  }
+
+  @keyframes ow-hero-in-prev {
+    from {
+      opacity: 0.4;
+      transform: scale(0.86) translateX(-48px);
+      filter: blur(1px) saturate(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+      filter: blur(0) saturate(1);
+    }
+  }
+
+  .ow-overlay-frame {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Neighbor slides recede: smaller, hazy, tucked half-behind the hero via
+     negative margin — this is what makes it read as a filmstrip rather
+     than a single centered image. */
+  .ow-neighbor {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    width: clamp(120px, 22vw, 260px);
+    height: 76%;
+    align-self: center;
+    margin: 0 -46px;
+    border: none;
+    padding: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    opacity: 0.4;
+    filter: blur(1px) saturate(0.7);
+    transform: scale(0.86);
+    transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+  }
+
+  .ow-neighbor:hover {
+    opacity: 0.7;
+    filter: saturate(0.9);
+    transform: scale(0.9);
+  }
+
+  .ow-overlay-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+    max-width: 620px;
+  }
+
+  .ow-overlay-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 24px;
+    color: #000;
+  }
+
+  .ow-overlay-caption {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #6b6b6b;
+  }
+
+  .ow-overlay-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .ow-scrub {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    height: 20px;
+    flex: none;
+  }
+
+  /* :global() — ticks are document.createElement('button'), so they never
+     receive Astro's data-astro-cid-* scoping attribute and a scoped
+     selector here would silently fail to match them (same root cause as
+     the .ow-overlay-frame img/video bug this page hit earlier). */
+  .ow-scrub :global(.ow-scrub-tick) {
+    width: 3px;
+    height: 8px;
+    border-radius: 2px;
+    border: none;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    transition: height 0.2s ease, background-color 0.2s ease;
+  }
+
+  .ow-scrub :global(.ow-scrub-tick:hover) {
+    background: rgba(0, 0, 0, 0.32);
+  }
+
+  .ow-scrub :global(.ow-scrub-tick.is-active) {
+    height: 18px;
+    background: #000;
+  }
+
+  .ow-overlay-counter {
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 300;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: #a39a8f;
+  }
+
+  @media (max-width: 1024px) {
+    .ow-overlay {
+      gap: 16px;
+      padding: 24px 16px;
+    }
+
+    .ow-stage {
+      height: min(48vh, 440px);
+    }
+
+    .ow-neighbor {
+      width: clamp(46px, 16vw, 84px);
+      margin: 0 -22px;
+    }
+
+    .ow-overlay-title {
+      font-size: 18px;
+    }
+
+    .ow-overlay-caption {
+      font-size: 13px;
+    }
+
+    .ow-overlay-close {
+      top: 18px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+    }
+  }
+</style>

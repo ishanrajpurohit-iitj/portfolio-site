@@ -1,0 +1,1198 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import '../styles/home.css';
+---
+
+<Layout
+  title="Ishan Rajpurohit · Product Designer"
+  description="Portfolio of Ishan Rajpurohit, a Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences. Currently at IIT Jodhpur."
+  scaleMode="fit-both"
+>
+  <div class="page-shell">
+    <Nav />
+
+    <div class="panel-stack">
+    <div class="hero-content panel-play" data-figma-node="0:12">
+      <a class="illustration illustration-turntable" data-figma-node="2:2" href="/music" aria-label="Music" data-transition-slow>
+        <img
+          class="illustration-cover"
+          src="/images/home/illustration-turntable.png"
+          alt="Turntable record player"
+        />
+      </a>
+
+      <a class="illustration-racket-wrap" data-figma-node="2:4" href="/hobbies" aria-label="Squash" data-transition-slow>
+        <div class="illustration-racket-rotate">
+          <div class="illustration-racket-frame">
+            <img src="/images/home/illustration-racket.png" alt="Squash racket" />
+          </div>
+        </div>
+      </a>
+
+      <a class="illustration illustration-books" data-figma-node="2:3" href="/reading#movies" aria-label="Books & Movies" data-transition-slow>
+        <div class="illustration-crop">
+          <img src="/images/home/illustration-books.png" alt="Stack of books" />
+        </div>
+      </a>
+
+      <div class="illustration illustration-mac-base" data-figma-node="0:14">
+        <img
+          class="illustration-cover"
+          src="/images/home/illustration-mac.png"
+          alt="Classic Macintosh computer"
+        />
+      </div>
+
+      <a class="illustration illustration-mac-zoom" data-figma-node="202:484" href="/intro" aria-label="Play intro">
+        <div class="illustration-crop">
+          <img src="/images/home/illustration-mac.png" alt="" />
+        </div>
+      </a>
+
+      <div class="illustration illustration-ball" data-figma-node="10:9">
+        <img
+          class="illustration-cover"
+          src="/images/home/illustration-ball.png"
+          alt="Squash ball"
+        />
+      </div>
+
+      <a class="illustration illustration-moleskine" data-figma-node="3:5" href="/writings#captures" aria-label="Writings & Captures" data-transition-slow>
+        <div class="illustration-crop">
+          <img src="/images/home/illustration-moleskine.png" alt="Black Moleskine notebook and pen" />
+        </div>
+      </a>
+
+      <div class="hero-headline" data-figma-node="34:61">
+        <p>Hi, I&rsquo;m Ishan</p>
+      </div>
+
+      <div class="hero-subtext" data-figma-node="10:7">
+        <p>A Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences.</p>
+        <p>&#8203;</p>
+        <p>Currently at IIT Jodhpur</p>
+        <p>&#8203;</p>
+      </div>
+    </div>
+
+    <!-- "View" mode is THE resume/CV view, not a project-card list with a
+         resume button — direct correction ("no this was the view mode of
+         portfolio"): the toggle's two states ARE "Play" (the interactive
+         desktop-app experience) vs "View" (the actual résumé). There is no
+         separate "full" version elsewhere to defer to — direct correction:
+         "there is no such thing as full resume, full resume hi dikhana hai
+         view mode mei" — so this panel carries the complete picture itself:
+         every role, both selected case studies, education, and a compact
+         comma-separated "Highlights" line under Education standing in for
+         the full leadership list (activities/societies condensed to a
+         couple words each, not a whole extra section) so it stays a fast
+         read without pretending there's more elsewhere. Every fact here is
+         the user's own real resume text (pasted directly), not
+         paraphrased/invented. Minor in Management deliberately omitted —
+         direct correction: "i am no longer in minor in magement". -->
+    <section class="home-cv panel-view">
+      <div class="home-cv-inner">
+        <header class="home-cv-header">
+          <div>
+            <h2>Hi, I&rsquo;m Ishan</h2>
+            <p class="home-cv-title">Product + Design</p>
+            <nav class="home-cv-links" aria-label="Important links">
+              <a href="/work">Work</a>
+              <span aria-hidden="true">|</span>
+              <a href="https://linkedin.com/in/ishanrajpurohit21" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <span aria-hidden="true">|</span>
+              <a href="mailto:ishanrajpurohit21@gmail.com">Email</a>
+            </nav>
+          </div>
+          <div class="home-cv-contact">
+            <a href="mailto:ishanrajpurohit21@gmail.com">ishanrajpurohit21@gmail.com</a>
+            <span>+91 80004 60744</span>
+          </div>
+        </header>
+
+        <hr />
+
+        <p class="home-cv-summary">
+          Product designer who ships, pairing UX craft with product thinking to take ideas from
+          0&rarr;1: flagship B2B platforms, networking products, and AI-based experiences across
+          early-stage startups. Currently leading IIT Jodhpur's Design and Product Clubs.
+        </p>
+
+        <hr />
+
+        <div class="home-cv-section">
+          <h3>Work Case Studies</h3>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title"><a href="/work/csite">CSite</a></span>
+              <span class="home-cv-entry-meta">Case Study · Product Design · B2B Systems</span>
+            </div>
+            <p class="home-cv-entry-org">
+              A mobile + web platform for India's unorganized construction sector. Sole designer, research through prototyping.
+            </p>
+          </div>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title"><a href="/work/photoshop-2030">Reimagining Photoshop 2030</a></span>
+              <span class="home-cv-entry-meta">AI-Native · Interaction Design · Product Design</span>
+            </div>
+            <p class="home-cv-entry-org">
+              A concept for a mobile, AI-first Photoshop for 2030. Designer on a six-person team, owning product vision and interaction model.
+            </p>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="home-cv-section">
+          <h3>Experience</h3>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title">Optima Learn</span>
+              <span class="home-cv-entry-meta">Oct 2025 – Dec 2025</span>
+            </div>
+            <p class="home-cv-entry-org">Product Intern: GTM &amp; feature roadmap for referral/campus acquisition.</p>
+          </div>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title">D&amp;S International Pvt Ltd</span>
+              <span class="home-cv-entry-meta">Feb 2025 – Jul 2025</span>
+            </div>
+            <p class="home-cv-entry-org">Product Design Intern: 3 platforms shipped from scratch, 100+ wireframes.</p>
+          </div>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title">Discovercap</span>
+              <span class="home-cv-entry-meta">Jan 2025 – Mar 2025</span>
+            </div>
+            <p class="home-cv-entry-org">UI/UX Intern: MVP roadmap and 40+ mobile-first screens.</p>
+          </div>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title">WorldQuant</span>
+              <span class="home-cv-entry-meta">May 2024 – Jan 2025</span>
+            </div>
+            <p class="home-cv-entry-org">Research Consultant: 20+ alpha models, Gold Level in the BRAIN Challenge.</p>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="home-cv-section">
+          <h3>Education</h3>
+          <div class="home-cv-entry">
+            <div class="home-cv-entry-head">
+              <span class="home-cv-entry-title">B.Tech, Chemical Engineering</span>
+              <span class="home-cv-entry-meta">Jul 2023 – Present</span>
+            </div>
+            <p class="home-cv-entry-org">Indian Institute of Technology, Jodhpur</p>
+            <p class="home-cv-entry-highlights">
+              Highlights: Product Club, Design Club, Inter IIT, Sandstone Summit, Prometeo&rsquo;25, TEDxIITJ
+            </p>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="home-cv-section">
+          <h3>Skills</h3>
+          <p class="home-cv-skills">
+            Product &amp; UX Design &middot; Interaction Design &middot; User Research &middot;
+            Prototyping &middot; Product Strategy &middot; Roadmapping &middot; Figma &middot;
+            Claude Code
+          </p>
+        </div>
+
+        <footer class="home-cv-footer">
+          <span>Made with love</span>
+        </footer>
+      </div>
+    </section>
+    </div>
+  </div>
+
+  <Fragment slot="mobile">
+    <div class="m-home-backdrop">
+      <img src="/images/shared/desktop-backdrop.jpg" alt="" />
+    </div>
+    <div class="m-home">
+      <!-- Same View/Play mode toggle desktop's Nav.astro has, scaled down —
+           direct feedback: "add the view play toggle on top scaled
+           according to mobile." A separate #m-mode-toggle id (not the
+           desktop one) since both trees render into the same document at
+           once (see Layout.astro's .mobile-shell comment) and an id must
+           be unique per page. Checked = Play (hero+carousel) by default,
+           unchecked = View (project list) — same semantics and default as
+           desktop's own #mode-toggle. -->
+      <div class="m-home-toggle">
+        <label for="m-mode-toggle" class="m-toggle-label">View</label>
+        <div class="m-toggle-switch">
+          <input type="checkbox" id="m-mode-toggle" class="m-toggle-checkbox" checked />
+          <label for="m-mode-toggle" class="m-toggle-track"></label>
+        </div>
+        <label for="m-mode-toggle" class="m-toggle-label">Play</label>
+      </div>
+
+      <div class="m-home-panels">
+        <div class="m-home-panel-play">
+          <header class="m-hero">
+            <h1>Hi, I&rsquo;m Ishan</h1>
+            <p>A Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences.</p>
+            <p class="m-hero-meta">Currently at IIT Jodhpur</p>
+          </header>
+
+          <!-- Replaces the two buttons this section had (2026-09-04) —
+               those replaced the ORIGINAL desk-illustration collage back on
+               2026-09-03 (see git history) because individual desk items
+               never worked well as tap targets on a phone with no hover to
+               reveal them. This carousel is the second attempt at the same
+               underlying idea (show the same five desk items desktop has:
+               Mac/intro, turntable/Music, books/Reading, racket/Hobbies,
+               moleskine/Writings) but one at a time instead of all-at-once,
+               so each tap target gets the full width of the phone instead
+               of a tiny slice of a collage. Figma: node 2386:10600 ("phone
+               flow"). Mac first per explicit instruction ("after the mac
+               appears"), then the rest in the Figma canvas's own
+               left-to-right order. Tapping the image navigates straight
+               through, same as desktop's click-through — the chevrons are
+               ONLY for browsing, never for navigating, so they sit outside
+               each slide's <a> instead of inside it (nesting them inside
+               would make a chevron tap also fire the anchor's navigation).
+               data-transition-slow matches every other Home-leaving
+               trigger (Dock's Home icon, desktop's mac/turntable/racket/
+               books/moleskine, Window's red close) — see Layout.astro's
+               isSlow handling. -->
+          <div class="m-hero-carousel">
+            <div class="m-hero-carousel-viewport">
+              <div class="m-hero-carousel-track">
+                <a class="m-hero-slide" href="/intro" aria-label="Play intro">
+                  <img src="/images/home/illustration-mac.png" alt="Classic Macintosh computer" draggable="false" />
+                </a>
+                <a class="m-hero-slide" href="/music" aria-label="Music" data-transition-slow>
+                  <img src="/images/home/illustration-turntable.png" alt="Turntable record player" draggable="false" />
+                </a>
+                <a class="m-hero-slide" href="/reading#movies" aria-label="Books &amp; Movies" data-transition-slow>
+                  <img src="/images/home/illustration-books.png" alt="Stack of books" draggable="false" />
+                </a>
+                <a class="m-hero-slide m-hero-slide-racket" href="/hobbies" aria-label="Squash" data-transition-slow>
+                  <img src="/images/home/illustration-racket.png" alt="Squash racket" draggable="false" />
+                </a>
+                <a class="m-hero-slide" href="/writings#captures" aria-label="Writings &amp; Captures" data-transition-slow>
+                  <img src="/images/home/illustration-moleskine.png" alt="Black Moleskine notebook and pen" draggable="false" />
+                </a>
+              </div>
+            </div>
+            <button type="button" class="m-hero-chevron m-hero-chevron-prev" aria-label="Previous">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 5L7.5 10L12.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <button type="button" class="m-hero-chevron m-hero-chevron-next" aria-label="Next">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7.5 5L12.5 10L7.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Present in Figma (node 2397:10637) but never actually built
+               here — a real gap, not a styling nit. Specific to the Play
+               state only (not shown in the Figma intro-beat frames), so it
+               lives inside .m-home-panel-play rather than at the top level. -->
+          <p class="m-home-desktop-notice">
+            This site is best viewed on desktop.<br />
+            Switch to desktop for the full experience.
+          </p>
+        </div>
+
+        <!-- Mobile equivalent of .home-projects (desktop's own View panel)
+             — reuses the exact ProjectCard data/props /work's own mobile
+             fragment uses (see work.astro's .m-work-list), the single
+             canonical source for this content; duplicating it back onto
+             Home was an explicit, direct instruction reversing the
+             2026-09-03 removal, not an oversight. -->
+        <!-- Same "View mode IS the (complete) CV" content desktop's
+             .home-cv has, see that section's own comment in this file for
+             the full reasoning — same content, same Highlights-line
+             compression trick, mirrored for mobile. -->
+        <div class="m-home-panel-view m-home-cv">
+          <header class="m-home-cv-header">
+            <h1>Hi, I&rsquo;m Ishan</h1>
+            <p class="m-home-cv-title">Product + Design</p>
+            <nav class="m-home-cv-links" aria-label="Important links">
+              <a href="/work">Work</a>
+              <span aria-hidden="true">|</span>
+              <a href="https://linkedin.com/in/ishanrajpurohit21" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <span aria-hidden="true">|</span>
+              <a href="mailto:ishanrajpurohit21@gmail.com">Email</a>
+            </nav>
+          </header>
+
+          <hr />
+
+          <p class="m-home-cv-summary">
+            Product designer who ships, pairing UX craft with product thinking to take ideas from
+            0&rarr;1: flagship B2B platforms, networking products, and AI-based experiences
+            across early-stage startups. Currently leading IIT Jodhpur's Design and Product Clubs.
+          </p>
+
+          <hr />
+
+          <div class="m-home-cv-section">
+            <h2>Work Case Studies</h2>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title"><a href="/work/csite">CSite</a></span>
+                <span class="m-home-cv-entry-meta">Case Study · B2B</span>
+              </div>
+              <p class="m-home-cv-entry-org">Construction-sector platform: sole designer, research through prototyping.</p>
+            </div>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title"><a href="/work/photoshop-2030">Reimagining Photoshop 2030</a></span>
+                <span class="m-home-cv-entry-meta">AI-Native</span>
+              </div>
+              <p class="m-home-cv-entry-org">Mobile AI-first Photoshop concept: product vision &amp; interaction model.</p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="m-home-cv-section">
+            <h2>Experience</h2>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title">Optima Learn</span>
+                <span class="m-home-cv-entry-meta">Oct–Dec 2025</span>
+              </div>
+              <p class="m-home-cv-entry-org">Product Intern</p>
+            </div>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title">D&amp;S International</span>
+                <span class="m-home-cv-entry-meta">Feb–Jul 2025</span>
+              </div>
+              <p class="m-home-cv-entry-org">Product Design Intern</p>
+            </div>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title">Discovercap</span>
+                <span class="m-home-cv-entry-meta">Jan–Mar 2025</span>
+              </div>
+              <p class="m-home-cv-entry-org">UI/UX Intern</p>
+            </div>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title">WorldQuant</span>
+                <span class="m-home-cv-entry-meta">May 2024–Jan 2025</span>
+              </div>
+              <p class="m-home-cv-entry-org">Research Consultant</p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="m-home-cv-section">
+            <h2>Education</h2>
+            <div class="m-home-cv-entry">
+              <div class="m-home-cv-entry-head">
+                <span class="m-home-cv-entry-title">B.Tech, Chemical Engineering</span>
+                <span class="m-home-cv-entry-meta">2023–Present</span>
+              </div>
+              <p class="m-home-cv-entry-org">IIT Jodhpur</p>
+              <p class="m-home-cv-entry-highlights">
+                Highlights: Product Club, Design Club, Inter IIT, Sandstone Summit, Prometeo&rsquo;25, TEDxIITJ
+              </p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="m-home-cv-section">
+            <h2>Skills</h2>
+            <p class="m-home-cv-skills">
+              Product &amp; UX Design &middot; Interaction Design &middot; User Research &middot;
+              Prototyping &middot; Product Strategy &middot; Figma &middot; Claude Code
+            </p>
+          </div>
+
+          <footer class="m-home-cv-footer">
+            <span>Made with love</span>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </Fragment>
+</Layout>
+
+<style>
+  /* Desktop Home never uses Layout's shared .page-backdrop — the hero
+     illustrations already *are* the desk, so a backdrop behind them would
+     just be clutter. Mobile swaps that hero for a plain icon grid, so it
+     needs its own backdrop image to keep the "sitting at the desk" feel;
+     scoped to this component and only ever reachable via the mobile
+     fragment (which is display:none entirely on desktop widths), so it
+     can never show up in the desktop render. */
+  .m-home-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .m-home-backdrop img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.3;
+  }
+
+  /* Centered, matching desktop's own hero (.hero-headline/.hero-subtext in
+     home.css are both text-align:center) — direct feedback: this was left-
+     aligned before, which was never asked for anywhere and didn't match
+     desktop's composition. */
+  /* Values now taken directly from Figma node 2397:10619 ("Mobile Home —
+     Play (Mac)") — pt-48, gap-64 between the toggle and the hero+carousel
+     group — rather than the guessed/rounded values an earlier "improve
+     the spacing" pass used. safe-area-inset is still added on top of the
+     flat 48px so a notch/status-bar doesn't eat into it, since Figma's own
+     canvas has no such concept to account for. */
+  .m-home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 64px;
+    padding: calc(48px + env(safe-area-inset-top, 0px)) 20px 20px;
+  }
+
+  /* Scaled-down version of Nav.astro's #mode-toggle (72x36 there) — see
+     that component for the full switch styling this mirrors. A SEPARATE
+     id/checkbox from desktop's, not a reuse — both the desktop and mobile
+     trees render into the same document at once (Layout.astro's
+     .mobile-shell), just one hidden via CSS depending on viewport width,
+     so a single #mode-toggle id would collide. */
+  .m-home-toggle {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .m-toggle-label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 100;
+    font-size: 14px;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .m-toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .m-toggle-checkbox {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .m-toggle-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: #d6cab6;
+    box-shadow: inset 0px 3px 1.5px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .m-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, #fefaf5, #ebe3d6);
+    box-shadow: 0px 3px 2.5px 0px rgba(0, 0, 0, 0.18);
+    transition: left 0.15s ease;
+  }
+
+  .m-toggle-switch:has(.m-toggle-checkbox:checked) .m-toggle-track {
+    background: #4dbf5e;
+  }
+
+  .m-toggle-switch:has(.m-toggle-checkbox:checked) .m-toggle-track::after {
+    left: 27px;
+  }
+
+  .m-home-panels {
+    width: 100%;
+  }
+
+  /* gap 8px, not 32 — Figma positions the Carousel only ~3px below Hero's
+     own bottom (Hero's rendered height plus its own internal gaps very
+     nearly equals the Carousel's 191px offset from the shared area's top;
+     see get_design_context on 2397:10619). 8px keeps a hair of breathing
+     room for the browser's own font-metric rounding without reopening the
+     32px gap this replaces, which read as far looser than the actual
+     design. */
+  .m-home-panel-play {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    animation: m-panel-fade-in 0.3s ease-out;
+  }
+
+  /* Mobile equivalent of desktop's .home-projects (the "View" panel) —
+     hidden by default (Play is the default mode, matching desktop's own
+     #mode-toggle checked-by-default). display:none/flex rather than
+     desktop's absolute-position opacity crossfade — that approach exists
+     on desktop specifically to keep .panel-stack's height constant so
+     .scale-frame's shared scale factor doesn't shift between modes (see
+     that comment in home.css); mobile has no shared frame-scale to
+     protect, so a plain swap is simpler and there's nothing lost by it. */
+  .m-home-panel-view {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    width: 100%;
+  }
+
+  /* Scoped to .m-home, not .m-home-panels — the checkbox lives in
+     .m-home-toggle, a SIBLING of .m-home-panels, not a descendant of it,
+     so :has() has to reach from their shared ancestor instead (same shape
+     as desktop's own .page-shell:has(#mode-toggle...) in home.css, for
+     the identical reason: Nav and .panel-stack are siblings there too). */
+  .m-home:has(.m-toggle-checkbox:not(:checked)) .m-home-panel-play {
+    display: none;
+  }
+
+  .m-home:has(.m-toggle-checkbox:not(:checked)) .m-home-panel-view {
+    display: flex;
+    animation: m-panel-fade-in 0.3s ease-out;
+  }
+
+  @keyframes m-panel-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Mobile equivalent of desktop's .home-cv — same content (the complete
+     résumé), see index.astro's .home-cv comment. Typewriter font
+     throughout, sized down from desktop's values. */
+  .m-home-cv {
+    gap: 0;
+    align-items: stretch;
+    text-align: left;
+    font-family: var(--font-mono);
+    color: #1a1a1a;
+  }
+
+  .m-home-cv-header h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .m-home-cv-title {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-weight: 300;
+    color: #6b6558;
+  }
+
+  .m-home-cv-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+
+  .m-home-cv-links a {
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .m-home-cv-links span {
+    color: #a39c8c;
+  }
+
+  .m-home-cv hr {
+    border: none;
+    border-top: 1px solid rgba(26, 26, 26, 0.15);
+    margin: 18px 0;
+  }
+
+  .m-home-cv-summary {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .m-home-cv-section h2 {
+    margin: 0 0 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .m-home-cv-entry {
+    margin-bottom: 12px;
+  }
+
+  .m-home-cv-entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .m-home-cv-entry-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .m-home-cv-entry-title {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .m-home-cv-entry-title a {
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .m-home-cv-entry-meta {
+    font-size: 11px;
+    font-weight: 300;
+    color: #6b6558;
+    white-space: nowrap;
+  }
+
+  .m-home-cv-entry-org {
+    margin: 3px 0 0;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 1.5;
+    color: #6b6558;
+  }
+
+  .m-home-cv-entry-highlights {
+    margin: 5px 0 0;
+    font-size: 10.5px;
+    font-weight: 300;
+    line-height: 1.5;
+    color: #a39c8c;
+  }
+
+  .m-home-cv-skills {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  .m-home-cv-footer {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(26, 26, 26, 0.15);
+    font-size: 11px;
+  }
+
+  .m-home-cv-footer a {
+    color: #1a1a1a;
+    text-decoration: none;
+  }
+
+  .m-home-cv-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .m-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .m-hero h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.05;
+    color: #000;
+  }
+
+  /* Same typewriter cursor as .hero-headline p (home.css) — see the comment
+     there for why it stops blinking and fades rather than blinking forever. */
+  .m-hero h1.typewriter-active::after,
+  .m-hero h1.typewriter-done::after {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 0.8em;
+    margin-left: 4px;
+    background: currentColor;
+    vertical-align: -0.05em;
+  }
+
+  .m-hero h1.typewriter-active::after {
+    animation: typewriter-blink 0.8s step-end infinite;
+  }
+
+  .m-hero h1.typewriter-done::after {
+    opacity: 0;
+    transition: opacity 0.4s ease-out 0.3s;
+  }
+
+  @keyframes typewriter-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .m-hero p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  .m-hero-meta {
+    color: #8b8b8b !important;
+    font-size: 14px !important;
+  }
+
+  .m-hero-carousel {
+    position: relative;
+    width: 100%;
+  }
+
+  /* No fill — the Figma file has none either (direct feedback: "why does
+     the carousel have a solid fill?"). It sits directly on the page, same
+     as every desktop desk item sitting straight on the desk scene with no
+     boxed canvas behind it; .m-home-backdrop's own photo is what actually
+     shows through here. */
+  .m-hero-carousel-viewport {
+    overflow: hidden;
+    width: 100%;
+    /* Lets the browser keep handling vertical page scroll natively while
+       the JS pointer handlers below own horizontal movement — without this
+       the first bit of every swipe fights the page's own scroll gesture. */
+    touch-action: pan-y;
+  }
+
+  .m-hero-carousel-track {
+    display: flex;
+    /* Springy-but-settled easing matches the rest of this site's motion
+       language (window open/minimize, MobileTitlebar's flip) rather than a
+       linear or purely-decelerating curve, so a chevron tap reads as part
+       of the same interaction vocabulary as everything else here. */
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* No horizontal padding — Figma positions Mac at exactly 42px in from
+     each edge of the 350px carousel (42 + 266 + 42 = 350, i.e. genuinely
+     centered), not inset by a separately-invented clearance margin. The
+     64px padding this replaced was sized for the OLD 58%/92%-based image
+     sizing; once the image got a real fixed 266px width (see below), that
+     padding left only 222px of content box for a 266px image, so the
+     browser silently let it overflow the padding box — explaining the
+     "not horizontally centered" bug this fixes (the overflow wasn't
+     symmetric, so centering looked broken even though justify-content was
+     correct). Chevron clearance still holds at 42px either side, just not
+     via padding. */
+  .m-hero-slide {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    box-sizing: border-box;
+    padding: 24px 0;
+  }
+
+  .m-hero-slide img {
+    /* Fixed 266x213 — Figma's own exact Mac image size (node 2397:10632,
+       "Mac image": w=266 h=213), not a percentage of the slide box. A
+       percentage (92%, before that 58%) never actually matched the
+       designer's real target size; this does, verbatim, and still can't
+       reach the chevrons on either side (same clearance guarantee the
+       padding above already provides, just no longer computed relative to
+       a percentage that could drift). */
+    max-width: 266px;
+    max-height: 213px;
+    object-fit: contain;
+    /* Same drop-shadow every desktop desk item uses (home.css) — a plain
+       box-shadow would trace the image's rectangular bounding box, not the
+       actual transparent-cutout illustration, and read as a visible box
+       floating behind it (see MEMORY.md's box-shadow-vs-drop-shadow note). */
+    filter: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.22));
+  }
+
+  /* Same rotation desktop's own racket illustration uses (.illustration-
+     racket-rotate, home.css) — kept in sync rather than re-derived, since
+     it's the same source asset photographed/authored at that angle. */
+  .m-hero-slide-racket img {
+    transform: rotate(30.21deg);
+  }
+
+  /* Bare icon, no circular pill/fill behind it — the Figma file's chevrons
+     are unadorned glyphs (direct feedback: "why do the chevron buttons
+     have a solid fill and round fill none of it in the file"). The 44px
+     box is real but invisible: same reasoning as MobileTitlebar's traffic
+     lights (11px visible dot, ~17x30px real hit area) — a bare 20px glyph
+     is too small a target on its own, so the tappable area stays generous
+     without adding any visible chrome around it. */
+  .m-hero-chevron {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 0;
+    border: none;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: opacity 0.2s ease-out;
+  }
+
+  .m-hero-chevron-prev {
+    left: 0;
+  }
+
+  .m-hero-chevron-next {
+    right: 0;
+  }
+
+  /* No more :disabled boundary state — the carousel loops now (direct
+     instruction: "the caoursel should be infinite last ke baad first"),
+     via cloned lead/trail slides in the track (see initHeroCarousel) that
+     make wrapping just one more single-step slide instead of a whole-track
+     whip-pan back to the start, so there's no longer a "you're at the end"
+     boundary to communicate — both chevrons stay live always. */
+
+  .m-home-desktop-notice {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(0, 0, 0, 0.6);
+  }
+</style>
+
+<script>
+  // Types out the hero headline a character at a time, with a blinking
+  // cursor that stops and fades once it's done. Reads the real text straight
+  // off the element on its FIRST run only, cached in data-full-text — once
+  // typing starts, el.textContent is no longer the true full string (it's
+  // whatever's been typed so far), so a later run has to reuse the cached
+  // copy rather than re-reading the element. Re-runs on every
+  // astro:page-load rather than once-ever — unlike the dock's persisted
+  // entrance, Home's own content is freshly rendered on every arrival here
+  // (nothing about it persists across navigations), so replaying it each
+  // time you land on Home is the natural default, not a bug to guard
+  // against. That said, astro:page-load fires an extra time right after the
+  // very first load's own top-level call below (same double-invocation
+  // astro's own lifecycle produces for any script that both runs at parse
+  // time and listens for astro:page-load — see AppLayout's dock-entrance
+  // script for the same pattern) — data-type-run is a per-element counter
+  // so a still-running older loop can tell it's been superseded and quietly
+  // stop instead of racing a newer one to write the same element.
+  function typewriteHeadline() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll('.hero-headline p, .m-hero h1').forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+      if (el.dataset.fullText === undefined) el.dataset.fullText = el.textContent ?? '';
+      const fullText = el.dataset.fullText;
+      const runId = String(Number(el.dataset.typeRun || '0') + 1);
+      el.dataset.typeRun = runId;
+      el.textContent = '';
+      el.classList.remove('typewriter-done');
+      el.classList.add('typewriter-active');
+      let i = 0;
+      const typeNext = () => {
+        if (el.dataset.typeRun !== runId) return;
+        el.textContent = fullText.slice(0, i);
+        const justTyped = fullText[i - 1];
+        i++;
+        if (i <= fullText.length) {
+          // A real typewriter's rhythm isn't perfectly even — a longer beat
+          // right after a comma reads as a deliberate pause, not just a
+          // uniform mechanical tick.
+          const delay = justTyped === ',' ? 480 : 90;
+          setTimeout(typeNext, delay);
+        } else {
+          el.classList.remove('typewriter-active');
+          el.classList.add('typewriter-done');
+        }
+      };
+      setTimeout(typeNext, 300);
+    });
+  }
+
+  typewriteHeadline();
+  document.addEventListener('astro:page-load', typewriteHeadline);
+
+  // Mobile hero carousel (see the markup comment above for the Figma node
+  // and the reasoning behind chevrons-browse/image-navigates). Re-binds and
+  // resets on every astro:page-load, same as typewriteHeadline above — Home
+  // is never persisted, so a fresh instance mounts every time you arrive
+  // here.
+  //
+  // Two direct follow-ups from user testing ("people on mobile are unable
+  // to figure out to tap carousel"):
+  // 1. Auto-advance — the carousel now scrolls on its own so its very
+  //    existence and interactivity is obvious without anyone finding the
+  //    swipe/chevron affordance first.
+  // 2. Infinite loop — "last ke baad first" (first after last), so
+  //    auto-advance actually has somewhere to go forever instead of
+  //    stalling dead at the last slide.
+  //
+  // Infinite looping is implemented with a cloned lead/trail slide at each
+  // end of the track (the standard technique for this) rather than index
+  // wrapping alone — index wrapping straight from last back to 0 with a
+  // plain index*-100% transform would visually whip-pan backward across
+  // every slide in one 0.4s transition instead of stepping by one. With
+  // clones, advancing off the real last slide is a normal single-step
+  // transition onto an identical-looking clone of the first slide; once
+  // that transition lands, a transitionend listener silently snaps the
+  // index back to the real first slide with transitions off for that one
+  // frame — invisible, since the clone and the real slide are pixel-
+  // identical. Same idea in the other direction for "previous" past the
+  // first slide.
+  function initHeroCarousel() {
+    document.querySelectorAll('.m-hero-carousel').forEach((carousel) => {
+      if (!(carousel instanceof HTMLElement) || carousel.dataset.bound === 'true') return;
+      carousel.dataset.bound = 'true';
+
+      const viewport = carousel.querySelector('.m-hero-carousel-viewport');
+      const track = carousel.querySelector('.m-hero-carousel-track');
+      const realSlides = Array.from(carousel.querySelectorAll('.m-hero-slide'));
+      const prevBtn = carousel.querySelector('.m-hero-chevron-prev');
+      const nextBtn = carousel.querySelector('.m-hero-chevron-next');
+      if (!(track instanceof HTMLElement) || !(viewport instanceof HTMLElement) || realSlides.length === 0) return;
+
+      // Clones are purely visual filler for the loop-around transition —
+      // hidden from assistive tech and out of tab order so a screen reader
+      // or keyboard user never lands on a duplicate "Play intro"/etc.
+      function cloneSlide(original) {
+        const clone = original.cloneNode(true);
+        if (clone instanceof HTMLElement) {
+          clone.setAttribute('aria-hidden', 'true');
+          clone.tabIndex = -1;
+        }
+        return clone;
+      }
+
+      const leadClone = cloneSlide(realSlides[realSlides.length - 1]);
+      const trailClone = cloneSlide(realSlides[0]);
+      track.insertBefore(leadClone, realSlides[0]);
+      track.appendChild(trailClone);
+
+      const slides = Array.from(track.children); // [leadClone, ...real, trailClone]
+      const firstRealIndex = 1;
+      const lastRealIndex = slides.length - 2;
+      let index = firstRealIndex;
+
+      function render(animate) {
+        track.style.transition = animate === false ? 'none' : '';
+        track.style.transform = `translateX(${index * -100}%)`;
+      }
+
+      // Lands on a clone → jump to the real slide it's standing in for,
+      // with no transition (both look identical, so the jump is invisible).
+      // Called from BOTH a transitionend listener and a plain setTimeout
+      // fallback in goTo below — found live, not hypothetical: transitionend
+      // never fires at all for a transition happening inside a display:none
+      // subtree (true here whenever the real viewport is wide enough that
+      // .mobile-shell itself is display:none, which is still where this
+      // script runs and keeps auto-advancing in the background), so relying
+      // on it alone let index climb unboundedly past the clone position with
+      // nothing ever wrapping it back — confirmed live via translateX
+      // reaching -800%/-900%/-1000% and climbing, on a track with only 7
+      // children (a valid range of 0% to -600%). The timer fires regardless
+      // of visibility/display state, so it's what actually guarantees this
+      // runs; the transitionend listener staying too just means the wrap
+      // still happens at the natural moment (right as the transition
+      // visually finishes) whenever it's available, rather than always
+      // waiting out the fallback's fixed delay.
+      function checkWrap() {
+        if (index === 0) {
+          index = lastRealIndex;
+          render(false);
+        } else if (index === slides.length - 1) {
+          index = firstRealIndex;
+          render(false);
+        }
+      }
+
+      function goTo(next) {
+        index = next;
+        render(true);
+        setTimeout(checkWrap, 450);
+      }
+
+      track.addEventListener('transitionend', (e) => {
+        if (e.target !== track || e.propertyName !== 'transform') return;
+        checkWrap();
+      });
+
+      prevBtn?.addEventListener('click', () => {
+        stopAuto();
+        goTo(index - 1);
+        scheduleAuto();
+      });
+      nextBtn?.addEventListener('click', () => {
+        stopAuto();
+        goTo(index + 1);
+        scheduleAuto();
+      });
+
+      // Swipe — direct instruction: "add swipe to the home carousel". Live
+      // drag-follow (not just a swipe-direction sniff on touchend) so it
+      // reads as a real touch surface rather than a gesture detector: the
+      // track visually tracks the finger 1:1 during the drag, then either
+      // commits to the neighboring slide or snaps back on release depending
+      // on how far past the threshold the drag went. transition is switched
+      // off for the live-follow (an animated .transform during pointermove
+      // would lag a finger by a frame every update) and restored for the
+      // commit/snap-back step, which is exactly where the existing
+      // spring-settle easing (see .m-hero-carousel-track) belongs. No more
+      // edge resistance — the loop means there's no longer a real edge to
+      // resist against.
+      let dragging = false;
+      let dragStartX = 0;
+      let dragDeltaX = 0;
+      let dragMoved = false;
+      let viewportWidth = 0;
+
+      function onPointerDown(e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        stopAuto();
+        dragging = true;
+        dragMoved = false;
+        dragDeltaX = 0;
+        dragStartX = e.clientX;
+        viewportWidth = viewport.getBoundingClientRect().width || 1;
+        track.style.transition = 'none';
+        // Defensive only — a pointerId setPointerCapture can't find (e.g. one
+        // that never went through a real hit-test) throws rather than being a
+        // silent no-op; swallowed so it can't abort the rest of the gesture.
+        try {
+          viewport.setPointerCapture(e.pointerId);
+        } catch (err) {
+          /* not capturable — drag still tracks fine via the window-level
+             pointermove/pointerup listeners below */
+        }
+      }
+
+      function onPointerMove(e) {
+        if (!dragging) return;
+        dragDeltaX = e.clientX - dragStartX;
+        if (Math.abs(dragDeltaX) > 6) dragMoved = true;
+        track.style.transform = `translateX(calc(${index * -100}% + ${dragDeltaX}px))`;
+      }
+
+      function endDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        track.style.transition = '';
+        const threshold = Math.max(40, viewportWidth * 0.12);
+        if (dragDeltaX <= -threshold) {
+          goTo(index + 1);
+        } else if (dragDeltaX >= threshold) {
+          goTo(index - 1);
+        } else {
+          render(true);
+        }
+        if (e && viewport.hasPointerCapture(e.pointerId)) viewport.releasePointerCapture(e.pointerId);
+        dragDeltaX = 0;
+        scheduleAuto();
+      }
+
+      viewport.addEventListener('pointerdown', onPointerDown);
+      viewport.addEventListener('pointermove', onPointerMove);
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+
+      // A real drag shouldn't also fire the slide's own <a href> navigation
+      // underneath it — captured on the track (fires before the anchor's
+      // own click) and only swallowed when this specific gesture actually
+      // moved past the tap-vs-drag threshold above.
+      track.addEventListener(
+        'click',
+        (e) => {
+          if (dragMoved) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+        true
+      );
+
+      // Auto-advance — direct instruction: "keep live carousel scrolling on
+      // so people can see". Paused for the duration of any manual
+      // interaction (drag start through drag end, or a chevron tap) and
+      // rescheduled fresh afterward, rather than stopping for good the first
+      // time someone touches it — the point is an always-eventually-moving
+      // carousel, not just a one-time animated hint. Cleared on navigating
+      // away so it isn't still ticking against a detached track once Home's
+      // DOM is gone (Home is never transition:persist — a fresh interval
+      // would otherwise leak on every single visit).
+      let autoTimer = null;
+      function stopAuto() {
+        if (autoTimer) clearTimeout(autoTimer);
+        autoTimer = null;
+      }
+      function scheduleAuto() {
+        stopAuto();
+        autoTimer = setTimeout(() => {
+          goTo(index + 1);
+          scheduleAuto();
+        }, 3200);
+      }
+      document.addEventListener('astro:before-preparation', stopAuto, { once: true });
+
+      render(false);
+      scheduleAuto();
+    });
+  }
+
+  initHeroCarousel();
+  document.addEventListener('astro:page-load', initHeroCarousel);
+</script>

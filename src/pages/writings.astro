@@ -1,0 +1,917 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Window from '../components/Window.astro';
+import MobileTitlebar from '../components/MobileTitlebar.astro';
+import ChevronLeft from '../components/ChevronLeft.astro';
+
+// Figma (node 2341:5775, the Writings list, and 2351:5951, the "fun fact"
+// entry's own detail frame). "fun fact..." and "meet ishan (no, not me)"
+// (formerly "who am i?", real copy pasted directly by the user) both have
+// real, finished body copy. A third entry, "squash and me?", was removed —
+// it never had real copy, only placeholder lorem ipsum (direct
+// instruction: "remove the squash and me writing").
+const journalEntries = [
+  {
+    id: 'who-am-i',
+    title: 'meet ishan (no, not me)',
+    date: '08.09.2026',
+    preview: 'this is ishan. i am not sure about loving going to school, but he loves coming back fro...',
+    image: { src: 'meet-ishan-childhood.png', alt: 'A childhood photo of Ishan, framed inside a collage of old school photos.' },
+    body: [
+      'this is ishan.',
+      'i am not sure about loving going to school, but he loves coming back from it. he loves drawing, he loves using ms paint. he loves using the computer.',
+      'he starts making his birthday invite cards featuring ben 10 and spiderman one month before his birthday.',
+      'he is currently trying to make a wimpy-kid-like comic in ms paint itself because that is all he knows, and he believes he is going to publish it next year.',
+      'he loves the feeling of being on a computer.',
+      'he is always intrigued by the things his family members are doing on this little machine.',
+      'whether it is his father making conference presentations or his sister making netbeans shopping website projects, he loves standing beside them as they do it. so much so that, once, while trying to open and use his sister’s netbeans project, he deleted it and was smiling like a shameless kid.',
+      'he also loves making presentations with photos of family members and loves to use the sound icon to put his favourite songs in the background.',
+      'he also aims to publish his first animated film after two years and win an award for it.',
+      'for him, the best times of the day are: entering home after school, watching cartoons on TV (with his mom), drawing, exploring the computer, playing with his sisters. he loves playing badminton with his sisters and goes to the park every evening with his father.',
+      'yes, that’s pretty much it. this is ishan. this is a very small part of what he has and his world.',
+    ],
+  },
+  {
+    id: 'chemical-engineering',
+    title: 'fun fact: i am a chemical engineering undergrad',
+    detailTitle: 'fun fact: I am a chemical engineering undergrad.',
+    date: '03.09.2026',
+    preview: 'yes yes yes. i am a final year undergrad in the department of chemical enginee...',
+    image: {
+      src: 'chemical-engineering-portrait.png',
+      alt: 'Ishan smiling on a rooftop at night, city lights in the background, in a halftone-print photo style.',
+    },
+    body: [
+      'yes yes yes. i am a final year undergrad in the department of chemical engineering at IIT Jodhpur.',
+      'instead of delving into the equations of process plant designs, reactors, and chemical engineering coursework, I am out here making a design portfolio which was neither taught to me formally nor was I supposed to do it, especially on the path I am currently on.',
+      'then how did we reach here?',
+      'it all starts with one singular decision after taking the JEE: that you want to go to an IIT, no matter what branch you take.',
+      'after landing there, you get exposed to a pool of numerous possibilities of careers through clubs, seniors, and college activities.',
+      'the thing that struck me was design.',
+      'I was doing dev in my first few years of college, but I was always obsessed with the nitty gritty details of how the website felt, how it looked visually. I was also deep into branding projects.',
+      'but I never thought this would be the main thing. I always viewed these things more as hobbies.',
+      'by the end of my second year, I had interned as a product designer in two startups, and in one of them I had designed the entire B2B ecosystem of the company as the sole product designer.',
+      'this kind of exposure was what I wanted as an early-stage person in this field.',
+      'going ahead, in my third year, we participated in the Inter IIT Tech Meet, and I had the opportunity to lead the product design of the Adobe problem statement there.',
+      'and guess what, our team got the third-highest score in Design & UX and the 6th position out of 23 IITs in the overall product development statement, which included AI, dev, and product as a whole as well.',
+      'that was a pretty big moment for me.',
+      'because for the first time, this thing that I had mostly considered a hobby had some actual weight to it.',
+      'and somewhere along the way, design stopped feeling like just something I happened to do on the side.',
+    ],
+  },
+];
+---
+
+<AppLayout
+  title="Writings & Captures · Ishan Rajpurohit"
+  description="Writings and photo captures from Ishan Rajpurohit: moments worth remembering."
+>
+  <Window title="Writings & Captures" height={738} transitionName="active-window">
+    <!-- .w-page: a wrapper genuinely owned by THIS file's own scoped
+         styles, needed so the :has() rules below (which reach from the
+         nested w-view radios, several levels deep inside .panel-writings,
+         up to .tab-switcher/.w-article-back, its OWN siblings at this
+         level) have a real ancestor to scope from — .window-content
+         (Window.astro's own element, wrapping both) carries THAT file's
+         scope hash, not this one's, so a selector for it written here
+         would silently match nothing (same cross-file-scoping trap noted
+         elsewhere this session, see MEMORY.md's Astro gotchas entry). -->
+    <div class="w-page">
+      <!-- Chevron-back row (see Figma node 285:1007, "Chevron left" — the
+           same ChevronLeft component/positioning case studies use for
+           their own "back to Work" row) — hidden by default, shown only
+           while an article is open (see the :has() rules below), toggling
+           back to the list rather than navigating anywhere (htmlFor, not
+           href — there's no separate URL for "the list" here). -->
+      <div class="w-article-back">
+        <ChevronLeft htmlFor="w-view-list" />
+      </div>
+
+      <div class="tabs-wrap">
+        <input type="radio" name="wc-tab" id="tab-writings" class="tab-radio" checked />
+        <input type="radio" name="wc-tab" id="tab-captures" class="tab-radio" />
+
+        <div class="tab-switcher">
+          <label for="tab-writings" class="tab-pill">Writings</label>
+          <label for="tab-captures" class="tab-pill">Captures</label>
+        </div>
+
+      <div class="tab-panel panel-writings">
+        <!-- Nested radio group, same technique as the Writings/Captures tab
+             pair above and the case-study sidebar tabs — #w-view-list
+             (default) shows the entry list; each entry's title is a
+             <label> for its own #w-view-{id} radio, switching to that
+             entry's detail view. The detail view's own title is ALSO a
+             label pointing back to #w-view-list (a second, redundant way
+             back on top of the .w-article-back chevron below — harmless,
+             and matches the detail title's own clickable-underlined
+             styling being identical to the list titles'). The chevron
+             itself (Figma node 285:1007, "Chevron left" — same component
+             case studies use) replaces .tab-switcher while an article is
+             open — see the :has() rules further down. -->
+        <div class="w-view-wrap">
+          <input type="radio" name="w-view" id="w-view-list" class="w-view-radio" checked />
+          {journalEntries.map((entry) => (
+            <input type="radio" name="w-view" id={`w-view-${entry.id}`} class="w-view-radio" />
+          ))}
+
+          <div class="w-list">
+            {journalEntries.map((entry) => (
+              <>
+                <label for={`w-view-${entry.id}`} class="w-entry">
+                  <div class="w-entry-head">
+                    <span class="w-entry-title">{entry.title}</span>
+                    <span class="w-entry-date">{entry.date}</span>
+                  </div>
+                  <p class="w-entry-preview">{entry.preview}</p>
+                </label>
+                <div class="w-entry-divider"></div>
+              </>
+            ))}
+          </div>
+
+          {journalEntries.map((entry) => (
+            <div class={`w-detail w-detail-${entry.id}`}>
+              <label for="w-view-list" class="w-detail-head">
+                <span class="w-detail-title">{entry.detailTitle ?? entry.title}</span>
+                <span class="w-detail-date">{entry.date}</span>
+              </label>
+              <div class="w-detail-body">
+                {entry.image && (
+                  <div class="w-detail-image">
+                    <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                  </div>
+                )}
+                {entry.body.map((para) => (
+                  <p>{para}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="tab-panel panel-captures">
+        <p class="captures-subtext">Not a professional, but I try to capture what moves me.</p>
+        <!-- Replaces the old two ad-hoc flex rows (each image carrying its
+             own hand-picked inline width/height — 150/160/200px, none of
+             them aligning into real columns) with a uniform grid: every
+             item is the same 4:5 cell via object-fit:cover, so the row/
+             column alignment a "proper grid" implies actually holds. The
+             video/photo distinction that used to come from their different
+             natural proportions is preserved instead via a small play-badge
+             overlay on the four recordings, rather than lost when
+             normalizing every cell to one aspect ratio. No Figma reference
+             for this one — direct instruction to redesign it. -->
+        <div class="captures-grid">
+          <div class="capture-item is-video">
+            <img src="/images/writings/video-1.png" alt="" />
+            <span class="capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="capture-item is-video">
+            <img src="/images/writings/video-2.png" alt="" />
+            <span class="capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="capture-item is-video">
+            <img src="/images/writings/video-3.png" alt="" />
+            <span class="capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="capture-item is-video">
+            <img src="/images/writings/video-4.png" alt="" />
+            <span class="capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="capture-item">
+            <img src="/images/writings/photo-1.jpg" alt="" />
+          </div>
+          <div class="capture-item">
+            <img src="/images/writings/photo-2.jpg" alt="" />
+          </div>
+          <div class="capture-item">
+            <img src="/images/writings/photo-3.jpg" alt="" />
+          </div>
+          <div class="capture-item">
+            <img src="/images/writings/photo-4.jpg" alt="" />
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Writings & Captures" />
+    <div class="m-writings">
+      <input type="radio" name="m-wc-tab" id="m-tab-writings" class="m-tab-radio" checked />
+      <input type="radio" name="m-wc-tab" id="m-tab-captures" class="m-tab-radio" />
+
+      <div class="m-tab-switcher">
+        <label for="m-tab-writings" class="m-tab-pill">Writings</label>
+        <label for="m-tab-captures" class="m-tab-pill">Captures</label>
+      </div>
+
+      <!-- Mobile equivalent of the desktop .w-article-back chevron — same
+           idea (hide the tab switcher while an article is open, show a
+           back-to-list control instead), sized for touch rather than
+           reusing ChevronLeft.astro's fixed desktop dimensions/position. -->
+      <div class="m-w-article-back">
+        <label for="m-w-view-list" class="m-w-back-btn" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 5L7.5 10L12.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </label>
+      </div>
+
+      <div class="m-tab-panel m-panel-writings">
+        <div class="m-w-view-wrap">
+          <input type="radio" name="m-w-view" id="m-w-view-list" class="m-w-view-radio" checked />
+          {journalEntries.map((entry) => (
+            <input type="radio" name="m-w-view" id={`m-w-view-${entry.id}`} class="m-w-view-radio" />
+          ))}
+
+          <div class="m-w-list">
+            {journalEntries.map((entry) => (
+              <>
+                <label for={`m-w-view-${entry.id}`} class="m-w-entry">
+                  <div class="m-w-entry-head">
+                    <span class="m-w-entry-title">{entry.title}</span>
+                    <span class="m-w-entry-date">{entry.date}</span>
+                  </div>
+                  <p class="m-w-entry-preview">{entry.preview}</p>
+                </label>
+                <div class="m-w-entry-divider"></div>
+              </>
+            ))}
+          </div>
+
+          {journalEntries.map((entry) => (
+            <div class={`m-w-detail m-w-detail-${entry.id}`}>
+              <label for="m-w-view-list" class="m-w-detail-head">
+                <span class="m-w-detail-title">{entry.detailTitle ?? entry.title}</span>
+                <span class="m-w-detail-date">{entry.date}</span>
+              </label>
+              <div class="m-w-detail-body">
+                {entry.image && (
+                  <div class="m-w-detail-image">
+                    <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                  </div>
+                )}
+                {entry.body.map((para) => (
+                  <p>{para}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="m-tab-panel m-panel-captures">
+        <p class="m-captures-subtext">Not a professional, but I try to capture what moves me.</p>
+        <div class="m-captures-grid">
+          <div class="m-capture-item m-is-video">
+            <img class="m-capture" src="/images/writings/video-1.png" alt="" />
+            <span class="m-capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="m-capture-item m-is-video">
+            <img class="m-capture" src="/images/writings/video-2.png" alt="" />
+            <span class="m-capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="m-capture-item m-is-video">
+            <img class="m-capture" src="/images/writings/video-3.png" alt="" />
+            <span class="m-capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="m-capture-item m-is-video">
+            <img class="m-capture" src="/images/writings/video-4.png" alt="" />
+            <span class="m-capture-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
+            </span>
+          </div>
+          <div class="m-capture-item">
+            <img class="m-capture" src="/images/writings/photo-1.jpg" alt="" />
+          </div>
+          <div class="m-capture-item">
+            <img class="m-capture" src="/images/writings/photo-2.jpg" alt="" />
+          </div>
+          <div class="m-capture-item">
+            <img class="m-capture" src="/images/writings/photo-3.jpg" alt="" />
+          </div>
+          <div class="m-capture-item">
+            <img class="m-capture" src="/images/writings/photo-4.jpg" alt="" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<script>
+  function applyHashTab() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash !== 'writings' && hash !== 'captures') return;
+    const radio = document.getElementById(`tab-${hash}`);
+    if (radio instanceof HTMLInputElement) radio.checked = true;
+    const mobileRadio = document.getElementById(`m-tab-${hash}`);
+    if (mobileRadio instanceof HTMLInputElement) mobileRadio.checked = true;
+  }
+  applyHashTab();
+  document.addEventListener('astro:page-load', applyHashTab);
+</script>
+
+<style>
+  .w-page {
+    width: 100%;
+  }
+
+  .w-article-back {
+    display: none;
+  }
+
+  /* Hardcoded per-entry ids rather than a loop — same reason the
+     .w-detail-{id} visibility rules further down are hardcoded: Astro's
+     <style> blocks are static, they can't emit a selector per array item
+     from journalEntries. Whichever entry radio is checked: hide the
+     Writings/Captures tab switcher (an open article isn't "a tab", it
+     doesn't make sense to offer switching tabs mid-read) and reveal the
+     chevron-back row in its place, and drop .tabs-wrap's own top padding
+     to 0 since the chevron row already supplies its own vertical space —
+     leaving both would double up the gap before the article title. */
+  .w-page:has(#w-view-who-am-i:checked) .tab-switcher,
+  .w-page:has(#w-view-chemical-engineering:checked) .tab-switcher {
+    display: none;
+  }
+
+  .w-page:has(#w-view-who-am-i:checked) .w-article-back,
+  .w-page:has(#w-view-chemical-engineering:checked) .w-article-back {
+    display: block;
+  }
+
+  .w-page:has(#w-view-who-am-i:checked) .tabs-wrap,
+  .w-page:has(#w-view-chemical-engineering:checked) .tabs-wrap {
+    padding-top: 0;
+  }
+
+  .tabs-wrap {
+    width: 100%;
+    padding: 72px 64px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tab-switcher {
+    display: flex;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 20px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #tab-writings:checked ~ .tab-switcher label[for='tab-writings'],
+  #tab-captures:checked ~ .tab-switcher label[for='tab-captures'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  .tab-panel {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @keyframes tab-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #tab-writings:checked ~ .panel-writings {
+    display: flex;
+    margin-top: 40px;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  #tab-captures:checked ~ .panel-captures {
+    display: flex;
+    margin-top: 40px;
+    gap: 40px;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .w-view-wrap {
+    width: 100%;
+  }
+
+  .w-view-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .w-list,
+  .w-detail {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  #w-view-list:checked ~ .w-list {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .w-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 30px 0 0;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .w-entry-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .w-entry-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 28px;
+    color: #000;
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+
+  .w-entry-date {
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 200;
+    font-size: 20px;
+    color: #000;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .w-entry-preview {
+    margin: 0;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 20px;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .w-entry-divider {
+    margin-top: 28px;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  /* Only the entry whose own radio is checked shows — every entry's
+     .w-detail-{id} is scoped by its own #w-view-{id}:checked selector
+     below (added per-entry since Astro can't emit a dynamic id selector
+     from a .map() into a static <style> block; see the per-entry rules a
+     few lines down generated the same way case-study pages handle their
+     own per-section reveal). */
+  .w-detail-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .w-detail-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 32px;
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .w-detail-date {
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 200;
+    font-size: 20px;
+    color: #000;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Switched from flex+gap to normal block flow (gap doesn't exist for
+     floats — a float only pulls text around it in normal in-flow layout,
+     never inside a flex container, where it's just ignored and the image
+     stays a full-width flex item stacked above the text) — direct
+     instruction: magazine/article-style inline image with text wrapping
+     beside it, not a separate block sitting above the copy. overflow:hidden
+     is a standard clearfix, so the container's own height still accounts
+     for the float even if it ends up taller than the paragraphs beside it. */
+  .w-detail-body {
+    margin-top: 36px;
+    overflow: hidden;
+  }
+
+  /* Floated right so paragraph text wraps along its left edge, magazine-style. */
+  .w-detail-image {
+    float: right;
+    margin: 0 0 20px 28px;
+    max-width: 280px;
+    box-shadow: 3px 5px 12px 0px rgba(0, 0, 0, 0.26);
+  }
+
+  .w-detail-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .w-detail-body p {
+    margin: 0 0 20px;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.5;
+    color: #000;
+  }
+
+  .w-detail-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  #w-view-who-am-i:checked ~ .w-detail-who-am-i,
+  #w-view-chemical-engineering:checked ~ .w-detail-chemical-engineering {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .captures-subtext {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 20px;
+    color: #443a3a;
+    text-align: center;
+  }
+
+  /* Masonry columns (CSS multi-column, no JS) instead of a uniform grid —
+     direction from a reference screenshot: staggered-height cards in real
+     columns, each image at its own natural aspect ratio rather than
+     cropped to match its neighbors. break-inside:avoid on each card is
+     what stops the multi-column layout from splitting a single image
+     across two columns. Work Explorations (coming soon) will reuse this
+     same pattern once that tab exists. */
+  .captures-grid {
+    columns: 3;
+    column-gap: 24px;
+    width: 100%;
+    padding: 0 20px 20px;
+    box-sizing: border-box;
+  }
+
+  /* Sharp corners + a soft, layered shadow (a tight single dark shadow
+     reads cheap; two lighter, larger-blur layers stacked reads like a
+     real elevated print/photo instead) — direct instruction: "remove the
+     rounded corners, make it premium and aesthetic". The image itself
+     zooms slightly on hover (overflow:hidden on the card clips it), same
+     hover-response language music.astro's own album covers already use
+     elsewhere on this site. */
+  .capture-item {
+    position: relative;
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 24px;
+    overflow: hidden;
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.08), 0px 14px 32px 0px rgba(0, 0, 0, 0.14);
+  }
+
+  .capture-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: scale(1);
+    transition: transform 0.4s ease-out;
+  }
+
+  .capture-item:hover img {
+    transform: scale(1.045);
+  }
+
+  /* Only appears on hover — a badge sitting on the thumbnail at all times
+     read as cluttered next to the sharper, quieter card treatment above;
+     revealing it on hover is a more considered, premium-feeling
+     interaction. Mobile keeps it always visible (see .m-capture-play)
+     since touch has no hover state to reveal it with. */
+  .capture-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.22);
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+  }
+
+  .capture-item:hover .capture-play {
+    opacity: 1;
+  }
+
+  .capture-play svg {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  .m-writings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 24px 20px;
+  }
+
+  .m-w-article-back {
+    display: none;
+    align-self: flex-start;
+  }
+
+  .m-w-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: -6px;
+    cursor: pointer;
+  }
+
+  .m-writings:has(#m-w-view-who-am-i:checked) .m-tab-switcher,
+  .m-writings:has(#m-w-view-chemical-engineering:checked) .m-tab-switcher {
+    display: none;
+  }
+
+  .m-writings:has(#m-w-view-who-am-i:checked) .m-w-article-back,
+  .m-writings:has(#m-w-view-chemical-engineering:checked) .m-w-article-back {
+    display: flex;
+  }
+
+  .m-tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .m-tab-switcher {
+    display: flex;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .m-tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 15px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #m-tab-writings:checked ~ .m-tab-switcher label[for='m-tab-writings'],
+  #m-tab-captures:checked ~ .m-tab-switcher label[for='m-tab-captures'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  .m-tab-panel {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #m-tab-writings:checked ~ .m-panel-writings,
+  #m-tab-captures:checked ~ .m-panel-captures {
+    display: flex;
+    margin-top: 8px;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .m-w-view-wrap {
+    width: 100%;
+  }
+
+  .m-w-view-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .m-w-list,
+  .m-w-detail {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  #m-w-view-list:checked ~ .m-w-list {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .m-w-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px 0 0;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .m-w-entry-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .m-w-entry-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 20px;
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .m-w-entry-date {
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 200;
+    font-size: 13px;
+    color: #000;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .m-w-entry-preview {
+    margin: 0;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 13px;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .m-w-entry-divider {
+    margin-top: 18px;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  .m-w-detail-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .m-w-detail-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1.15;
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .m-w-detail-date {
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 200;
+    font-size: 13px;
+    color: #000;
+  }
+
+  .m-w-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .m-w-detail-image {
+    max-width: 220px;
+    box-shadow: 3px 5px 12px 0px rgba(0, 0, 0, 0.26);
+  }
+
+  .m-w-detail-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .m-w-detail-body p {
+    margin: 0;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #000;
+  }
+
+  #m-w-view-who-am-i:checked ~ .m-w-detail-who-am-i,
+  #m-w-view-chemical-engineering:checked ~ .m-w-detail-chemical-engineering {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .m-captures-subtext {
+    margin: 0 0 20px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 15px;
+    color: #443a3a;
+    text-align: center;
+  }
+
+  /* Same masonry approach as the desktop .captures-grid, at 2 columns
+     instead of 3. */
+  .m-captures-grid {
+    columns: 2;
+    column-gap: 18px;
+    width: 100%;
+  }
+
+  .m-capture-item {
+    position: relative;
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.08), 0px 14px 32px 0px rgba(0, 0, 0, 0.14);
+  }
+
+  .m-capture {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .m-capture-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .m-capture-play svg {
+    width: 26px;
+    height: 26px;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
+  }
+</style>

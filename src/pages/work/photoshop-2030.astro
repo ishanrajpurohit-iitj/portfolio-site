@@ -1,0 +1,686 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import Window from '../../components/Window.astro';
+import ChevronLeft from '../../components/ChevronLeft.astro';
+import MobileTitlebar from '../../components/MobileTitlebar.astro';
+import '../../styles/mobile-case-study.css';
+
+const sections = [
+  { id: 'problem', label: 'Problem' },
+  { id: 'bet', label: 'The Bet' },
+  { id: 'assistant', label: 'The assistant' },
+  { id: 'control', label: 'Control' },
+  { id: 'constraint', label: 'The constraint' },
+  { id: 'result', label: 'Result & reflection' },
+  { id: 'visuals', label: 'More Visuals' },
+];
+---
+
+<AppLayout
+  title="Photoshop 2030 · Ishan Rajpurohit"
+  description="Reimagining Photoshop as a 2030 AI editor you can talk to, an Adobe Inter-IIT Tech Meet case study by Ishan Rajpurohit."
+>
+  <Window title="Work" height={738} transitionName="active-window">
+    <ChevronLeft href="/work" />
+    <div class="cs-body">
+      {sections.map((s, i) => (
+        <input type="radio" name="ph-tab" id={`ph-${s.id}`} class="cs-radio" checked={i === 0} />
+      ))}
+
+      <div class="cs-row">
+        <nav class="cs-sidebar">
+          {sections.map((s) => (
+            <label for={`ph-${s.id}`} class="cs-pill">{s.label}</label>
+          ))}
+        </nav>
+
+        <div class="cs-content">
+          <div class="cs-panel panel-problem">
+            <div class="overview-header">
+              <h1 class="overview-title">Reimagining Photoshop as a 2030 AI editor you can talk to.</h1>
+              <div class="meta-grid">
+                <div class="meta-col">
+                  <p class="meta-label">role</p>
+                  <p class="meta-value">Sole Product<br />Designer</p>
+                </div>
+                <div class="meta-col">
+                  <p class="meta-label">context</p>
+                  <p class="meta-value">Adobe | Inter-IIT Tech Meet 14.0 | AI editor of 2030</p>
+                </div>
+                <div class="meta-col">
+                  <p class="meta-label">team</p>
+                  <p class="meta-value">6: design (me), product (1), dev (2), AI (2)</p>
+                </div>
+                <div class="meta-col">
+                  <p class="meta-label">result</p>
+                  <p class="meta-value">3rd highest score in design &amp; UX; and 6th of 23 IITs (overall, across design + ML)</p>
+                </div>
+              </div>
+              <p class="overview-desc">Adobe&rsquo;s brief: design a lightweight, mobile-first AI image editor for 2030 that stays fast on low-compute devices and keeps the human in control. I was the sole designer on a six-person team. We placed 6th of 23 IITs.</p>
+            </div>
+
+            <div class="problem-row">
+              <div class="section-text">
+                <div class="section-heading">
+                  <h2>Problem</h2>
+                  <p class="section-sub">By 2030, editing moves to the phone, and to conversation.</p>
+                </div>
+                <div class="section-body">
+                  <p>Photoshop&rsquo;s users have always relied on desktop-class hardware and dense toolbars.</p>
+                  <p>Adobe&rsquo;s brief looked ahead: by 2030, creators will expect mobile-first, AI-assisted editing on limited compute, where you say &ldquo;brighten only the left half of the sky&rdquo; instead of hunting for a tool.</p>
+                  <p>The hard part Adobe named explicitly: <span class="inline-emphasis">keep the human in control while using small, efficient models.</span> The user has to see what the AI did and be able to refine it.</p>
+                  <p>The obvious response is to bolt AI onto the existing tool (Photoshop), plus a prompt box. I didn&rsquo;t want that.</p>
+                </div>
+              </div>
+              <div class="phone-shot-empty ph-hero"></div>
+            </div>
+          </div>
+
+          <div class="cs-panel panel-bet centered">
+            <div class="bet-stack">
+              <div class="section-text">
+                <div class="section-heading">
+                  <h2>The bet</h2>
+                  <p class="section-sub">I didn&rsquo;t want Photoshop 2030. I wanted an app that feels two-way.</p>
+                </div>
+                <div class="section-body">
+                  <p>Most AI editors work like a vending machine: type an input, get a result.</p>
+                  <p>My stand was that the 2030 editor should feel like a <span class="inline-emphasis">conversation layered on top of fast direct actions</span>: you talk to it when you want guidance, and go direct when you don&rsquo;t.</p>
+                  <p>The product should feel alive and context-aware, not like a form you submit.</p>
+                  <p>That single decision drove these two things: <span class="inline-emphasis">Orby</span>, an assistant that makes the app a partner rather than a passive tool, and a <span class="inline-emphasis">home experience</span> built to feel like a 2030 AI product, not a phone-sized copy of the desktop app.</p>
+                </div>
+              </div>
+              <div class="info-grid">
+                <div class="info-col">
+                  <p class="info-heading">Intent over tools</p>
+                  <p class="info-body">You describe what you want; the app figures out which operation that is.</p>
+                </div>
+                <div class="info-col">
+                  <p class="info-heading">Human in the loop</p>
+                  <p class="info-body">You always see what changed and can refine it. AI assists, it doesn&rsquo;t decide.</p>
+                </div>
+                <div class="info-col">
+                  <p class="info-heading">Conversation on top of speed</p>
+                  <p class="info-body">Talk to it for guidance; bypass it entirely when you already know.</p>
+                </div>
+              </div>
+            </div>
+            <div class="phone-row">
+              <div class="phone-shot-empty ph-tall"></div>
+              <div class="phone-shot-empty ph-tall"></div>
+            </div>
+          </div>
+
+          <div class="cs-panel panel-assistant">
+            <div class="section-text">
+              <div class="section-heading">
+                <h2>The assistant</h2>
+                <p class="section-sub">Orby is a guide you summon, not an assistant that interrupts.</p>
+              </div>
+              <div class="section-body">
+                <p>Orby is what makes the app feel human: an emotive navigator that gives context-aware suggestions (&ldquo;Remove tourists&rdquo;, &ldquo;Fix lighting&rdquo;) instead of leaving you to find the right tool.</p>
+                <p>But an always-active AI companion is one wrong move away from Clippy: charming in a demo, exhausting in daily use.</p>
+                <p>So Orby earns its place by staying out of the way. It sits <span class="inline-emphasis">minimised at the edge of the screen, blinking,</span> and only comes forward when touched or called.</p>
+                <p>And it&rsquo;s never a gate: <span class="inline-emphasis">Prompt is direct-to-result, and Stylize and Auto-Enhance are one tap</span>, so a power user can bypass Orby entirely.</p>
+                <p>It&rsquo;s a guide for when you can&rsquo;t express what you want, not a toll you pay on every edit.</p>
+              </div>
+            </div>
+            <div class="phone-shot-empty ph-tall"></div>
+          </div>
+
+          <div class="cs-panel panel-control">
+            <div class="section-text">
+              <div class="section-heading">
+                <h2>Control</h2>
+                <p class="section-sub">Two ways to remove the birds: quick, or precise.</p>
+              </div>
+              <div class="section-body">
+                <p>&ldquo;Human in the loop&rdquo; only means something if the user can choose how much control they want. Ask to remove the birds from a photo and Orby offers two paths.</p>
+                <p><span class="inline-emphasis">The Prompt tab:</span> just type it, done.</p>
+                <p><span class="inline-emphasis">The Select tab:</span> mask the birds with stylus or touch and erase or inpaint, for precise results. Same goal, two levels of control, the user&rsquo;s call.</p>
+                <p>That logic shapes the whole editor. I reduced the cluttered toolbar to a <span class="inline-emphasis">floating capsule of four decisive options</span>: Select (one linear workflow that absorbs Heal, Patch and Move, where you select and then pick the intent: Erase, Move, or Inpaint), Prompt (conversational generation), Edit (legacy manual tools, tucked away), and Layers (non-destructive control).</p>
+                <p>AI is the default. Manual is always one tap away.</p>
+              </div>
+            </div>
+            <div class="phone-shot-empty ph-control"></div>
+          </div>
+
+          <div class="cs-panel panel-constraint centered">
+            <div class="section-text">
+              <div class="section-heading">
+                <h2>The constraint</h2>
+                <p class="section-sub">On-device or cloud: the user&rsquo;s choice, not a hidden default.</p>
+              </div>
+              <div class="section-body">
+                <p>The brief&rsquo;s hard constraint was low compute. Most solutions would hide that decision in the backend. I made it a visible toggle: Atom runs locally, private and fast on limited hardware, while PhotoFlux V30 runs in the cloud for high-fidelity results.</p>
+                <p>The constraint becomes a feature: privacy and speed when you want them, fidelity when you need it, and the user always knows which one they&rsquo;re using.</p>
+                <p>Two smaller calls round it out. One-tap generative shortcuts (Stylize, Auto-Enhance) sit in the top navigation for instant access.</p>
+                <p>And every exported, AI-generated layer carries C2PA content credentials: provenance built in, because a 2030 AI tool should be honest about what it made.</p>
+              </div>
+            </div>
+            <div class="phone-row">
+              <div class="phone-shot"><img src="/images/work/photoshop2030/constraint-screen3.png" alt="Photoshop 2030 on-device vs cloud toggle" /></div>
+              <div class="phone-shot"><img src="/images/work/photoshop2030/constraint-screen4.jpg" alt="Photoshop 2030 content credentials" /></div>
+            </div>
+          </div>
+
+          <div class="cs-panel panel-result centered text-only">
+            <div class="section-text">
+              <div class="section-heading">
+                <h2>Result &amp; reflection</h2>
+                <p class="section-sub">3rd highest score bracket in Design &amp; UX. Overall 6th of 23 IITs, and a sharper view of AI-UX.</p>
+              </div>
+              <div class="section-body">
+                <p>We got placed in the 3rd highest score bracket in design &amp; UX. And for the overall, AI + Dev + Design Problem Statement, 6th of 23 IITs.</p>
+                <p>It was a team result across three tracks (product design, market research, and building the AI pipelines), and I led the product design. This is a concept built under competition time pressure, not a shipped product.</p>
+                <p>What I took from it: the hard part of designing for AI isn&rsquo;t the generation. It&rsquo;s <span class="inline-emphasis">control and trust.</span></p>
+                <p>The decisions that mattered weren&rsquo;t the impressive outputs; they were the off-ramps: letting the user bypass Orby, the precise Select path next to the quick Prompt one, the visible model toggle.</p>
+                <p>Designing where the human stays in control taught me more than any single AI feature could.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="cs-panel panel-visuals centered">
+            <div class="section-heading visuals-heading">
+              <h2>More Visuals</h2>
+            </div>
+            <div class="phone-shot-empty ph-full"></div>
+            <div class="phone-row">
+              <div class="phone-shot-empty ph-tall"></div>
+              <div class="phone-shot-empty ph-tall"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Work" backHref="/work" />
+    <div class="m-cs">
+      <header class="m-cs-header">
+        <h1>Reimagining Photoshop as a 2030 AI editor you can talk to.</h1>
+        <div class="m-cs-meta">
+          <div class="m-cs-meta-col">
+            <p class="m-cs-meta-label">role</p>
+            <p class="m-cs-meta-value">Sole Product Designer</p>
+          </div>
+          <div class="m-cs-meta-col">
+            <p class="m-cs-meta-label">context</p>
+            <p class="m-cs-meta-value">Adobe | Inter-IIT Tech Meet 14.0</p>
+          </div>
+          <div class="m-cs-meta-col">
+            <p class="m-cs-meta-label">team</p>
+            <p class="m-cs-meta-value">6: design (me), product (1), dev (2), AI (2)</p>
+          </div>
+          <div class="m-cs-meta-col">
+            <p class="m-cs-meta-label">result</p>
+            <p class="m-cs-meta-value">3rd highest score in design &amp; UX; 6th of 23 IITs overall</p>
+          </div>
+        </div>
+        <p class="m-cs-desc">Adobe&rsquo;s brief: design a lightweight, mobile-first AI image editor for 2030 that stays fast on low-compute devices and keeps the human in control. I was the sole designer on a six-person team. We placed 6th of 23 IITs.</p>
+      </header>
+
+      <nav class="m-cs-nav">
+        {sections.filter((s) => s.id !== 'visuals').map((s) => (
+          <a href={`#m-ph-${s.id}`}>{s.label}</a>
+        ))}
+      </nav>
+
+      <div class="m-cs-content cs-content">
+        <section id="m-ph-problem" class="m-cs-section">
+          <h2>Problem</h2>
+          <p class="m-cs-sub">By 2030, editing moves to the phone, and to conversation.</p>
+          <div class="m-cs-body">
+            <p>Photoshop&rsquo;s users have always relied on desktop-class hardware and dense toolbars.</p>
+            <p>Adobe&rsquo;s brief looked ahead: by 2030, creators will expect mobile-first, AI-assisted editing on limited compute, where you say &ldquo;brighten only the left half of the sky&rdquo; instead of hunting for a tool.</p>
+            <p>The hard part Adobe named explicitly: <span class="m-cs-emphasis-inline">keep the human in control while using small, efficient models.</span> The user has to see what the AI did and be able to refine it.</p>
+            <p>The obvious response is to bolt AI onto the existing tool (Photoshop), plus a prompt box. I didn&rsquo;t want that.</p>
+          </div>
+        </section>
+
+        <section id="m-ph-bet" class="m-cs-section">
+          <h2>The bet</h2>
+          <p class="m-cs-sub">I didn&rsquo;t want Photoshop 2030. I wanted an app that feels two-way.</p>
+          <div class="m-cs-body">
+            <p>Most AI editors work like a vending machine: type an input, get a result.</p>
+            <p>My stand was that the 2030 editor should feel like a <span class="m-cs-emphasis-inline">conversation layered on top of fast direct actions</span>: you talk to it when you want guidance, and go direct when you don&rsquo;t.</p>
+            <p>The product should feel alive and context-aware, not like a form you submit.</p>
+            <p>That single decision drove these two things: <span class="m-cs-emphasis-inline">Orby</span>, an assistant that makes the app a partner rather than a passive tool, and a <span class="m-cs-emphasis-inline">home experience</span> built to feel like a 2030 AI product, not a phone-sized copy of the desktop app.</p>
+          </div>
+          <div class="m-cs-info-grid">
+            <div class="m-cs-info-col">
+              <p class="m-cs-info-heading">Intent over tools</p>
+              <p class="m-cs-info-body">You describe what you want; the app figures out which operation that is.</p>
+            </div>
+            <div class="m-cs-info-col">
+              <p class="m-cs-info-heading">Human in the loop</p>
+              <p class="m-cs-info-body">You always see what changed and can refine it. AI assists, it doesn&rsquo;t decide.</p>
+            </div>
+            <div class="m-cs-info-col">
+              <p class="m-cs-info-heading">Conversation on top of speed</p>
+              <p class="m-cs-info-body">Talk to it for guidance; bypass it entirely when you already know.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="m-ph-assistant" class="m-cs-section">
+          <h2>The assistant</h2>
+          <p class="m-cs-sub">Orby is a guide you summon, not an assistant that interrupts.</p>
+          <div class="m-cs-body">
+            <p>Orby is what makes the app feel human: an emotive navigator that gives context-aware suggestions (&ldquo;Remove tourists&rdquo;, &ldquo;Fix lighting&rdquo;) instead of leaving you to find the right tool.</p>
+            <p>But an always-active AI companion is one wrong move away from Clippy: charming in a demo, exhausting in daily use.</p>
+            <p>So Orby earns its place by staying out of the way. It sits <span class="m-cs-emphasis-inline">minimised at the edge of the screen, blinking,</span> and only comes forward when touched or called.</p>
+            <p>And it&rsquo;s never a gate: <span class="m-cs-emphasis-inline">Prompt is direct-to-result, and Stylize and Auto-Enhance are one tap</span>, so a power user can bypass Orby entirely.</p>
+            <p>It&rsquo;s a guide for when you can&rsquo;t express what you want, not a toll you pay on every edit.</p>
+          </div>
+        </section>
+
+        <section id="m-ph-control" class="m-cs-section">
+          <h2>Control</h2>
+          <p class="m-cs-sub">Two ways to remove the birds: quick, or precise.</p>
+          <div class="m-cs-body">
+            <p>&ldquo;Human in the loop&rdquo; only means something if the user can choose how much control they want. Ask to remove the birds from a photo and Orby offers two paths.</p>
+            <p><span class="m-cs-emphasis-inline">The Prompt tab:</span> just type it, done.</p>
+            <p><span class="m-cs-emphasis-inline">The Select tab:</span> mask the birds with stylus or touch and erase or inpaint, for precise results. Same goal, two levels of control, the user&rsquo;s call.</p>
+            <p>That logic shapes the whole editor. I reduced the cluttered toolbar to a <span class="m-cs-emphasis-inline">floating capsule of four decisive options</span>: Select (one linear workflow that absorbs Heal, Patch and Move, where you select and then pick the intent: Erase, Move, or Inpaint), Prompt (conversational generation), Edit (legacy manual tools, tucked away), and Layers (non-destructive control).</p>
+            <p>AI is the default. Manual is always one tap away.</p>
+          </div>
+        </section>
+
+        <section id="m-ph-constraint" class="m-cs-section">
+          <h2>The constraint</h2>
+          <p class="m-cs-sub">On-device or cloud: the user&rsquo;s choice, not a hidden default.</p>
+          <div class="m-cs-body">
+            <p>The brief&rsquo;s hard constraint was low compute. Most solutions would hide that decision in the backend. I made it a visible toggle: Atom runs locally, private and fast on limited hardware, while PhotoFlux V30 runs in the cloud for high-fidelity results.</p>
+            <p>The constraint becomes a feature: privacy and speed when you want them, fidelity when you need it, and the user always knows which one they&rsquo;re using.</p>
+            <p>Two smaller calls round it out. One-tap generative shortcuts (Stylize, Auto-Enhance) sit in the top navigation for instant access.</p>
+            <p>And every exported, AI-generated layer carries C2PA content credentials: provenance built in, because a 2030 AI tool should be honest about what it made.</p>
+          </div>
+          <div class="m-cs-shot-row">
+            <div class="m-cs-shot"><img src="/images/work/photoshop2030/constraint-screen3.png" alt="Photoshop 2030 on-device vs cloud toggle" /></div>
+            <div class="m-cs-shot"><img src="/images/work/photoshop2030/constraint-screen4.jpg" alt="Photoshop 2030 content credentials" /></div>
+          </div>
+        </section>
+
+        <section id="m-ph-result" class="m-cs-section">
+          <h2>Result &amp; reflection</h2>
+          <p class="m-cs-sub">3rd highest score bracket in Design &amp; UX. Overall 6th of 23 IITs, and a sharper view of AI-UX.</p>
+          <div class="m-cs-body">
+            <p>We got placed in the 3rd highest score bracket in design &amp; UX. And for the overall, AI + Dev + Design Problem Statement, 6th of 23 IITs.</p>
+            <p>It was a team result across three tracks (product design, market research, and building the AI pipelines), and I led the product design. This is a concept built under competition time pressure, not a shipped product.</p>
+            <p>What I took from it: the hard part of designing for AI isn&rsquo;t the generation. It&rsquo;s <span class="m-cs-emphasis-inline">control and trust.</span></p>
+            <p>The decisions that mattered weren&rsquo;t the impressive outputs; they were the off-ramps: letting the user bypass Orby, the precise Select path next to the quick Prompt one, the visible model toggle.</p>
+            <p>Designing where the human stays in control taught me more than any single AI feature could.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<style>
+  .cs-body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cs-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .cs-row {
+    display: flex;
+    flex: 1 0 0;
+    gap: 40px;
+    align-items: flex-start;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 64px 72px 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .cs-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding-top: 24px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    width: 200px;
+  }
+
+  .cs-pill {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 12px 0 12px 32px;
+    border-radius: 0 60px 60px 0;
+    filter: drop-shadow(0px 4px 5.25px rgba(0, 0, 0, 0.16));
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 20px;
+    color: #000;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  #ph-problem:checked ~ .cs-row .cs-sidebar label[for='ph-problem'],
+  #ph-bet:checked ~ .cs-row .cs-sidebar label[for='ph-bet'],
+  #ph-assistant:checked ~ .cs-row .cs-sidebar label[for='ph-assistant'],
+  #ph-control:checked ~ .cs-row .cs-sidebar label[for='ph-control'],
+  #ph-constraint:checked ~ .cs-row .cs-sidebar label[for='ph-constraint'],
+  #ph-result:checked ~ .cs-row .cs-sidebar label[for='ph-result'],
+  #ph-visuals:checked ~ .cs-row .cs-sidebar label[for='ph-visuals'] {
+    background: #ebe3d7;
+    box-shadow: 0px 4px 10.5px 0px rgba(0, 0, 0, 0.16);
+    filter: none;
+  }
+
+  .cs-content {
+    display: flex;
+    flex: 1 0 0;
+    flex-direction: column;
+    min-width: 0;
+    padding: 24px 20px 0;
+    box-sizing: border-box;
+  }
+
+  .cs-panel {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .cs-panel.centered {
+    align-items: center;
+  }
+
+  @keyframes tab-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #ph-problem:checked ~ .cs-row .panel-problem,
+  #ph-bet:checked ~ .cs-row .panel-bet,
+  #ph-assistant:checked ~ .cs-row .panel-assistant,
+  #ph-control:checked ~ .cs-row .panel-control,
+  #ph-constraint:checked ~ .cs-row .panel-constraint,
+  #ph-result:checked ~ .cs-row .panel-result,
+  #ph-visuals:checked ~ .cs-row .panel-visuals {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .panel-problem {
+    gap: 20px;
+  }
+
+  .overview-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .overview-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 48px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .meta-grid {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .meta-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1 0 0;
+    min-width: 0;
+  }
+
+  .meta-label {
+    margin: 0;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 14px;
+    color: #000;
+  }
+
+  .meta-value {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    color: #5b5a5a;
+  }
+
+  .overview-desc {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 22px;
+    color: #8b8b8b;
+  }
+
+  .problem-row {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .section-text {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    flex: 1 0 0;
+    min-width: 0;
+  }
+
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .section-heading h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .section-sub {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-size: 24px;
+    line-height: 22px;
+    color: #5b5a5a;
+  }
+
+  .section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 22px;
+    color: #000;
+  }
+
+  .section-body p {
+    margin: 0;
+  }
+
+  .inline-emphasis {
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 400;
+  }
+
+  /* Empty placeholder mockups — these Figma slots have no source screenshot yet */
+  .phone-shot-empty {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    box-shadow: 2px 4px 8.5px 0px rgba(0, 0, 0, 0.25);
+  }
+
+  .ph-hero {
+    width: 333px;
+    height: 592px;
+    border: 4px solid #acacac;
+    border-radius: 60px;
+  }
+
+  .ph-tall {
+    width: 286px;
+    height: 585px;
+    border-radius: 60px;
+  }
+
+  .ph-control {
+    width: 321px;
+    height: 570px;
+    border: 2px solid #acacac;
+    border-radius: 30px;
+  }
+
+  .ph-full {
+    width: 100%;
+    height: 479px;
+    border-radius: 60px;
+  }
+
+  .phone-shot {
+    position: relative;
+    flex-shrink: 0;
+    width: 177px;
+    height: 384px;
+    border: 2px solid #acacac;
+    border-radius: 30px;
+    box-shadow: 2px 4px 8.5px 0px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+
+  .phone-shot img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    transition: transform 0.2s ease-out;
+  }
+
+  .phone-shot:hover img {
+    transform: scale(1.04);
+  }
+
+  .phone-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+
+  .panel-bet {
+    gap: 40px;
+  }
+
+  .bet-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .info-grid {
+    display: flex;
+    gap: 30px;
+    padding: 10px 0;
+    width: 100%;
+  }
+
+  .info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1 0 0;
+    min-width: 0;
+  }
+
+  .info-heading {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    color: #5b5a5a;
+  }
+
+  .info-body {
+    margin: 0;
+    font-family: 'Geist Mono', var(--font-mono);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .panel-assistant,
+  .panel-control {
+    gap: 40px;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .panel-constraint {
+    gap: 40px;
+  }
+
+  .panel-result {
+    justify-content: center;
+  }
+
+  .panel-visuals {
+    gap: 25px;
+  }
+
+  .visuals-heading {
+    width: 100%;
+  }
+
+  .phone-row .ph-tall {
+    margin: 0;
+  }
+
+  .panel-bet .phone-row,
+  .panel-visuals .phone-row {
+    padding: 20px 0;
+  }
+</style>

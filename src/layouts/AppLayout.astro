@@ -1,0 +1,219 @@
+---
+import Layout from './Layout.astro';
+import Dock from '../components/Dock.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  windowTop?: string;
+}
+
+const { title, description, windowTop = 'calc(50% - 70px)' } = Astro.props;
+---
+
+<Layout title={title} description={description} scaleMode="fit-both" backdrop={true}>
+  <div class="app-frame">
+    <div class="app-content">
+      <div class="window-position" style={`top:${windowTop}`}>
+        <slot />
+      </div>
+    </div>
+    <div class="app-dock floating-dock-anchor dock-entering" transition:name="app-dock" transition:persist>
+      <Dock />
+    </div>
+  </div>
+  <slot name="mobile" slot="mobile" />
+</Layout>
+
+<script>
+  // Plays the dock's entrance exactly once per DOM node, then tears down
+  // every class/property involved in that entrance — see .dock-entering in
+  // the <style> below for why leaving them attached is what was actually
+  // causing the "dock refloats on every dock-icon click" bug.
+  function initDockEntrance() {
+    const dock = document.querySelector('.app-dock');
+    if (!(dock instanceof HTMLElement)) return;
+    if (!dock.classList.contains('dock-entering') || dock.dataset.entered === 'true') return;
+    dock.dataset.entered = 'true';
+    // Set by Layout.astro's astro:before-preparation handler when this
+    // navigation came directly from Home — holds the dock back until the
+    // window has actually finished scaling in, instead of starting
+    // immediately (astro:page-load fires right as the DOM swap completes,
+    // well before the View Transition's own crossfade even begins playing,
+    // which landed the dock on screen before the window it's meant to
+    // follow). Reset immediately after reading so a later true-first-mount
+    // on some other page (which never sets this) doesn't inherit a stale
+    // delay from a previous navigation.
+    const delay = window.__dockEntranceDelayMs || 0;
+    window.__dockEntranceDelayMs = 0;
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        dock.classList.add('dock-in');
+        dock.addEventListener(
+          'transitionend',
+          () => dock.classList.remove('dock-entering', 'dock-in'),
+          { once: true }
+        );
+      });
+    }, delay);
+  }
+
+  initDockEntrance();
+  document.addEventListener('astro:page-load', initDockEntrance);
+
+  // Window.astro's maximize toggle dispatches this on the green traffic
+  // light click. The maximized window's own background is only 58% opaque
+  // (rgba(255,255,255,0.58) — the "frosted glass" look), so even once it's
+  // genuinely covering the full screen (see Window.astro's maximize
+  // comment for why that needed a portal), the dock sitting behind it is
+  // still faintly visible showing through, at its own unrelated position
+  // within the now-hidden-behind-the-portal .app-frame — not actually
+  // hidden just because something opaque-looking is drawn over it. Sliding
+  // it down and out below the frame (see setDockMaxHidden below) actually
+  // removes it from view instead of relying on translucency to do that.
+  //
+  // setDockMaxHidden sets these as INLINE styles rather than toggling a
+  // .dock-max-hidden class (the original approach) — found live, still
+  // reproducing after the first fix attempt at this exact bug: the dock's
+  // own one-time entrance (.dock-entering/.dock-in, see initDockEntrance
+  // above) cleans itself up via a `transitionend` listener that isn't
+  // guaranteed to fire promptly (or at all, if something else interrupts
+  // the transition it's listening for) — while dock-entering/dock-in are
+  // still attached, `.app-dock.dock-entering.dock-in` and
+  // `.app-dock.dock-max-hidden.dock-max-hidden` are BOTH exactly
+  // (0,3,0)-specificity 3-class selectors, so it comes down to CSS source
+  // order — fine as a one-time tie-break, but fragile: it silently
+  // depends on nothing ever adding a THIRD same-specificity contender, and
+  // clearly still isn't bulletproof given the bug recurred. Inline styles
+  // always beat any class-based rule regardless of how many classes it
+  // chains, so this sidesteps the whole specificity question rather than
+  // trying to out-specificity it again.
+  function setDockMaxHidden(dock, hidden) {
+    if (hidden) {
+      dock.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+      dock.style.transform = 'translateX(-50%) translateY(150px)';
+      dock.style.opacity = '0';
+      dock.style.pointerEvents = 'none';
+    } else {
+      dock.style.transition = '';
+      dock.style.transform = '';
+      dock.style.opacity = '';
+      dock.style.pointerEvents = '';
+    }
+  }
+
+  document.addEventListener('appwindow:maximize', (e) => {
+    const dock = document.querySelector('.app-dock');
+    if (dock instanceof HTMLElement) {
+      setDockMaxHidden(dock, !!e.detail?.maximized);
+    }
+  });
+
+  // Minimizing a maximized window left the dock stuck hidden (still
+  // hidden from the maximize) with nothing else on screen to navigate
+  // anywhere with — found live, not hypothetical: minimize while
+  // maximized produced just an empty backdrop, no dock, no way out short of
+  // a manual URL edit. Minimize always needs the dock regardless of the
+  // window's own maximized/not state, since the whole point of minimizing
+  // is "get back to the desk to open something else from the dock".
+  // Restoring doesn't get to just assume "not minimized" means "not
+  // maximized" either — setMinimized() (Window.astro) only ever touches
+  // transform/opacity/pointer-events, never data-maximized, so a window
+  // that was maximized before being minimized is STILL maximized once
+  // restored, and the dock needs to go back to hidden for that case rather
+  // than staying visible over a full-screen window.
+  document.addEventListener('appwindow:minimize', (e) => {
+    const dock = document.querySelector('.app-dock');
+    if (!(dock instanceof HTMLElement)) return;
+    if (e.detail?.minimized) {
+      setDockMaxHidden(dock, false);
+    } else {
+      const win = document.querySelector('.window');
+      const stillMaximized = win instanceof HTMLElement && win.dataset.maximized === 'true';
+      setDockMaxHidden(dock, stillMaximized);
+    }
+  });
+</script>
+
+<style>
+  .app-frame {
+    position: relative;
+    width: 1440px;
+    height: 1024px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  .app-content {
+    position: absolute;
+    left: -1px;
+    top: 122px;
+    width: 1440px;
+    height: 902px;
+    overflow: hidden;
+  }
+
+  .window-position {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Position/transform live in the shared .floating-dock-anchor class
+     (global.css) instead of here — see intro.astro's matching .intro-dock
+     comment for why: this scoped rule doesn't survive a transition:persist
+     navigation that lands on a DIFFERENT page than the one that authored
+     it. */
+  .app-dock {
+    position: absolute;
+  }
+
+  /* Plays once, on the dock's true first mount — Home has no dock at rest
+     (it sits parked off-frame there in the Figma source, y:1034 vs. the
+     1024-tall frame), so the first time a dock exists anywhere is exactly
+     when navigating from Home into a page that has one; that's the "opens
+     as a page appears" entrance. 112px is Figma's own gap between the
+     dock's off-frame position on Home (y:1034) and its resting position
+     everywhere else (y:922, matching bottom:40px in a 1024-tall frame).
+
+     This used to be a permanent `animation: dock-float-in ... forwards`
+     directly on .app-dock, on the assumption transition:persist means "this
+     exact DOM node, never re-inserted" — it doesn't: swapBodyElement (astro/
+     dist/transitions/swap-functions.js) persists a node by DETACHING it
+     (the old <body> is replaced wholesale) and then RE-INSERTING that same
+     node into the new body via replaceWith(). A keyframe animation that's
+     still declared on an element restarts from `from` on that kind of
+     reinsertion, even though it's the same element with the same identity —
+     which is exactly what showed up as the dock re-floating on every single
+     dock-icon click, not just on true first mount. A `transition` doesn't
+     have that failure mode (it only fires on an actual computed-value
+     change while continuously rendered, and a reinsertion with an unchanged
+     class list produces no such change) — but the real fix is that the
+     script above removes .dock-entering/.dock-in entirely once the
+     one-time entrance finishes, so a settled dock carries no
+     animation-or-transition-triggering class at all for any later
+     persist-reinsertion to possibly restart. */
+  /* .app-dock.dock-entering (two classes) rather than just .dock-entering —
+     .floating-dock-anchor (global.css) also sets `transform` at single-class
+     specificity, and which file's stylesheet loads later in <head> isn't
+     something to depend on for who wins that tie. */
+  .app-dock.dock-entering {
+    opacity: 0;
+    transform: translateX(-50%) translateY(112px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .app-dock.dock-entering.dock-in {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* No .dock-max-hidden rule here anymore — that class-based approach
+     (repeating the class to win a specificity tie against
+     .dock-entering.dock-in) was the first fix for the maximize/dock bug
+     and turned out not to be fully reliable in practice (the bug
+     recurred). setDockMaxHidden (the appwindow:maximize/:minimize
+     listeners above) now sets the hidden state as inline styles directly
+     on the dock instead, which always wins over any class-based rule
+     regardless of specificity — see that function's own comment for why. */
+</style>

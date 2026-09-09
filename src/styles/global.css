@@ -1,0 +1,82 @@
+/* overflow:hidden + overscroll-behavior:none here is a hard, explicit
+   guarantee, not an incidental side effect of content happening to fit —
+   neither the desktop composition (a fixed 1440x1024 canvas, scaled to
+   fit; internal scroll only ever happens inside .window-content) nor the
+   mobile one (a fixed-height .mobile-content, internal scroll only inside
+   its own last-child — see that file's own comments) is meant to let the
+   PAGE itself scroll in either state where an actual window/sheet is on
+   screen. overscroll-behavior specifically guards against iOS Safari's
+   rubber-band bounce, which can still visually read as "the screen is
+   scrolling" even with overflow correctly hidden — a real-device-only
+   quirk this automated environment can't reproduce or catch. */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Only html gets the background — not body. Putting it on BOTH broke
+   #page-backdrop (AppLayout pages' full-bleed photo, z-index:-1): per the
+   CSS2.1 painting order, a stacking context's own background paints below
+   negative-z-index descendants, but an in-flow descendant's background
+   (body, un-positioned) paints ABOVE them — so body having its own opaque
+   background put it in front of the backdrop, hiding it completely behind
+   a flat #EFE8DD field. Before either of them had this rule, body's
+   background was being CSS-spec-promoted to serve as the canvas's own
+   background (the "if html has no background, use body's for the canvas,
+   and body itself then paints transparent" rule) — which is exactly why
+   the backdrop worked correctly before. Explicitly setting it on html only
+   keeps that same effect (body has no background of its own to paint above
+   the backdrop with) while still fixing the original problem: a View
+   Transition briefly hides the real page while building its snapshot tree,
+   and during that gap the canvas could paint using the browser's raw
+   default (white) instead of the propagated color — a flash right at the
+   very start of a transition, worst on Home <-> a destination page (the
+   most named groups needing simultaneous setup). html having its own
+   explicit background, rather than relying on the propagation rule to
+   supply one just in time, closes that gap. */
+html {
+  background: var(--color-bg);
+}
+
+body {
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* Shared 1440px page shell (nav + page content) used by every screen. Fixed
+   to 1024px tall — the same natural height every other screen's outer frame
+   uses (AppLayout's .app-frame, intro's .intro-stage) — instead of
+   auto-sizing to its flex children. Home was the one page whose frame grew
+   past 1024px (nav + content + an in-flow dock it doesn't actually have —
+   Home has no dock at rest in the source file; it only arrives floating up
+   as part of the transition into other pages), so it rendered at a
+   different .scale-frame scale than the pages it links to: the same
+   1440-space element (e.g. the home Mac icon vs. /intro's) came out a
+   different on-screen size on each page, reading as a jump during the
+   page-transition crossfade. */
+.page-shell {
+  position: relative;
+  width: 1440px;
+  height: 1024px;
+  margin: 0 auto;
+}
+
+/* Shared, UNSCOPED resting position for the floating dock (AppLayout's
+   .app-dock and intro.astro's .intro-dock). When the dock persists across a
+   transition:persist navigation (e.g. intro.astro -> work.astro), the
+   surviving DOM node keeps whatever page it was originally scoped-styled
+   by — but Astro's page swap drops that origin page's own <style> tag from
+   the document entirely, since it's no longer part of the new page's render
+   tree. A plain import like this one is the one kind of stylesheet that
+   survives every navigation (matched and kept by its own <link>/module
+   identity, not by which component authored it), so it's the only safe
+   place for the persisted node's position to live. Values match the
+   Figma-measured left:calc(50% + 0.5px)/bottom:40px used by both callers. */
+.floating-dock-anchor {
+  position: absolute;
+  left: calc(50% + 0.5px);
+  bottom: 40px;
+  transform: translateX(-50%);
+}

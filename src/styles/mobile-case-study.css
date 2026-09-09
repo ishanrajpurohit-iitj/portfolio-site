@@ -1,0 +1,227 @@
+/* Shared mobile layout for the case-study pages (csite.astro,
+   photoshop-2030.astro): a continuous scroll with a horizontal jump-nav,
+   instead of the desktop's sidebar + hidden-tab-panels — there's no room
+   for a fixed sidebar on a phone, and a scrolling read matches how mobile
+   case studies/articles actually work. */
+
+.m-cs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.m-cs-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.m-cs-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.1;
+  color: #000;
+}
+
+.m-cs-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 20px;
+}
+
+.m-cs-meta-label {
+  margin: 0 0 4px;
+  font-family: 'Geist Mono', var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  color: #000;
+}
+
+.m-cs-meta-value {
+  margin: 0;
+  font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
+  color: #5b5a5a;
+}
+
+.m-cs-desc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #8b8b8b;
+}
+
+.m-cs-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 20px 4px;
+  scrollbar-width: none;
+}
+
+.m-cs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.m-cs-nav a {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 60px;
+  background: rgba(0, 0, 0, 0.05);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: #000;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.m-cs-content {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  padding: 4px 20px 0;
+}
+
+.m-cs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-margin-top: 16px;
+}
+
+.m-cs-section h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  color: #000;
+}
+
+.m-cs-sub {
+  margin: 0;
+  font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.3;
+  color: #5b5a5a;
+}
+
+.m-cs-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #000;
+}
+
+.m-cs-body p,
+.m-cs-body ul {
+  margin: 0;
+}
+
+.m-cs-body ul {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m-cs-italic {
+  font-style: italic;
+  color: #5b5a5a !important;
+}
+
+.m-cs-emphasis,
+.m-cs-emphasis-inline {
+  font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.m-cs-shot-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.m-cs-shot-row::-webkit-scrollbar {
+  display: none;
+}
+
+.m-cs-shot {
+  position: relative;
+  flex-shrink: 0;
+  width: 150px;
+  height: 326px;
+  border: 2px solid #acacac;
+  border-radius: 26px;
+  box-shadow: 2px 4px 8.5px 0px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  box-sizing: border-box;
+  cursor: zoom-in;
+}
+
+.m-cs-shot-thick {
+  border-width: 4px;
+}
+
+.m-cs-shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.m-cs-diagram {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.m-cs-diagram img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.m-cs-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.m-cs-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.m-cs-info-heading {
+  margin: 0;
+  font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+  font-size: 14px;
+  color: #5b5a5a;
+}
+
+.m-cs-info-body {
+  margin: 0;
+  font-family: 'Geist Mono', var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #000;
+}

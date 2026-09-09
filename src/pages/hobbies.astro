@@ -1,0 +1,149 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Window from '../components/Window.astro';
+import MobileTitlebar from '../components/MobileTitlebar.astro';
+---
+
+<AppLayout
+  title="Squash · Ishan Rajpurohit"
+  description="Why squash takes up Ishan Rajpurohit's evenings."
+>
+  <Window title="Squash" height={738} transitionName="active-window">
+    <div class="squash-content">
+      <div class="squash-text">
+        <h1>Squash takes up my evenings.</h1>
+        <div class="squash-body">
+          <p>Between design projects and engineering classes, you&rsquo;ll usually find me on a squash court in the evenings.</p>
+          <p>I started playing in early 2025, and what began as curiosity quickly became one of the most rewarding parts of my routine.</p>
+          <p>Squash has taught me far more than how to hit a ball. It&rsquo;s taught me consistency, patience, and that small improvements compound over time. More importantly, it&rsquo;s introduced me to a community that makes every practice worth showing up for.</p>
+          <p>I&rsquo;ll probably always have a squash racquet leaning somewhere near my desk.</p>
+        </div>
+      </div>
+      <div class="squash-image">
+        <img src="/images/hobbies/squash-collage.png" alt="Playing squash on court" />
+      </div>
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Squash" />
+    <div class="m-squash">
+      <div class="m-squash-image">
+        <img src="/images/hobbies/squash-collage.png" alt="Playing squash on court" />
+      </div>
+      <h1>Squash takes up my evenings.</h1>
+      <div class="m-squash-body">
+        <p>Between design projects and engineering classes, you&rsquo;ll usually find me on a squash court in the evenings.</p>
+        <p>I started playing in early 2025, and what began as curiosity quickly became one of the most rewarding parts of my routine.</p>
+        <p>Squash has taught me far more than how to hit a ball. It&rsquo;s taught me consistency, patience, and that small improvements compound over time. More importantly, it&rsquo;s introduced me to a community that makes every practice worth showing up for.</p>
+        <p>I&rsquo;ll probably always have a squash racquet leaning somewhere near my desk.</p>
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<style>
+  .squash-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    width: 100%;
+    padding: 72px 64px;
+    box-sizing: border-box;
+  }
+
+  .squash-text {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    width: 653px;
+    flex-shrink: 0;
+  }
+
+  .squash-text h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .squash-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .squash-body p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 20px;
+    line-height: normal;
+    color: #443a3a;
+  }
+
+  .squash-image {
+    width: 191px;
+    height: 526px;
+    border-radius: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .squash-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .m-squash {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .m-squash-image {
+    width: 60%;
+    max-width: 220px;
+    margin: 0 auto;
+    aspect-ratio: 191 / 526;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .m-squash-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .m-squash h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.15;
+    color: #000;
+  }
+
+  .m-squash-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .m-squash-body p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #443a3a;
+  }
+</style>

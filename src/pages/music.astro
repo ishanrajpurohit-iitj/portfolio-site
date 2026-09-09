@@ -1,0 +1,753 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Window from '../components/Window.astro';
+import MobileTitlebar from '../components/MobileTitlebar.astro';
+
+// artist/album below are the grid's display fields — left exactly as
+// sourced from Figma (including "Lana Del Ray" and the Kanye entry's
+// artist/album ordering), direct instruction: "dont change the album names
+// in the window vo vahi rehne de jo figma mei the." released/length/
+// trackCount/pick are separate metadata for the album-info overlay (see
+// .album-overlay below) — clicking a cover opens a small centered card
+// showing the release info, track count, and one personal-pick track,
+// matching the site's established glass-card overlay language (same
+// recipe as Layout.astro's .music-overlay "now playing" card: blurred warm
+// backdrop, translucent white card, Window.astro's own open/close easing
+// curves). Previously this held a full per-track table — replaced per
+// direct instruction ("remove tracklist and replace them with top picks")
+// with just the one pick per album, so credit/pick data uses the user's
+// own corrected spellings (e.g. "Lana Del Rey", "Kanye West" as the
+// artist) even where the grid's own display field intentionally doesn't.
+const albums = [
+  {
+    image: '01-shes-green-wisteria.jpg',
+    artist: 'She’s Green',
+    album: 'Wisteria',
+    released: 'June 30, 2023',
+    length: '21:11',
+    trackCount: 5,
+    pick: { title: 'Purple', length: '3:55', by: 'She’s Green' },
+  },
+  {
+    image: '02-emile-mosseri-minari.jpg',
+    artist: 'Emile Mosseri',
+    album: 'Minari',
+    released: 'December 11, 2020',
+    length: '33:09',
+    trackCount: 16,
+    pick: { title: 'Jacob and the Stone', length: '1:39', by: 'Emile Mosseri' },
+  },
+  {
+    image: '03-lana-del-rey-nfr.jpg',
+    artist: 'Lana Del Ray',
+    album: 'Norman Fucking Rockwell!',
+    released: 'August 30, 2019',
+    length: '67:43',
+    trackCount: 14,
+    pick: { title: 'Cinnamon Girl', length: '5:00', by: 'Lana Del Rey' },
+  },
+  {
+    image: '04-mazzy-star-among-my-swan.jpg',
+    artist: 'Mazzy Star',
+    album: 'Among My Swan',
+    released: 'October 29, 1996',
+    length: '51:36',
+    trackCount: 12,
+    pick: { title: 'Look on Down from the Bridge', length: '4:47', by: 'Mazzy Star' },
+  },
+  {
+    image: '05-cas-cry.jpg',
+    artist: 'CAS',
+    album: 'Cry',
+    released: 'October 25, 2019',
+    length: '40:26',
+    trackCount: 9,
+    pick: { title: 'Pure', length: '4:14', by: 'Cigarettes After Sex' },
+  },
+  {
+    image: '06-vishal-shekhar-anjaana-anjaani.jpg',
+    artist: 'Vishal & Shekhar',
+    album: 'Anjaana Anjaani',
+    released: 'August 27, 2010',
+    length: '42:17',
+    trackCount: 9,
+    credit: 'Composed by Vishal–Shekhar; lyrics by Anvita Dutt.',
+    pick: { title: 'I Feel Good', length: '5:17', by: 'Vishal Dadlani, Shilpa Rao' },
+  },
+  {
+    image: '07-lsd-title-ep.jpg',
+    artist: 'LSD and the Search for God',
+    album: 'Title EP',
+    released: 'January 16, 2007',
+    length: '22:03',
+    trackCount: 5,
+    pick: { title: 'Starting Over', length: '5:04', by: 'LSD and the Search for God' },
+  },
+  {
+    image: '08-smush-iywihibhn.jpg',
+    artist: 'smush',
+    album: 'if you were here i’d be home now',
+    released: '2024',
+    length: '39:38',
+    trackCount: 12,
+    pick: { title: 'Goodnight Moon', length: '4:03', by: 'smush' },
+  },
+  {
+    image: '09-ye-donda.jpg',
+    artist: 'Ye',
+    album: 'Donda',
+    released: 'August 29, 2021',
+    length: '~1:48:00',
+    trackCount: 27,
+    pick: { title: 'No Child Left Behind', length: '2:58', by: 'Sunday Service Choir, Vory' },
+  },
+  {
+    image: '10-ar-rahman-rockstar.jpg',
+    artist: 'AR Rahman',
+    album: 'Rockstar',
+    released: 'September 30, 2011',
+    length: '1:06:21',
+    trackCount: 14,
+    credit: 'Composed by A. R. Rahman; lyrics by Irshad Kamil.',
+    // Rockstar has two different "Tum Ho" recordings (track 8, Kavita
+    // Krishnamurthy, 5:48; track 12, Mohit Chauhan/Suzanne D’Mello, 5:18) —
+    // defaulted to the track 12 version per direct instruction ("didn't
+    // want to silently guess... otherwise I'd default to track 12").
+    pick: { title: 'Tum Ho', length: '5:18', by: 'Mohit Chauhan, Suzanne D’Mello' },
+  },
+  {
+    image: '11-kanye-life-of-pablo.jpg',
+    artist: 'The Life of Pablo',
+    album: 'Kanye West',
+    released: 'February 14, 2016',
+    length: '66:01',
+    trackCount: 20,
+    pick: { title: 'Waves', length: '3:01', by: 'Chris Brown, Kid Cudi' },
+  },
+  {
+    image: '12-radiohead-ok-computer.jpg',
+    artist: 'Radiohead',
+    album: 'OK Computer',
+    released: 'May 21, 1997',
+    length: '53:21',
+    trackCount: 12,
+    pick: { title: 'Let Down', length: '4:59', by: 'Radiohead' },
+  },
+  {
+    image: '13-don-toliver-octane.jpg',
+    artist: 'Don Toliver',
+    album: 'Octane',
+    released: 'January 30, 2026',
+    length: '~49:00',
+    trackCount: 18,
+    pick: { title: 'Secondhand', length: '3:46', by: 'Rema' },
+  },
+  {
+    image: '14-drake-views.jpg',
+    artist: 'Drake',
+    album: 'Views',
+    released: 'April 29, 2016',
+    length: '81:14',
+    trackCount: 20,
+    pick: { title: '9', length: '4:15', by: '' },
+  },
+  {
+    image: '15-neighbourhood-wiped-out.jpg',
+    artist: 'The Neighbourhood',
+    album: 'Wiped Out!',
+    released: 'October 30, 2015',
+    length: '45:17',
+    trackCount: 11,
+    pick: { title: 'Baby Came Home 2 / Valentines', length: '6:35', by: 'The Neighbourhood' },
+  },
+  {
+    image: '16-arctic-monkeys-am.jpg',
+    artist: 'Arctic Monkeys',
+    album: 'AM',
+    released: 'September 6, 2013',
+    length: '41:38',
+    trackCount: 12,
+    pick: { title: 'No. 1 Party Anthem', length: '4:03', by: 'Arctic Monkeys' },
+  },
+  {
+    image: '17-ye-bully.jpg',
+    artist: 'Ye',
+    album: 'Bully',
+    released: 'March 28, 2026',
+    length: '42:26',
+    trackCount: 18,
+    pick: { title: 'Mama’s Favorite', length: '2:34', by: 'Nine Vicious' },
+  },
+  {
+    image: '18-kendrick-gnx.jpg',
+    artist: 'Kendrick Lamar',
+    album: 'GNX',
+    released: 'November 22, 2024',
+    length: '44:20',
+    trackCount: 12,
+    pick: { title: 'Luther', length: '2:57', by: 'SZA' },
+  },
+  {
+    image: '19-the-1975-being-funny.jpg',
+    artist: 'The 1975',
+    album: 'Being Funny in a Foreign Language',
+    released: 'October 14, 2022',
+    length: '43:26',
+    trackCount: 11,
+    pick: { title: 'About You', length: '5:26', by: 'The 1975' },
+  },
+  {
+    image: '20-funkadelic-maggot-brain.jpg',
+    artist: 'Funkadelic',
+    album: 'Maggot Brain',
+    released: 'July 12, 1971',
+    length: '36:58',
+    trackCount: 7,
+    pick: { title: 'Maggot Brain (title track)', length: '10:21', by: 'Funkadelic' },
+  },
+];
+
+const rows = [];
+for (let i = 0; i < albums.length; i += 4) {
+  rows.push(albums.slice(i, i + 4));
+}
+---
+
+<AppLayout
+  title="Music · Ishan Rajpurohit"
+  description="A small collection of favourite albums from Ishan Rajpurohit's music library."
+>
+  <Window title="Music" height={738} transitionName="active-window">
+    <div class="music-content">
+      <div class="music-heading">
+        <h1>No, I don&rsquo;t own a vinyl turntable yet.</h1>
+        <p>But I love music though! Here&rsquo;s a very small collection from my favourites library.</p>
+      </div>
+      {
+        rows.map((row) => (
+          <div class="music-row">
+            {row.map((a) => (
+              <div
+                class="album"
+                data-album-index={albums.indexOf(a)}
+                role="button"
+                tabindex="0"
+                aria-haspopup="dialog"
+                aria-label={`View top pick for ${a.album} by ${a.artist}`}
+              >
+                <div class="album-cover">
+                  <img src={`/images/music/${a.image}`} alt={`${a.album} by ${a.artist}`} loading="lazy" />
+                </div>
+                <div class="album-meta">
+                  <p class="album-artist">{a.artist}</p>
+                  <p class="album-title">{a.album}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Music" />
+    <div class="m-music">
+      <header class="m-music-heading">
+        <h1>No, I don&rsquo;t own a vinyl turntable yet.</h1>
+        <p>But I love music though! Here&rsquo;s a very small collection from my favourites library.</p>
+      </header>
+      <div class="m-music-grid">
+        {albums.map((a, i) => (
+          <div
+            class="m-album"
+            data-album-index={i}
+            role="button"
+            tabindex="0"
+            aria-haspopup="dialog"
+            aria-label={`View top pick for ${a.album} by ${a.artist}`}
+          >
+            <div class="m-album-cover">
+              <img src={`/images/music/${a.image}`} alt={`${a.album} by ${a.artist}`} loading="lazy" />
+            </div>
+            <p class="m-album-artist">{a.artist}</p>
+            <p class="m-album-title">{a.album}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<!-- Album-info overlay: a small centered card (see .album-overlay below)
+     showing the clicked album's cover, release info, and one personal-pick
+     track. Lives outside <AppLayout> here in the template, then gets moved
+     to document.body by the script below on mount — same reason
+     Layout.astro's own #lightbox and the music widget's iframe both live
+     outside .scale-frame: AppLayout hardcodes scaleMode="fit-both"
+     (transform:scale(...) on .scale-frame), and any transformed ancestor
+     becomes the containing block for a position:fixed descendant, so left
+     inside that subtree this overlay would center against the shrunk
+     1440x1024 frame instead of the real viewport, and inherit its
+     scale-down (the exact "text also is small" bug already fixed once on
+     Home's CV — see home.css). Page-specific, not transition:persist — it
+     only needs to exist while /music is open, so appending to
+     document.body (not document.documentElement, unlike the persistent
+     music iframe) is correct: it's fine for it to go away on the next
+     navigation's body swap. -->
+<div class="album-overlay" id="album-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Album top pick">
+  <div class="album-overlay-card">
+    <button type="button" class="album-overlay-close" id="album-overlay-close" aria-label="Close">&times;</button>
+    <div class="album-overlay-header">
+      <div class="album-overlay-cover">
+        <img id="album-overlay-img" src="" alt="" />
+      </div>
+      <div class="album-overlay-meta">
+        <p class="album-overlay-title" id="album-overlay-title"></p>
+        <p class="album-overlay-artist" id="album-overlay-artist"></p>
+        <p class="album-overlay-info" id="album-overlay-info"></p>
+        <p class="album-overlay-credit" id="album-overlay-credit"></p>
+      </div>
+    </div>
+    <div class="album-overlay-pick">
+      <p class="album-overlay-pick-label">Personal pick</p>
+      <div class="album-overlay-pick-row">
+        <p class="album-overlay-pick-title" id="album-overlay-pick-title"></p>
+        <p class="album-overlay-pick-length" id="album-overlay-pick-length"></p>
+      </div>
+      <p class="album-overlay-pick-by" id="album-overlay-pick-by"></p>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ albums }}>
+  // Page-specific (not the global __xInit guard pattern Layout.astro uses
+  // for elements that persist across navigations) — this script and the
+  // overlay markup it wires up only exist while /music itself is loaded,
+  // re-running fresh on every visit.
+  (function () {
+    const overlay = document.getElementById('album-overlay');
+    if (!overlay) return;
+
+    // Escape .scale-frame's transform — see the markup comment above.
+    document.body.appendChild(overlay);
+
+    const imgEl = document.getElementById('album-overlay-img');
+    const titleEl = document.getElementById('album-overlay-title');
+    const artistEl = document.getElementById('album-overlay-artist');
+    const infoEl = document.getElementById('album-overlay-info');
+    const creditEl = document.getElementById('album-overlay-credit');
+    const pickTitleEl = document.getElementById('album-overlay-pick-title');
+    const pickLengthEl = document.getElementById('album-overlay-pick-length');
+    const pickByEl = document.getElementById('album-overlay-pick-by');
+    const closeBtn = document.getElementById('album-overlay-close');
+
+    let lastTrigger = null;
+
+    function openAlbum(index, trigger) {
+      const a = albums[index];
+      if (!a) return;
+      lastTrigger = trigger || null;
+
+      imgEl.src = `/images/music/${a.image}`;
+      imgEl.alt = `${a.album} by ${a.artist}`;
+      titleEl.textContent = a.album;
+      artistEl.textContent = a.artist;
+      infoEl.textContent = `Released: ${a.released} · ${a.trackCount} tracks · ${a.length} total`;
+      creditEl.textContent = a.credit || '';
+      creditEl.style.display = a.credit ? '' : 'none';
+
+      pickTitleEl.textContent = a.pick.title;
+      pickLengthEl.textContent = a.pick.length;
+      pickByEl.textContent = a.pick.by;
+      pickByEl.style.display = a.pick.by ? '' : 'none';
+
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus();
+    }
+
+    function closeAlbum() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
+      lastTrigger = null;
+    }
+
+    document.querySelectorAll('[data-album-index]').forEach((el) => {
+      el.addEventListener('click', () => openAlbum(Number(el.dataset.albumIndex), el));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openAlbum(Number(el.dataset.albumIndex), el);
+        }
+      });
+    });
+
+    closeBtn.addEventListener('click', closeAlbum);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeAlbum();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeAlbum();
+    });
+  })();
+</script>
+
+<style>
+  .music-content {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    width: 100%;
+    padding: 72px 64px;
+    box-sizing: border-box;
+  }
+
+  .music-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
+  }
+
+  .music-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .music-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 22px;
+    color: #8b8b8b;
+  }
+
+  .music-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px 20px;
+  }
+
+  .album {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 0 10px;
+    cursor: pointer;
+  }
+
+  .album-cover {
+    width: 200px;
+    height: 200px;
+    box-shadow: 3px 5px 5px 0px rgba(0, 0, 0, 0.26);
+    transform: scale(1);
+    transition: transform 0.3s ease-out;
+  }
+
+  .album:hover .album-cover {
+    transform: scale(1.045);
+  }
+
+  .album-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .album-meta {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.73);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .album-artist {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  .album-title {
+    margin: 0;
+  }
+
+  .m-music {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 24px 20px;
+  }
+
+  .m-music-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .m-music-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.15;
+    color: #000;
+  }
+
+  .m-music-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #8b8b8b;
+  }
+
+  .m-music-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 18px;
+  }
+
+  .m-album {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .m-album-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    box-shadow: 3px 5px 5px 0px rgba(0, 0, 0, 0.26);
+  }
+
+  .m-album-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .m-album-artist,
+  .m-album-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(0, 0, 0, 0.73);
+  }
+
+  .m-album-artist {
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  /* Album-info overlay — same glass-card recipe as Layout.astro's
+     .music-overlay-card (blurred warm backdrop, translucent white card,
+     Window.astro's own open/restore vs. minimize/close easing curves: a
+     snappy cubic-bezier(0.22,1,0.36,1) "pop" in, an accelerating
+     cubic-bezier(0.5,0,0.75,0) shrink out), moved here into a page-specific
+     stylesheet since only /music uses it. Two separate transition
+     declarations — base rule is the CLOSED/exit state, .is-open is the
+     OPEN/enter state — is what lets entering and exiting use different
+     easing/duration instead of one symmetric transition, matching every
+     other overlay in this codebase (.lightbox, .music-overlay). */
+  .album-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: rgba(239, 232, 221, 0.55);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+  }
+
+  .album-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+  }
+
+  .album-overlay-card {
+    position: relative;
+    width: 360px;
+    max-width: 100%;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transform: scale(0.92);
+    transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0);
+  }
+
+  .album-overlay.is-open .album-overlay-card {
+    transform: scale(1);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .album-overlay-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease;
+  }
+
+  .album-overlay-close:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .album-overlay-header {
+    display: flex;
+    gap: 16px;
+    padding-right: 28px;
+  }
+
+  .album-overlay-cover {
+    flex: none;
+    width: 84px;
+    height: 84px;
+    box-shadow: 2px 4px 8px 0px rgba(0, 0, 0, 0.22);
+  }
+
+  .album-overlay-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .album-overlay-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .album-overlay-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  .album-overlay-artist {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.73);
+  }
+
+  .album-overlay-info {
+    margin: 2px 0 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 11.5px;
+    color: #8b8b8b;
+  }
+
+  .album-overlay-credit {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 11px;
+    color: #8b8b8b;
+  }
+
+  .album-overlay-pick {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 16px;
+  }
+
+  .album-overlay-pick-label {
+    margin: 0 0 6px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b8b8b;
+  }
+
+  .album-overlay-pick-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .album-overlay-pick-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 15px;
+    color: #000;
+  }
+
+  .album-overlay-pick-length {
+    margin: 0;
+    flex: none;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: #8b8b8b;
+  }
+
+  .album-overlay-pick-by {
+    margin: 4px 0 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    color: #8b8b8b;
+  }
+
+  @media (max-width: 1024px) {
+    .album-overlay-card {
+      width: 100%;
+    }
+  }
+</style>

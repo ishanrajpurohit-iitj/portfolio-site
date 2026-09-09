@@ -1,0 +1,750 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Window from '../components/Window.astro';
+import MobileTitlebar from '../components/MobileTitlebar.astro';
+
+const books = [
+  { image: 'book-01-godaan.jpg', title: 'Godaan', meta: 'Munshi Premchand' },
+  { image: 'book-02-metamorphosis.jpg', title: 'Metamorphosis', meta: 'Franz Kafka' },
+  { image: 'book-03-kafan.jpg', title: 'Kafan', meta: 'Munshi Premchand' },
+];
+
+// title/meta below are the grid's display fields — left as they already
+// were (short forms, e.g. "Namesake" not "The Namesake"), same rule as
+// music.astro's album grid: the window's own card labels don't change.
+// director/runtime/genre/info are separate metadata for the film-info
+// overlay (see .film-overlay below) — clicking a poster opens a small
+// centered card with the full title, crew/runtime/genre, and a crisp
+// synopsis, mirroring /music's album-info overlay (same glass-card recipe,
+// same reasoning for escaping .scale-frame).
+const movieRows = [
+  [
+    {
+      image: 'movie-01-namesake.jpg',
+      title: 'Namesake',
+      meta: '2006',
+      fullTitle: 'The Namesake',
+      director: 'Mira Nair',
+      runtime: '121 min',
+      genre: 'Drama',
+      info: 'Bengali immigrant family navigating identity and belonging across generations in America; based on Jhumpa Lahiri’s novel.',
+    },
+    {
+      image: 'movie-02-beautiful-boy.jpg',
+      title: 'Beautiful Boy',
+      meta: '2018',
+      fullTitle: 'Beautiful Boy',
+      director: 'Felix van Groeningen',
+      runtime: '120 min',
+      genre: 'Biographical drama',
+      info: 'A father-son relationship strained by the son’s addiction, based on memoirs by David and Nic Sheff.',
+    },
+    {
+      image: 'movie-03-perfect-days.jpg',
+      title: 'Perfect Days',
+      meta: '2023',
+      fullTitle: 'Perfect Days',
+      director: 'Wim Wenders',
+      runtime: '124 min',
+      genre: 'Drama',
+      info: 'Hirayama, a Tokyo toilet cleaner, finds quiet meaning in routine: cassette tapes, books, and photographing trees.',
+    },
+  ],
+  [
+    {
+      image: 'movie-04-good-will-hunting.jpg',
+      title: 'Good Will Hunting',
+      meta: '1997',
+      fullTitle: 'Good Will Hunting',
+      director: 'Gus Van Sant',
+      runtime: '126 min',
+      genre: 'Drama',
+      info: 'A self-taught genius working as an MIT janitor confronts his past through therapy and mentorship.',
+    },
+    {
+      image: 'movie-05-pather-panchali.jpg',
+      title: 'Pather Panchali',
+      meta: '1955',
+      fullTitle: 'Pather Panchali',
+      director: 'Satyajit Ray',
+      // Sources disagree on runtime depending on print/restoration —
+      // flagged as a range rather than picking one arbitrarily, per direct
+      // instruction.
+      runtime: '~112–126 min',
+      genre: 'Drama',
+      info: 'Apu and his sister Durga live through rural poverty and childhood wonder in early 20th-century Bengal; first of the Apu Trilogy.',
+    },
+    {
+      image: 'movie-06-seven.jpg',
+      title: 'Seven',
+      meta: '1995',
+      fullTitle: 'Seven (Se7en)',
+      director: 'David Fincher',
+      runtime: '127 min',
+      genre: 'Crime thriller',
+      info: 'Two detectives hunt a serial killer staging murders around the seven deadly sins.',
+    },
+  ],
+];
+
+const movies = movieRows.flat();
+---
+
+<AppLayout
+  title="Books & Movies · Ishan Rajpurohit"
+  description="Books and movies that have stayed with Ishan Rajpurohit."
+>
+  <Window title="Books & Movies" height={738} transitionName="active-window">
+    <div class="tabs-wrap">
+      <input type="radio" name="bm-tab" id="tab-books" class="tab-radio" checked />
+      <input type="radio" name="bm-tab" id="tab-movies" class="tab-radio" />
+
+      <div class="tab-panel panel-books">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <h1>I&rsquo;d like to be the person who reads a lot of books.</h1>
+            <p>Progress is slower than my wishlist.</p>
+          </div>
+          <div class="tab-switcher">
+            <label for="tab-books" class="tab-pill">Books</label>
+            <label for="tab-movies" class="tab-pill">Movies</label>
+          </div>
+        </div>
+        <div class="card-row">
+          {
+            books.map((b) => (
+              <div class="card">
+                <div class="card-cover">
+                  <div class="card-crop">
+                    <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
+                  </div>
+                </div>
+                <div class="card-meta">
+                  <p class="card-title">{b.title}</p>
+                  <p class="card-sub">{b.meta}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="tab-panel panel-movies">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <h1>Some movies stay with me.</h1>
+            <p>A good film has a way of staying with me long after the credits roll.</p>
+          </div>
+          <div class="tab-switcher">
+            <label for="tab-books" class="tab-pill">Books</label>
+            <label for="tab-movies" class="tab-pill">Movies</label>
+          </div>
+        </div>
+        {
+          movieRows.map((row) => (
+            <div class="card-row">
+              {row.map((m) => (
+                <div
+                  class="card"
+                  data-movie-index={movies.indexOf(m)}
+                  role="button"
+                  tabindex="0"
+                  aria-haspopup="dialog"
+                  aria-label={`View details for ${m.fullTitle}`}
+                >
+                  <div class="card-cover">
+                    <div class="card-crop">
+                      <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} />
+                    </div>
+                  </div>
+                  <div class="card-meta">
+                    <p class="card-title">{m.title}</p>
+                    <p class="card-sub">{m.meta}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </Window>
+
+  <Fragment slot="mobile">
+    <MobileTitlebar title="Books & Movies" />
+    <div class="m-reading">
+      <input type="radio" name="m-bm-tab" id="m-tab-books" class="m-tab-radio" checked />
+      <input type="radio" name="m-bm-tab" id="m-tab-movies" class="m-tab-radio" />
+
+      <div class="m-reading-switcher">
+        <label for="m-tab-books" class="m-tab-pill">Books</label>
+        <label for="m-tab-movies" class="m-tab-pill">Movies</label>
+      </div>
+
+      <div class="m-tab-panel m-panel-books">
+        <header class="m-panel-heading">
+          <h1>I&rsquo;d like to be the person who reads a lot of books.</h1>
+          <p>Progress is slower than my wishlist.</p>
+        </header>
+        <div class="m-card-grid">
+          {books.map((b) => (
+            <div class="m-card">
+              <div class="m-card-cover">
+                <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
+              </div>
+              <p class="m-card-title">{b.title}</p>
+              <p class="m-card-sub">{b.meta}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="m-tab-panel m-panel-movies">
+        <header class="m-panel-heading">
+          <h1>Some movies stay with me.</h1>
+          <p>A good film has a way of staying with me long after the credits roll.</p>
+        </header>
+        <div class="m-card-grid">
+          {movies.map((m, i) => (
+            <div
+              class="m-card"
+              data-movie-index={i}
+              role="button"
+              tabindex="0"
+              aria-haspopup="dialog"
+              aria-label={`View details for ${m.fullTitle}`}
+            >
+              <div class="m-card-cover">
+                <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} />
+              </div>
+              <p class="m-card-title">{m.title}</p>
+              <p class="m-card-sub">{m.meta}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </Fragment>
+</AppLayout>
+
+<!-- Film-info overlay: a small centered card (see .film-overlay below)
+     showing the clicked poster's full title, director/runtime/genre, and a
+     crisp synopsis. Same reasoning and pattern as /music's .album-overlay:
+     lives outside <AppLayout> here in the template, then gets moved to
+     document.body by the script below on mount, since AppLayout hardcodes
+     scaleMode="fit-both" (transform:scale(...) on .scale-frame) and any
+     transformed ancestor becomes the containing block for a
+     position:fixed descendant — left inside that subtree this overlay
+     would center against the shrunk 1440x1024 frame instead of the real
+     viewport, and inherit its scale-down. Page-specific, not
+     transition:persist — appending to document.body (not
+     document.documentElement) is correct since it only needs to exist
+     while /reading is open. -->
+<div class="film-overlay" id="film-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Film details">
+  <div class="film-overlay-card">
+    <button type="button" class="film-overlay-close" id="film-overlay-close" aria-label="Close">&times;</button>
+    <div class="film-overlay-header">
+      <div class="film-overlay-cover">
+        <img id="film-overlay-img" src="" alt="" />
+      </div>
+      <div class="film-overlay-meta">
+        <p class="film-overlay-title" id="film-overlay-title"></p>
+        <p class="film-overlay-info" id="film-overlay-info"></p>
+      </div>
+    </div>
+    <p class="film-overlay-synopsis" id="film-overlay-synopsis"></p>
+  </div>
+</div>
+
+<script define:vars={{ movies }}>
+  // Page-specific (not the global __xInit guard pattern Layout.astro uses
+  // for elements that persist across navigations) — this script and the
+  // overlay markup it wires up only exist while /reading itself is loaded,
+  // re-running fresh on every visit.
+  (function () {
+    const overlay = document.getElementById('film-overlay');
+    if (!overlay) return;
+
+    // Escape .scale-frame's transform — see the markup comment above.
+    document.body.appendChild(overlay);
+
+    const imgEl = document.getElementById('film-overlay-img');
+    const titleEl = document.getElementById('film-overlay-title');
+    const infoEl = document.getElementById('film-overlay-info');
+    const synopsisEl = document.getElementById('film-overlay-synopsis');
+    const closeBtn = document.getElementById('film-overlay-close');
+
+    let lastTrigger = null;
+
+    function openMovie(index, trigger) {
+      const m = movies[index];
+      if (!m) return;
+      lastTrigger = trigger || null;
+
+      imgEl.src = `/images/reading/${m.image}`;
+      imgEl.alt = m.fullTitle;
+      titleEl.textContent = `${m.fullTitle} (${m.meta})`;
+      infoEl.textContent = `${m.director} · ${m.runtime} · ${m.genre}`;
+      synopsisEl.textContent = m.info;
+
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus();
+    }
+
+    function closeMovie() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
+      lastTrigger = null;
+    }
+
+    document.querySelectorAll('[data-movie-index]').forEach((el) => {
+      el.addEventListener('click', () => openMovie(Number(el.dataset.movieIndex), el));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openMovie(Number(el.dataset.movieIndex), el);
+        }
+      });
+    });
+
+    closeBtn.addEventListener('click', closeMovie);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeMovie();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeMovie();
+    });
+  })();
+</script>
+
+<script>
+  function applyHashTab() {
+    const hash = window.location.hash.replace('#', '');
+    if (hash !== 'books' && hash !== 'movies') return;
+    const radio = document.getElementById(`tab-${hash}`);
+    if (radio instanceof HTMLInputElement) radio.checked = true;
+    const mobileRadio = document.getElementById(`m-tab-${hash}`);
+    if (mobileRadio instanceof HTMLInputElement) mobileRadio.checked = true;
+  }
+  applyHashTab();
+  document.addEventListener('astro:page-load', applyHashTab);
+</script>
+
+<style>
+  .tabs-wrap {
+    width: 100%;
+    padding: 72px 64px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 40px;
+  }
+
+  .tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 40px;
+    width: 100%;
+  }
+
+  @keyframes tab-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #tab-books:checked ~ .panel-books {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  #tab-movies:checked ~ .panel-movies {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .panel-header {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .panel-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 0 0;
+    min-width: 0;
+    padding: 0 20px;
+  }
+
+  .panel-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: normal;
+    color: #000;
+  }
+
+  .panel-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 22px;
+    color: #8b8b8b;
+  }
+
+  .tab-switcher {
+    display: flex;
+    flex-shrink: 0;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 20px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #tab-books:checked ~ .panel-books .tab-pill[for='tab-books'],
+  #tab-movies:checked ~ .panel-movies .tab-pill[for='tab-movies'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px 20px;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 0 10px;
+    cursor: pointer;
+  }
+
+  .card-cover {
+    width: 200px;
+    height: 309px;
+    box-shadow: 3px 5px 5px 0px rgba(0, 0, 0, 0.26);
+    transform: scale(1);
+    transition: transform 0.3s ease-out;
+  }
+
+  .card:hover .card-cover {
+    transform: scale(1.05);
+  }
+
+  .card-crop {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .card-crop img {
+    position: absolute;
+    left: 0;
+    top: -1.05%;
+    width: 100%;
+    height: 101.13%;
+    max-width: none;
+  }
+
+  .card-meta {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.73);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .card-title {
+    margin: 0;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  .card-sub {
+    margin: 0;
+  }
+
+  .m-reading {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 24px 20px;
+  }
+
+  .m-tab-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .m-reading-switcher {
+    display: flex;
+    align-self: flex-start;
+    background: #ebe2d6;
+    border-radius: 60px;
+    overflow: hidden;
+  }
+
+  .m-tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 15px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 60px;
+  }
+
+  #m-tab-books:checked ~ .m-reading-switcher .m-tab-pill[for='m-tab-books'],
+  #m-tab-movies:checked ~ .m-reading-switcher .m-tab-pill[for='m-tab-movies'] {
+    background: rgba(118, 189, 232, 0.17);
+  }
+
+  .m-tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  #m-tab-books:checked ~ .m-panel-books,
+  #m-tab-movies:checked ~ .m-panel-movies {
+    display: flex;
+    animation: tab-fade-in 0.3s ease-out;
+  }
+
+  .m-panel-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .m-panel-heading h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.15;
+    color: #000;
+  }
+
+  .m-panel-heading p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #8b8b8b;
+  }
+
+  .m-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 18px;
+  }
+
+  .m-card-cover {
+    width: 100%;
+    aspect-ratio: 200 / 309;
+    box-shadow: 3px 5px 5px 0px rgba(0, 0, 0, 0.26);
+    overflow: hidden;
+  }
+
+  .m-card-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .m-card-title,
+  .m-card-sub {
+    margin: 8px 0 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(0, 0, 0, 0.73);
+  }
+
+  .m-card-title {
+    margin-top: 8px;
+    font-family: 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  .m-card-sub {
+    margin-top: 0;
+  }
+
+  /* Film-info overlay — same glass-card recipe as /music's .album-overlay
+     (itself matching Layout.astro's .music-overlay-card: blurred warm
+     backdrop, translucent white card, Window.astro's own open/restore vs.
+     minimize/close easing curves). Portrait cover (2:3-ish, matching
+     .card-cover's own 200x309) instead of music's square art. */
+  .film-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: rgba(239, 232, 221, 0.55);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: opacity 0.3s ease-out, visibility 0s linear 0.3s;
+  }
+
+  .film-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+  }
+
+  .film-overlay-card {
+    position: relative;
+    width: 400px;
+    max-width: 100%;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transform: scale(0.92);
+    transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0);
+  }
+
+  .film-overlay.is-open .film-overlay-card {
+    transform: scale(1);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .film-overlay-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease;
+  }
+
+  .film-overlay-close:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .film-overlay-header {
+    display: flex;
+    gap: 16px;
+    padding-right: 28px;
+  }
+
+  .film-overlay-cover {
+    flex: none;
+    width: 72px;
+    height: 111px;
+    box-shadow: 2px 4px 8px 0px rgba(0, 0, 0, 0.22);
+  }
+
+  .film-overlay-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .film-overlay-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .film-overlay-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  .film-overlay-info {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    color: #8b8b8b;
+  }
+
+  .film-overlay-synopsis {
+    margin: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 16px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  @media (max-width: 1024px) {
+    .film-overlay-card {
+      width: 100%;
+    }
+  }
+</style>
