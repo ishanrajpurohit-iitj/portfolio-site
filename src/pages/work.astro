@@ -420,23 +420,22 @@ const otherWorkResolved = otherWork.map((w) => ({
 
 <script define:vars={{ otherWork: otherWorkResolved }}>
   (function () {
-    const overlay = document.getElementById('ow-overlay');
-    if (!overlay) return;
-
-    // Escape .scale-frame's transform — see the markup comment above.
-    document.body.appendChild(overlay);
-
-    const frame = document.getElementById('ow-overlay-frame');
-    const counterEl = document.getElementById('ow-overlay-counter');
-    const titleEl = document.getElementById('ow-overlay-title');
-    const captionEl = document.getElementById('ow-overlay-caption');
-    const tagsEl = document.getElementById('ow-overlay-tags');
-    const closeBtn = document.getElementById('ow-overlay-close');
-    const prevBtn = document.getElementById('ow-overlay-prev');
-    const nextBtn = document.getElementById('ow-overlay-next');
-    const chevronPrevBtn = document.getElementById('ow-chevron-prev');
-    const chevronNextBtn = document.getElementById('ow-chevron-next');
-    const scrubEl = document.getElementById('ow-scrub');
+    // Everything DOM-related here is `let`, not `const`, and queried fresh
+    // inside bindOtherWorkOverlay() (bottom of this IIFE) instead of once
+    // up top — confirmed live: Astro skips re-executing an inline script
+    // whose content is byte-identical to one it already ran (otherWork
+    // never changes, so define:vars serializes the same script text every
+    // time), even though the DOM around it — including a genuinely fresh
+    // #ow-overlay node — gets rebuilt normally on each navigation. Symptom:
+    // grid covers stop opening the filmstrip after as little as one
+    // revisit to /work, no console error, because the click listeners from
+    // the very first run only ever pointed at that first run's elements.
+    // Same root shape as the music-overlay bug fixed earlier this session,
+    // different trigger — same fix shape too: bindOtherWorkOverlay() runs
+    // once here AND on every astro:page-load, which stays correct because
+    // that listener is bound to `document` (never replaced), independent
+    // of whether this script tag's own top-level code ever runs again.
+    let overlay, frame, counterEl, titleEl, captionEl, tagsEl, closeBtn, prevBtn, nextBtn, chevronPrevBtn, chevronNextBtn, scrubEl;
 
     let activePiece = null;
     let activeIndex = 0;
@@ -577,25 +576,52 @@ const otherWorkResolved = otherWork.map((w) => ({
       lastTrigger = null;
     }
 
-    document.querySelectorAll('[data-ow-index]').forEach((el) => {
-      el.addEventListener('click', () => openPiece(Number(el.dataset.owIndex), el));
-    });
-
-    prevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
-    nextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
-    chevronPrevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
-    chevronNextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
-
-    closeBtn.addEventListener('click', closePiece);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closePiece();
-    });
+    // Bound once on `document` (stable across navigations, unlike anything
+    // inside #ow-overlay) — reads the current overlay/prevBtn/nextBtn live
+    // via closure, so it stays correct regardless of which #ow-overlay
+    // copy is actually on screen.
     document.addEventListener('keydown', (e) => {
-      if (!overlay.classList.contains('is-open')) return;
+      if (!overlay?.classList.contains('is-open')) return;
       if (e.key === 'Escape') closePiece();
-      if (e.key === 'ArrowLeft') prevBtn.click();
-      if (e.key === 'ArrowRight') nextBtn.click();
+      if (e.key === 'ArrowLeft') prevBtn?.click();
+      if (e.key === 'ArrowRight') nextBtn?.click();
     });
+
+    function bindOtherWorkOverlay() {
+      overlay = document.getElementById('ow-overlay');
+      if (!overlay) return;
+
+      // Escape .scale-frame's transform — see the markup comment above.
+      document.body.appendChild(overlay);
+
+      frame = document.getElementById('ow-overlay-frame');
+      counterEl = document.getElementById('ow-overlay-counter');
+      titleEl = document.getElementById('ow-overlay-title');
+      captionEl = document.getElementById('ow-overlay-caption');
+      tagsEl = document.getElementById('ow-overlay-tags');
+      closeBtn = document.getElementById('ow-overlay-close');
+      prevBtn = document.getElementById('ow-overlay-prev');
+      nextBtn = document.getElementById('ow-overlay-next');
+      chevronPrevBtn = document.getElementById('ow-chevron-prev');
+      chevronNextBtn = document.getElementById('ow-chevron-next');
+      scrubEl = document.getElementById('ow-scrub');
+
+      document.querySelectorAll('[data-ow-index]').forEach((el) => {
+        el.addEventListener('click', () => openPiece(Number(el.dataset.owIndex), el));
+      });
+
+      prevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
+      nextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
+      chevronPrevBtn.addEventListener('click', () => go(activeIndex - 1, 'prev'));
+      chevronNextBtn.addEventListener('click', () => go(activeIndex + 1, 'next'));
+
+      closeBtn.addEventListener('click', closePiece);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closePiece();
+      });
+    }
+    bindOtherWorkOverlay();
+    document.addEventListener('astro:page-load', bindOtherWorkOverlay);
   })();
 </script>
 

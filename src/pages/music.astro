@@ -321,33 +321,38 @@ for (let i = 0; i < albums.length; i += 4) {
 </div>
 
 <script define:vars={{ albums }}>
-  // Page-specific (not the global __xInit guard pattern Layout.astro uses
-  // for elements that persist across navigations) — this script and the
-  // overlay markup it wires up only exist while /music itself is loaded,
-  // re-running fresh on every visit.
+  // Page-specific — but NOT actually "re-running fresh on every visit" the
+  // way the comment here used to claim: confirmed live that Astro skips
+  // re-executing an inline script whose content is byte-identical to one
+  // it already ran (albums never change, so define:vars serializes the
+  // exact same script text every time), even though the DOM around it
+  // (including a genuinely fresh #album-overlay node) is rebuilt normally.
+  // Symptom: album covers stop opening the overlay after as little as one
+  // revisit to /music, no console error, because the click listeners from
+  // the ORIGINAL run were only ever bound to that first run's elements.
+  // Same root shape as the music-WIDGET-overlay bug fixed earlier this
+  // session (a different overlay — Layout.astro's persistent player — but
+  // the same class of bug), different trigger this time — same fix shape
+  // too: bindAlbumOverlay() runs once here AND on every astro:page-load,
+  // which stays correct because that listener is bound to `document`
+  // (never replaced), independent of whether this script tag's own
+  // top-level code ever runs again.
   (function () {
-    const overlay = document.getElementById('album-overlay');
-    if (!overlay) return;
-
-    // Escape .scale-frame's transform — see the markup comment above.
-    document.body.appendChild(overlay);
-
-    const imgEl = document.getElementById('album-overlay-img');
-    const titleEl = document.getElementById('album-overlay-title');
-    const artistEl = document.getElementById('album-overlay-artist');
-    const infoEl = document.getElementById('album-overlay-info');
-    const creditEl = document.getElementById('album-overlay-credit');
-    const pickTitleEl = document.getElementById('album-overlay-pick-title');
-    const pickLengthEl = document.getElementById('album-overlay-pick-length');
-    const pickByEl = document.getElementById('album-overlay-pick-by');
-    const closeBtn = document.getElementById('album-overlay-close');
-
-    let lastTrigger = null;
+    let overlay, closeBtn, lastTrigger;
 
     function openAlbum(index, trigger) {
       const a = albums[index];
-      if (!a) return;
+      if (!a || !overlay) return;
       lastTrigger = trigger || null;
+
+      const imgEl = document.getElementById('album-overlay-img');
+      const titleEl = document.getElementById('album-overlay-title');
+      const artistEl = document.getElementById('album-overlay-artist');
+      const infoEl = document.getElementById('album-overlay-info');
+      const creditEl = document.getElementById('album-overlay-credit');
+      const pickTitleEl = document.getElementById('album-overlay-pick-title');
+      const pickLengthEl = document.getElementById('album-overlay-pick-length');
+      const pickByEl = document.getElementById('album-overlay-pick-by');
 
       imgEl.src = `/images/music/${a.image}`;
       imgEl.alt = `${a.album} by ${a.artist}`;
@@ -364,33 +369,49 @@ for (let i = 0; i < albums.length; i += 4) {
 
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
-      closeBtn.focus();
+      closeBtn?.focus();
     }
 
     function closeAlbum() {
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden', 'true');
+      overlay?.classList.remove('is-open');
+      overlay?.setAttribute('aria-hidden', 'true');
       if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
       lastTrigger = null;
     }
 
-    document.querySelectorAll('[data-album-index]').forEach((el) => {
-      el.addEventListener('click', () => openAlbum(Number(el.dataset.albumIndex), el));
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openAlbum(Number(el.dataset.albumIndex), el);
-        }
-      });
+    // Bound once on `document` (stable across navigations) — reads the
+    // current overlay/closeAlbum live via closure, so it stays correct
+    // regardless of which #album-overlay copy is actually on screen.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay?.classList.contains('is-open')) closeAlbum();
     });
 
-    closeBtn.addEventListener('click', closeAlbum);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeAlbum();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeAlbum();
-    });
+    function bindAlbumOverlay() {
+      overlay = document.getElementById('album-overlay');
+      if (!overlay) return;
+
+      // Escape .scale-frame's transform — see the markup comment above.
+      document.body.appendChild(overlay);
+
+      closeBtn = document.getElementById('album-overlay-close');
+
+      document.querySelectorAll('[data-album-index]').forEach((el) => {
+        el.addEventListener('click', () => openAlbum(Number(el.dataset.albumIndex), el));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openAlbum(Number(el.dataset.albumIndex), el);
+          }
+        });
+      });
+
+      closeBtn.addEventListener('click', closeAlbum);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAlbum();
+      });
+    }
+    bindAlbumOverlay();
+    document.addEventListener('astro:page-load', bindAlbumOverlay);
   })();
 </script>
 

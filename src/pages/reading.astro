@@ -323,69 +323,92 @@ const movies = movieRows.flat();
 </div>
 
 <script define:vars={{ movies, books }}>
-  // Page-specific (not the global __xInit guard pattern Layout.astro uses
-  // for elements that persist across navigations) — this script and the
-  // overlay markup it wires up only exist while /reading itself is loaded,
-  // re-running fresh on every visit. Shared by both books and movies —
-  // same glass-card recipe, so one overlay instead of a second
-  // near-identical one on the same page (direct instruction: "add the
-  // info overlay for books as well").
-  (function () {
-    const overlay = document.getElementById('film-overlay');
-    if (!overlay) return;
+  // Page-specific — but NOT actually "re-running fresh on every visit" the
+  // way the comment here used to claim: confirmed live that Astro skips
+  // re-executing an inline script whose content is byte-identical to one
+  // it already ran (movies/books never change, so define:vars serializes
+  // the exact same script text every time), even though the DOM around it
+  // (including a genuinely fresh #film-overlay node) is rebuilt normally.
+  // Symptom: book/movie covers stop opening the overlay after as little as
+  // one revisit to /reading, no console error, because the click listeners
+  // from the ORIGINAL run were only ever bound to that first run's
+  // elements. Same root shape as the music-overlay bug fixed earlier this
+  // session, different trigger (script dedup instead of a non-persisted
+  // DOM node) — same fix shape too: everything below is wrapped in
+  // bindReadingOverlay(), called once here AND on every astro:page-load.
+  // That event listener itself is bound to `document`, which is never
+  // replaced, so it keeps firing on every future navigation regardless of
+  // whether THIS script tag's own top-level code ever runs again.
+  let overlay, closeBtn, lastTrigger;
 
-    // Escape .scale-frame's transform — see the markup comment above.
-    document.body.appendChild(overlay);
+  function openMovie(index, trigger) {
+    const m = movies[index];
+    if (!m || !overlay) return;
+    lastTrigger = trigger || null;
 
     const imgEl = document.getElementById('film-overlay-img');
     const titleEl = document.getElementById('film-overlay-title');
     const infoEl = document.getElementById('film-overlay-info');
     const synopsisEl = document.getElementById('film-overlay-synopsis');
-    const closeBtn = document.getElementById('film-overlay-close');
 
-    let lastTrigger = null;
+    imgEl.src = `/images/reading/${m.image}`;
+    imgEl.alt = m.fullTitle;
+    titleEl.textContent = `${m.fullTitle} (${m.meta})`;
+    infoEl.textContent = `${m.director} · ${m.runtime} · ${m.genre}`;
+    synopsisEl.textContent = m.info;
 
-    function openMovie(index, trigger) {
-      const m = movies[index];
-      if (!m) return;
-      lastTrigger = trigger || null;
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    closeBtn?.focus();
+  }
 
-      imgEl.src = `/images/reading/${m.image}`;
-      imgEl.alt = m.fullTitle;
-      titleEl.textContent = `${m.fullTitle} (${m.meta})`;
-      infoEl.textContent = `${m.director} · ${m.runtime} · ${m.genre}`;
-      synopsisEl.textContent = m.info;
+  function openBook(index, trigger) {
+    const b = books[index];
+    if (!b || !overlay) return;
+    lastTrigger = trigger || null;
 
-      overlay.classList.add('is-open');
-      overlay.setAttribute('aria-hidden', 'false');
-      closeBtn.focus();
-    }
+    const imgEl = document.getElementById('film-overlay-img');
+    const titleEl = document.getElementById('film-overlay-title');
+    const infoEl = document.getElementById('film-overlay-info');
+    const synopsisEl = document.getElementById('film-overlay-synopsis');
 
-    function openBook(index, trigger) {
-      const b = books[index];
-      if (!b) return;
-      lastTrigger = trigger || null;
+    imgEl.src = `/images/reading/${b.image}`;
+    imgEl.alt = b.fullTitle;
+    titleEl.textContent = `${b.fullTitle} (${b.year})`;
+    // length is optional (e.g. Kafan is just "a short story", not worth
+    // its own field) — filter(Boolean) drops it instead of leaving a
+    // stray "· ·" behind.
+    infoEl.textContent = [b.author, b.length, b.genre].filter(Boolean).join(' · ');
+    synopsisEl.textContent = b.info;
 
-      imgEl.src = `/images/reading/${b.image}`;
-      imgEl.alt = b.fullTitle;
-      titleEl.textContent = `${b.fullTitle} (${b.year})`;
-      // length is optional (e.g. Kafan is just "a short story", not worth
-      // its own field) — filter(Boolean) drops it instead of leaving a
-      // stray "· ·" behind.
-      infoEl.textContent = [b.author, b.length, b.genre].filter(Boolean).join(' · ');
-      synopsisEl.textContent = b.info;
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    closeBtn?.focus();
+  }
 
-      overlay.classList.add('is-open');
-      overlay.setAttribute('aria-hidden', 'false');
-      closeBtn.focus();
-    }
+  function closeOverlay() {
+    overlay?.classList.remove('is-open');
+    overlay?.setAttribute('aria-hidden', 'true');
+    if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
+    lastTrigger = null;
+  }
 
-    function closeOverlay() {
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden', 'true');
-      if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
-      lastTrigger = null;
-    }
+  // Bound once on `document` (stable across navigations) rather than on
+  // `overlay` itself — reads the current `overlay`/closeOverlay live via
+  // closure, so it stays correct regardless of which #film-overlay copy is
+  // actually on screen.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay?.classList.contains('is-open')) closeOverlay();
+  });
+
+  function bindReadingOverlay() {
+    overlay = document.getElementById('film-overlay');
+    if (!overlay) return;
+
+    // Escape .scale-frame's transform — see the markup comment above.
+    document.body.appendChild(overlay);
+
+    closeBtn = document.getElementById('film-overlay-close');
 
     document.querySelectorAll('[data-movie-index]').forEach((el) => {
       el.addEventListener('click', () => openMovie(Number(el.dataset.movieIndex), el));
@@ -411,10 +434,9 @@ const movies = movieRows.flat();
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeOverlay();
     });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeOverlay();
-    });
-  })();
+  }
+  bindReadingOverlay();
+  document.addEventListener('astro:page-load', bindReadingOverlay);
 </script>
 
 <script>
