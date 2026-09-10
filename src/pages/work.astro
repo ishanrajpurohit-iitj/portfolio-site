@@ -1039,7 +1039,7 @@ const otherWorkResolved = otherWork.map((w) => ({
   .m-tab-panel {
     display: none;
     flex-direction: column;
-    gap: 20px;
+    gap: 28px;
   }
 
   #m-tab-case-studies:checked ~ .m-panel-case-studies,
@@ -1074,7 +1074,7 @@ const otherWorkResolved = otherWork.map((w) => ({
   .m-cs-list {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 48px;
   }
 
   .m-cs-item {
@@ -1110,7 +1110,7 @@ const otherWorkResolved = otherWork.map((w) => ({
 
   .m-cs-item-title {
     display: block;
-    margin-top: 14px;
+    margin-top: 18px;
     font-family: var(--font-display);
     font-weight: 400;
     font-size: 18px;
@@ -1120,7 +1120,7 @@ const otherWorkResolved = otherWork.map((w) => ({
 
   .m-cs-item-desc {
     display: block;
-    margin-top: 6px;
+    margin-top: 8px;
     font-family: var(--font-body);
     font-weight: 300;
     font-size: 13px;
@@ -1131,32 +1131,52 @@ const otherWorkResolved = otherWork.map((w) => ({
   .m-cs-item-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 10px;
+    gap: 6px;
+    margin-top: 12px;
   }
 
+  /* Single horizontal scrolling row instead of a 2-column masonry grid —
+     direct instruction: "instead of two section in mobile, keep one
+     singular scrolling row... with enough breathing space." Bleeds past
+     .m-work's own 20px padding (negative margin) so cards can scroll edge-
+     to-edge, then re-adds that same 20px as scroll-padding so the first/
+     last card still lines up with the rest of the page instead of
+     touching the screen edge. */
   .m-other-work-grid {
-    columns: 2;
-    column-gap: 16px;
+    display: flex;
+    gap: 24px;
+    margin: 0 -20px;
+    padding: 4px 20px 12px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 20px;
   }
 
   .m-ow-item {
-    display: block;
-    width: 100%;
-    margin: 0 0 20px;
+    flex: 0 0 auto;
+    width: 78%;
+    max-width: 320px;
+    margin: 0;
     padding: 0;
     border: none;
     background: none;
     font: inherit;
     text-align: left;
     cursor: pointer;
-    break-inside: avoid;
+    scroll-snap-align: start;
   }
 
   .m-ow-item-cover {
     position: relative;
     display: block;
     width: 100%;
+    /* Fixed ratio (was height:auto, sized off each image's own natural
+       aspect ratio) — in a single scrolling row every card sits side by
+       side, so mismatched heights read as a jagged, uneven strip; a
+       consistent card height reads as one clean row instead. Portrait-
+       leaning since most Other Work pieces are posters/packaging, not
+       landscape decks. */
+    aspect-ratio: 3 / 4;
     box-shadow:
       0px 2px 6px rgba(0, 0, 0, 0.08),
       0px 14px 32px rgba(0, 0, 0, 0.14);
@@ -1165,9 +1185,12 @@ const otherWorkResolved = otherWork.map((w) => ({
 
   .m-ow-item-cover img,
   .m-ow-item-cover video {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
   }
 
   .m-ow-item-caption {
