@@ -2136,14 +2136,42 @@ const {
       const widgetIcon = document.getElementById('music-widget-icon-btn');
       const widgetArtImg = document.getElementById('music-widget-art-img');
       const widgetArtBtn = document.getElementById('music-widget-art-btn');
-      const overlay = document.getElementById('music-overlay');
-      const overlayArtImg = document.getElementById('music-overlay-art-img');
-      const overlayTitleEl = document.getElementById('music-overlay-title');
-      const overlayArtistEl = document.getElementById('music-overlay-artist');
-      const overlayPlayBtn = document.getElementById('music-overlay-play');
-      const overlayPrevBtn = document.getElementById('music-overlay-prev');
-      const overlayNextBtn = document.getElementById('music-overlay-next');
-      const queuePanel = document.getElementById('music-overlay-queue-panel');
+
+      // Everything below is inside #music-overlay, which is NOT
+      // transition:persist (that combination with this card's own
+      // backdrop-filter blur corrupts the compositor during page
+      // transitions — confirmed live, reverted once already). Astro
+      // replaces this whole subtree with a fresh, listener-less copy on
+      // every client-side navigation, so these are `let`, not `const` —
+      // bindOverlayInteractions() (below) re-queries every one of them and
+      // re-binds their direct listeners on every astro:page-load, not just
+      // once at init. Root-caused live: "music player pe bhi click nahi
+      // hota album wala until reload" — same shape as the video-autoplay
+      // bug fixed earlier this session, just for DOM/listener staleness
+      // instead of a failed media load.
+      let overlay,
+        overlayArtImg,
+        overlayTitleEl,
+        overlayArtistEl,
+        overlayPlayBtn,
+        overlayPrevBtn,
+        overlayNextBtn,
+        queuePanel,
+        timelineTrack,
+        timelineFill,
+        timelineThumb,
+        timeCurrentEl,
+        timeDurationEl,
+        muteBtn,
+        volumeSlider,
+        volumeControl,
+        queueBtn;
+      // Shared between the window-level pointermove/pointerup below (bound
+      // ONCE — window itself is never replaced, so they don't need
+      // rebinding) and timelineTrack's own pointerdown (rebound on every
+      // navigation, see bindOverlayInteractions below) — both need to agree
+      // on the same flag.
+      let seekingTimeline = false;
 
       // Reflects the current track into every piece of UI that shows it —
       // the small widget's art/aria-label, the big overlay's art/title/
@@ -2471,8 +2499,6 @@ const {
         togglePlay();
       });
 
-      overlayPlayBtn?.addEventListener('click', togglePlay);
-
       // Real track-list navigation — swaps the widget's loaded track via
       // SC.Widget's own load(url, options), rather than recreating the
       // iframe (which would re-trigger the whole "detach resets browsing
@@ -2514,23 +2540,11 @@ const {
         });
       }
 
-      overlayPrevBtn?.addEventListener('click', () => {
-        loadTrack((currentTrackIndex - 1 + TRACKS.length) % TRACKS.length, { autoplay: scPlayingState });
-      });
-      overlayNextBtn?.addEventListener('click', () => {
-        loadTrack((currentTrackIndex + 1) % TRACKS.length, { autoplay: scPlayingState });
-      });
-
       // Timeline/seek bar. Big-overlay-only, per direct instruction (the
       // small widget stays icon-only). Draggable the same deadzone-free way
       // as the click-through-a-drag problem on the widget itself was fixed
       // — window-level pointermove/pointerup rather than setPointerCapture,
       // since capture was what broke the widget's own click routing.
-      const timelineTrack = document.getElementById('music-overlay-timeline-track');
-      const timelineFill = document.getElementById('music-overlay-timeline-fill');
-      const timelineThumb = document.getElementById('music-overlay-timeline-thumb');
-      const timeCurrentEl = document.getElementById('music-overlay-time-current');
-      const timeDurationEl = document.getElementById('music-overlay-time-duration');
 
       function formatTime(seconds) {
         if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -2561,20 +2575,20 @@ const {
         updateTimelineUI();
       }
 
-      if (timelineTrack instanceof HTMLElement) {
-        let seekingTimeline = false;
-        timelineTrack.addEventListener('pointerdown', (e) => {
-          seekingTimeline = true;
-          seekFromClientX(e.clientX);
-        });
-        window.addEventListener('pointermove', (e) => {
-          if (!seekingTimeline) return;
-          seekFromClientX(e.clientX);
-        });
-        window.addEventListener('pointerup', () => {
-          seekingTimeline = false;
-        });
-      }
+      // Window-level move/up only ever need binding once — window itself
+      // is never replaced by a navigation, and both read timelineTrack /
+      // seekingTimeline live via closure, so they stay correct once those
+      // are reassigned by bindOverlayInteractions on a later navigation.
+      // The pointerdown that actually STARTS a drag lives on timelineTrack
+      // itself though, and that element IS replaced every navigation — see
+      // bindOverlayInteractions below for where it gets rebound.
+      window.addEventListener('pointermove', (e) => {
+        if (!seekingTimeline) return;
+        seekFromClientX(e.clientX);
+      });
+      window.addEventListener('pointerup', () => {
+        seekingTimeline = false;
+      });
 
       // No timeupdate-equivalent listener setup here anymore — SC.Widget's
       // PLAY_PROGRESS event (bound in initSoundCloudWidget below) drives
@@ -2588,9 +2602,6 @@ const {
       // up top) rather than reading back from scWidget — like play/pause,
       // its setVolume() call is fire-and-forget with no synchronous
       // property to read.
-      const muteBtn = document.getElementById('music-overlay-mute');
-      const volumeSlider = document.getElementById('music-overlay-volume-slider');
-
       function updateVolumeUI() {
         if (volumeSlider instanceof HTMLInputElement) {
           volumeSlider.value = String(scVolume);
@@ -2598,22 +2609,6 @@ const {
         }
         muteBtn?.setAttribute('data-muted', scMuted || scVolume === 0 ? 'true' : 'false');
       }
-
-      muteBtn?.addEventListener('click', () => {
-        scMuted = !scMuted;
-        if (scWidget && scReady) scWidget.setVolume(scMuted ? 0 : scVolume * 100);
-        updateVolumeUI();
-      });
-
-      volumeSlider?.addEventListener('input', () => {
-        if (!(volumeSlider instanceof HTMLInputElement)) return;
-        scVolume = parseFloat(volumeSlider.value);
-        scMuted = false;
-        if (scWidget && scReady) scWidget.setVolume(scVolume * 100);
-        updateVolumeUI();
-      });
-
-      updateVolumeUI();
 
       // Touch fallback for the volume popover — see its :hover/:focus-within
       // CSS rule's own comment above for why touch needs one at all. Tapping
@@ -2625,48 +2620,114 @@ const {
       // desktop's hover reveal: this is an OR, not a replacement (see the
       // CSS comment) — clicking the mute button on desktop toggling this
       // class too is harmless since hover already independently shows/hides
-      // the same popover regardless of the class's state.
-      const volumeControl = document.getElementById('music-overlay-volume-control');
-      volumeControl?.addEventListener('click', (e) => {
-        // Dragging the slider itself fires 'click' too on release — don't
-        // let that close a popover the user is actively adjusting.
-        if (e.target instanceof Element && e.target.closest('.music-overlay-volume-slider')) return;
-        volumeControl.classList.toggle('is-open');
-      });
+      // the same popover regardless of the class's state. Bound once on
+      // `document` (stable) rather than per-navigation — reads the current
+      // `volumeControl` live via closure, so it stays correct once
+      // bindOverlayInteractions reassigns it.
       document.addEventListener('click', (e) => {
         if (!volumeControl || !volumeControl.classList.contains('is-open')) return;
         if (e.target instanceof Element && volumeControl.contains(e.target)) return;
         volumeControl.classList.remove('is-open');
       });
 
-      // Queue button — toggles the panel added above (queuePanel itself is
-      // declared up top, alongside the other overlay element lookups, since
-      // renderQueue/updateNowPlayingUI need it too).
-      const queueBtn = document.getElementById('music-overlay-queue');
-      queueBtn?.addEventListener('click', () => {
-        const open = queuePanel?.classList.toggle('is-open');
-        queueBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-
-      // Clicking a queue item jumps to that track — delegated on the panel
-      // itself rather than per-item listeners, since renderQueue rebuilds
-      // the items (and would otherwise need to reattach a listener on every
-      // rebuild).
-      queuePanel?.addEventListener('click', (e) => {
-        const item = e.target instanceof Element ? e.target.closest('.music-overlay-queue-item') : null;
-        if (!(item instanceof HTMLElement) || !item.dataset.trackIndex) return;
-        const index = Number(item.dataset.trackIndex);
-        if (index === currentTrackIndex) return;
-        loadTrack(index, { autoplay: scPlayingState });
-      });
-
-      overlay?.addEventListener('click', (e) => {
-        if (e.target === overlay) closeOverlay();
-      });
-
+      // Escape closes the overlay regardless of focus — bound once on
+      // `document` for the same reason as the click-outside listener above;
+      // closeOverlay() itself reads the current `overlay` live via closure.
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeOverlay();
       });
+
+      // Re-queries and re-binds every #music-overlay-scoped element (see the
+      // `let overlay, overlayArtImg, ...` declaration up top for the full
+      // list and why they're `let`) and repaints the overlay's current
+      // state onto whatever fresh copy Astro just rendered. Called once
+      // here for the very first load, and again on every astro:page-load —
+      // this IS the fix for "music player pe bhi click nahi hota album
+      // wala until reload": every button below was previously bound once,
+      // ever, to the very first #music-overlay; any navigation after that
+      // silently left them pointing at a detached node.
+      function bindOverlayInteractions() {
+        overlay = document.getElementById('music-overlay');
+        overlayArtImg = document.getElementById('music-overlay-art-img');
+        overlayTitleEl = document.getElementById('music-overlay-title');
+        overlayArtistEl = document.getElementById('music-overlay-artist');
+        overlayPlayBtn = document.getElementById('music-overlay-play');
+        overlayPrevBtn = document.getElementById('music-overlay-prev');
+        overlayNextBtn = document.getElementById('music-overlay-next');
+        queuePanel = document.getElementById('music-overlay-queue-panel');
+        timelineTrack = document.getElementById('music-overlay-timeline-track');
+        timelineFill = document.getElementById('music-overlay-timeline-fill');
+        timelineThumb = document.getElementById('music-overlay-timeline-thumb');
+        timeCurrentEl = document.getElementById('music-overlay-time-current');
+        timeDurationEl = document.getElementById('music-overlay-time-duration');
+        muteBtn = document.getElementById('music-overlay-mute');
+        volumeSlider = document.getElementById('music-overlay-volume-slider');
+        volumeControl = document.getElementById('music-overlay-volume-control');
+        queueBtn = document.getElementById('music-overlay-queue');
+
+        overlayPlayBtn?.addEventListener('click', togglePlay);
+        overlayPrevBtn?.addEventListener('click', () => {
+          loadTrack((currentTrackIndex - 1 + TRACKS.length) % TRACKS.length, { autoplay: scPlayingState });
+        });
+        overlayNextBtn?.addEventListener('click', () => {
+          loadTrack((currentTrackIndex + 1) % TRACKS.length, { autoplay: scPlayingState });
+        });
+
+        timelineTrack?.addEventListener('pointerdown', (e) => {
+          seekingTimeline = true;
+          seekFromClientX(e.clientX);
+        });
+
+        muteBtn?.addEventListener('click', () => {
+          scMuted = !scMuted;
+          if (scWidget && scReady) scWidget.setVolume(scMuted ? 0 : scVolume * 100);
+          updateVolumeUI();
+        });
+        volumeSlider?.addEventListener('input', () => {
+          if (!(volumeSlider instanceof HTMLInputElement)) return;
+          scVolume = parseFloat(volumeSlider.value);
+          scMuted = false;
+          if (scWidget && scReady) scWidget.setVolume(scVolume * 100);
+          updateVolumeUI();
+        });
+        volumeControl?.addEventListener('click', (e) => {
+          // Dragging the slider itself fires 'click' too on release — don't
+          // let that close a popover the user is actively adjusting.
+          if (e.target instanceof Element && e.target.closest('.music-overlay-volume-slider')) return;
+          volumeControl.classList.toggle('is-open');
+        });
+
+        queueBtn?.addEventListener('click', () => {
+          const open = queuePanel?.classList.toggle('is-open');
+          queueBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Clicking a queue item jumps to that track — delegated on the
+        // panel itself rather than per-item listeners, since renderQueue
+        // rebuilds the items (and would otherwise need to reattach a
+        // listener on every rebuild).
+        queuePanel?.addEventListener('click', (e) => {
+          const item = e.target instanceof Element ? e.target.closest('.music-overlay-queue-item') : null;
+          if (!(item instanceof HTMLElement) || !item.dataset.trackIndex) return;
+          const index = Number(item.dataset.trackIndex);
+          if (index === currentTrackIndex) return;
+          loadTrack(index, { autoplay: scPlayingState });
+        });
+
+        overlay?.addEventListener('click', (e) => {
+          if (e.target === overlay) closeOverlay();
+        });
+
+        // Repaint the fresh elements with the CURRENT state — a newly
+        // rendered #music-overlay starts with its hardcoded default HTML
+        // (first track's title/art, volume slider at its default value),
+        // which won't match reality if e.g. the user had already switched
+        // tracks or muted before navigating.
+        updateNowPlayingUI();
+        updateTimelineUI();
+        updateVolumeUI();
+      }
+      bindOverlayInteractions();
+      document.addEventListener('astro:page-load', bindOverlayInteractions);
 
       // Wires up the actual SoundCloud player. SC (the global the
       // w.soundcloud.com/player/api.js script attaches) should already be
@@ -2716,11 +2777,6 @@ const {
         });
       }
       initSoundCloudWidget();
-
-      // Populates the queue panel for the starting track (index 0) — every
-      // later switch does this itself via loadTrack -> updateNowPlayingUI,
-      // but nothing else calls it for the very first load.
-      updateNowPlayingUI();
 
       document.addEventListener('astro:before-preparation', closeOverlay);
       document.addEventListener('astro:page-load', refreshRouteVisibility);
