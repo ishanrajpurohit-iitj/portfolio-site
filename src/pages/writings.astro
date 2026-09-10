@@ -153,40 +153,25 @@ const journalEntries = [
 
       <div class="tab-panel panel-captures">
         <p class="captures-subtext">Not a professional, but I try to capture what moves me.</p>
-        <!-- Replaces the old two ad-hoc flex rows (each image carrying its
-             own hand-picked inline width/height — 150/160/200px, none of
-             them aligning into real columns) with a uniform grid: every
-             item is the same 4:5 cell via object-fit:cover, so the row/
-             column alignment a "proper grid" implies actually holds. The
-             video/photo distinction that used to come from their different
-             natural proportions is preserved instead via a small play-badge
-             overlay on the four recordings, rather than lost when
-             normalizing every cell to one aspect ratio. No Figma reference
-             for this one — direct instruction to redesign it. -->
+        <!-- Masonry grid (see .captures-grid below — natural aspect ratios,
+             CSS multi-column, no cropping). The four recordings are real
+             clips now (public/images/writings/video-1..4.mp4, direct
+             upload) — muted/looped/autoplaying right in the grid itself,
+             poster= the extracted-frame cover so there's no blank flash
+             before each buffers in. Non-interactive (plain <div>s) —
+             thumbnails alone are enough, no click-to-open viewer. -->
         <div class="captures-grid">
           <div class="capture-item is-video">
-            <img src="/images/writings/video-1.png" alt="" />
-            <span class="capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video src="/images/writings/video-1.mp4" poster="/images/writings/video-1.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="capture-item is-video">
-            <img src="/images/writings/video-2.png" alt="" />
-            <span class="capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video src="/images/writings/video-2.mp4" poster="/images/writings/video-2.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="capture-item is-video">
-            <img src="/images/writings/video-3.png" alt="" />
-            <span class="capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video src="/images/writings/video-3.mp4" poster="/images/writings/video-3.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="capture-item is-video">
-            <img src="/images/writings/video-4.png" alt="" />
-            <span class="capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video src="/images/writings/video-4.mp4" poster="/images/writings/video-4.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="capture-item">
             <img src="/images/writings/photo-1.jpg" alt="" />
@@ -276,28 +261,16 @@ const journalEntries = [
         <p class="m-captures-subtext">Not a professional, but I try to capture what moves me.</p>
         <div class="m-captures-grid">
           <div class="m-capture-item m-is-video">
-            <img class="m-capture" src="/images/writings/video-1.png" alt="" />
-            <span class="m-capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video class="m-capture" src="/images/writings/video-1.mp4" poster="/images/writings/video-1.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="m-capture-item m-is-video">
-            <img class="m-capture" src="/images/writings/video-2.png" alt="" />
-            <span class="m-capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video class="m-capture" src="/images/writings/video-2.mp4" poster="/images/writings/video-2.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="m-capture-item m-is-video">
-            <img class="m-capture" src="/images/writings/video-3.png" alt="" />
-            <span class="m-capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video class="m-capture" src="/images/writings/video-3.mp4" poster="/images/writings/video-3.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="m-capture-item m-is-video">
-            <img class="m-capture" src="/images/writings/video-4.png" alt="" />
-            <span class="m-capture-play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="white"><path d="M8 5.5v13l11-6.5-11-6.5z" /></svg>
-            </span>
+            <video class="m-capture" src="/images/writings/video-4.mp4" poster="/images/writings/video-4.jpg" autoplay muted loop playsinline preload="auto"></video>
           </div>
           <div class="m-capture-item">
             <img class="m-capture" src="/images/writings/photo-1.jpg" alt="" />
@@ -328,6 +301,29 @@ const journalEntries = [
   }
   applyHashTab();
   document.addEventListener('astro:page-load', applyHashTab);
+
+  // Explicit .play() fallback for the capture thumbnails — the declarative
+  // autoplay attribute alone is unreliable on mobile Safari, and here it's
+  // worse than usual: Writings is the default tab, not Captures, so these
+  // <video>s sit inside a display:none panel (#tab-captures/#m-tab-captures
+  // unchecked) at the moment the browser would normally attempt autoplay.
+  // A play attempt made while display:none never retroactively resumes
+  // once the tab becomes visible — direct report: "mobile mei captures mei
+  // videos ke thumbnail autoplay nahi ho rahe". Re-run on the Captures
+  // radio's own change event (that's the exact moment the videos actually
+  // become visible) as well as on load/navigation, so it's covered
+  // whichever tab happens to be active first.
+  function playCaptureVideos() {
+    document.querySelectorAll('.captures-grid video, .m-captures-grid video').forEach((video) => {
+      if (video instanceof HTMLVideoElement && video.paused) {
+        video.play().catch(() => {});
+      }
+    });
+  }
+  playCaptureVideos();
+  document.addEventListener('astro:page-load', playCaptureVideos);
+  document.getElementById('tab-captures')?.addEventListener('change', playCaptureVideos);
+  document.getElementById('m-tab-captures')?.addEventListener('change', playCaptureVideos);
 </script>
 
 <style>
@@ -615,13 +611,15 @@ const journalEntries = [
   .capture-item {
     position: relative;
     display: block;
+    width: 100%;
     break-inside: avoid;
     margin-bottom: 24px;
     overflow: hidden;
     box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.08), 0px 14px 32px 0px rgba(0, 0, 0, 0.14);
   }
 
-  .capture-item img {
+  .capture-item img,
+  .capture-item video {
     display: block;
     width: 100%;
     height: auto;
@@ -629,34 +627,9 @@ const journalEntries = [
     transition: transform 0.4s ease-out;
   }
 
-  .capture-item:hover img {
+  .capture-item:hover img,
+  .capture-item:hover video {
     transform: scale(1.045);
-  }
-
-  /* Only appears on hover — a badge sitting on the thumbnail at all times
-     read as cluttered next to the sharper, quieter card treatment above;
-     revealing it on hover is a more considered, premium-feeling
-     interaction. Mobile keeps it always visible (see .m-capture-play)
-     since touch has no hover state to reveal it with. */
-  .capture-play {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.22);
-    opacity: 0;
-    transition: opacity 0.25s ease-out;
-  }
-
-  .capture-item:hover .capture-play {
-    opacity: 1;
-  }
-
-  .capture-play svg {
-    width: 34px;
-    height: 34px;
-    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
   }
 
   .m-writings {
@@ -888,6 +861,7 @@ const journalEntries = [
   .m-capture-item {
     position: relative;
     display: block;
+    width: 100%;
     break-inside: avoid;
     margin-bottom: 18px;
     overflow: hidden;
@@ -900,18 +874,4 @@ const journalEntries = [
     height: auto;
   }
 
-  .m-capture-play {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.18);
-  }
-
-  .m-capture-play svg {
-    width: 26px;
-    height: 26px;
-    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
-  }
 </style>

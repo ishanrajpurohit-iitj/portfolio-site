@@ -23,6 +23,7 @@ const caseStudies = [
   },
   {
     image: '/images/work/card-photoshop2030.png',
+    video: '/images/work/photoshop2030/more-visuals-1-cover.mp4',
     title: 'Reimagining Photoshop as a 2030 AI editor you can talk to',
     description: 'A concept for a mobile, AI-first Photoshop for 2030, built to stay fast on low-compute devices. I was the designer on a six-person team, owning the product vision, the home experience, Orby, and the interaction model.',
     tags: ['AI-Native', 'Interaction Design', 'Product Design'],
@@ -61,6 +62,12 @@ const otherWork = [
     count: 9,
     ext: 'mp4',
     cover: 'adobe-inter-iit-reels/cover.jpg',
+    // Live video cover instead of a static frame — first of the Other
+    // Work grid covers to go this way (direct instruction: "changing the
+    // other work's covers non static... make slide 3 the cover"). Grid
+    // still needs `cover` above as the poster (shown before the clip
+    // buffers in, and as the alt-less fallback if video ever fails).
+    coverVideo: 'adobe-inter-iit-reels/03.mp4',
   },
   {
     id: 'arka-techpark',
@@ -81,6 +88,7 @@ const otherWork = [
     folder: 'guru-dhanji',
     count: 5,
     ext: 'jpg',
+    coverCycle: true,
   },
   {
     id: 'kurt-cobain',
@@ -101,6 +109,12 @@ const otherWork = [
     folder: 'boat-packaging',
     count: 5,
     ext: 'jpg',
+    // Cover cycles through every slide in this piece on a fast,
+    // uncrossfaded cut — no transition between frames, just a hard swap
+    // (see the coverCycle script further down) — direct instruction:
+    // "quickly changing animation... match cuts type, not literally that
+    // but that speed."
+    coverCycle: true,
   },
   {
     id: 'perfect-days-poster',
@@ -131,6 +145,7 @@ const otherWork = [
     folder: 'big-dawgs-hanumankind',
     count: 5,
     ext: 'jpg',
+    coverCycle: true,
   },
   {
     id: 'vedavriksha',
@@ -141,6 +156,7 @@ const otherWork = [
     folder: 'vedavriksha',
     count: 8,
     ext: 'jpg',
+    coverCycle: true,
   },
 ];
 
@@ -180,7 +196,11 @@ const otherWorkResolved = otherWork.map((w) => ({
               caseStudies.map((c) => (
                 <a class="cs-item" href={c.href}>
                   <span class="cs-item-cover">
-                    <img src={c.image} alt={c.title} style={c.imageStyle} />
+                    {c.video ? (
+                      <video src={c.video} poster={c.image} autoplay muted loop playsinline preload="auto" />
+                    ) : (
+                      <img src={c.image} alt={c.title} style={c.imageStyle} />
+                    )}
                   </span>
                   <span class="cs-item-title">{c.title}</span>
                   <span class="cs-item-desc">{c.description}</span>
@@ -217,8 +237,25 @@ const otherWorkResolved = otherWork.map((w) => ({
                   aria-label={`${w.title} - view`}
                 >
                   <span class="ow-item-cover">
-                    <img src={`/images/work/other-work/${w.cover}`} alt={w.title} loading="lazy" />
-                    {w.type === 'reel' && (
+                    {w.coverVideo ? (
+                      <video
+                        src={`/images/work/other-work/${w.coverVideo}`}
+                        poster={`/images/work/other-work/${w.cover}`}
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="auto"
+                      />
+                    ) : (
+                      <img
+                        src={`/images/work/other-work/${w.cover}`}
+                        alt={w.title}
+                        loading="lazy"
+                        data-cycle={w.coverCycle ? 'true' : undefined}
+                      />
+                    )}
+                    {w.type === 'reel' && !w.coverVideo && (
                       <span class="ow-play-badge" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="white">
                           <path d="M8 5.5v13l11-6.5-11-6.5z" />
@@ -262,7 +299,11 @@ const otherWorkResolved = otherWork.map((w) => ({
             caseStudies.map((c) => (
               <a class="m-cs-item" href={c.href}>
                 <span class="m-cs-item-cover">
-                  <img src={c.image} alt={c.title} style={c.imageStyle} />
+                  {c.video ? (
+                    <video src={c.video} poster={c.image} autoplay muted loop playsinline preload="auto" />
+                  ) : (
+                    <img src={c.image} alt={c.title} style={c.imageStyle} />
+                  )}
                 </span>
                 <span class="m-cs-item-title">{c.title}</span>
                 <span class="m-cs-item-desc">{c.description}</span>
@@ -293,8 +334,25 @@ const otherWorkResolved = otherWork.map((w) => ({
                 aria-label={`${w.title} - view`}
               >
                 <span class="m-ow-item-cover">
-                  <img src={`/images/work/other-work/${w.cover}`} alt={w.title} loading="lazy" />
-                  {w.type === 'reel' && (
+                  {w.coverVideo ? (
+                    <video
+                      src={`/images/work/other-work/${w.coverVideo}`}
+                      poster={`/images/work/other-work/${w.cover}`}
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      preload="auto"
+                    />
+                  ) : (
+                    <img
+                      src={`/images/work/other-work/${w.cover}`}
+                      alt={w.title}
+                      loading="lazy"
+                      data-cycle={w.coverCycle ? 'true' : undefined}
+                    />
+                  )}
+                  {w.type === 'reel' && !w.coverVideo && (
                     <span class="ow-play-badge" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="white">
                         <path d="M8 5.5v13l11-6.5-11-6.5z" />
@@ -541,6 +599,49 @@ const otherWorkResolved = otherWork.map((w) => ({
   })();
 </script>
 
+<!-- Cover-cycling — grid covers for pieces flagged coverCycle:true hard-cut
+     through every slide in that piece on a fast, uncrossfaded loop (no
+     transition, just an instant swap) — direct instruction: "quickly
+     changing animation... match cuts type, not literally that but that
+     speed." boAt is the first (and currently only) piece flagged this
+     way, but this reads coverCycle off otherWork generically rather than
+     hardcoding boAt, so flagging any other piece the same way is enough
+     to give it the same treatment later. Separate script/IIFE from the
+     filmstrip overlay above — unrelated concerns, no reason to share
+     state. -->
+<script define:vars={{ otherWork: otherWorkResolved }}>
+  (function () {
+    const CYCLE_MS = 420;
+    const timers = [];
+
+    function startCycling() {
+      document.querySelectorAll('[data-ow-index]').forEach((trigger) => {
+        const img = trigger.querySelector('img[data-cycle="true"]');
+        if (!img) return;
+        const piece = otherWork[Number(trigger.dataset.owIndex)];
+        if (!piece || !piece.items || piece.items.length < 2) return;
+
+        let frame = 0;
+        const timer = setInterval(() => {
+          frame = (frame + 1) % piece.items.length;
+          img.src = `/images/work/other-work/${piece.items[frame]}`;
+        }, CYCLE_MS);
+        timers.push(timer);
+      });
+    }
+
+    function stopCycling() {
+      timers.splice(0).forEach((t) => clearInterval(t));
+    }
+
+    startCycling();
+    // Clear timers before a client-side navigation swaps the DOM out from
+    // under them — same reasoning as the Home carousel's own
+    // astro:before-preparation cleanup elsewhere on this site.
+    document.addEventListener('astro:before-preparation', stopCycling, { once: true });
+  })();
+</script>
+
 <style>
   .w-page {
     width: 100%;
@@ -696,7 +797,8 @@ const otherWorkResolved = otherWork.map((w) => ({
       0px 22px 44px rgba(0, 0, 0, 0.18);
   }
 
-  .cs-item-cover img {
+  .cs-item-cover img,
+  .cs-item-cover video {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -708,7 +810,8 @@ const otherWorkResolved = otherWork.map((w) => ({
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .cs-item:hover .cs-item-cover img {
+  .cs-item:hover .cs-item-cover img,
+  .cs-item:hover .cs-item-cover video {
     transform: scale(1.045);
   }
 
@@ -776,7 +879,8 @@ const otherWorkResolved = otherWork.map((w) => ({
     transition: box-shadow 0.3s ease-out;
   }
 
-  .ow-item-cover img {
+  .ow-item-cover img,
+  .ow-item-cover video {
     display: block;
     width: 100%;
     height: auto;
@@ -790,7 +894,8 @@ const otherWorkResolved = otherWork.map((w) => ({
       0px 22px 44px rgba(0, 0, 0, 0.18);
   }
 
-  .ow-item:hover .ow-item-cover img {
+  .ow-item:hover .ow-item-cover img,
+  .ow-item:hover .ow-item-cover video {
     transform: scale(1.045);
   }
 
@@ -940,7 +1045,8 @@ const otherWorkResolved = otherWork.map((w) => ({
       0px 14px 32px rgba(0, 0, 0, 0.14);
   }
 
-  .m-cs-item-cover img {
+  .m-cs-item-cover img,
+  .m-cs-item-cover video {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -949,6 +1055,7 @@ const otherWorkResolved = otherWork.map((w) => ({
     object-position: left center;
     max-width: none;
   }
+
 
   .m-cs-item-title {
     display: block;
@@ -1005,7 +1112,8 @@ const otherWorkResolved = otherWork.map((w) => ({
     overflow: hidden;
   }
 
-  .m-ow-item-cover img {
+  .m-ow-item-cover img,
+  .m-ow-item-cover video {
     display: block;
     width: 100%;
     height: auto;

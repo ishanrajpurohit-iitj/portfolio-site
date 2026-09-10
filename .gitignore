@@ -17,3 +17,8 @@ npm-debug.log*
 
 # local Claude Code settings (workspace-specific, not shared)
 .claude/
+
+# raw source footage (384MB) — already compressed/trimmed into the actual
+# assets used on the site (public/images/work/photoshop2030/*.mp4); this
+# folder is just the original uploads, never referenced by any page
+public/images/work/photoshop2030/adobe case study videos/

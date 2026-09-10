@@ -3,10 +3,59 @@ import AppLayout from '../layouts/AppLayout.astro';
 import Window from '../components/Window.astro';
 import MobileTitlebar from '../components/MobileTitlebar.astro';
 
+// Single row (tried 2x2 — the pair read as a floating, misaligned island
+// even left-aligned; tried 3+1 — a lone book stranded in row 2 was worse.
+// A single row of all 4 is the one that doesn't introduce a new "weird"
+// spot, direct instruction: "looks more weird, 3 wala krde or 4").
+//
+// fullTitle/author/year/length/genre/info are for the book-info overlay
+// (clicking a cover opens it, same as movies' own .film-overlay below —
+// reused wholesale rather than building a second near-identical overlay
+// on the same page) — text supplied directly by the user, kept verbatim.
 const books = [
-  { image: 'book-01-godaan.jpg', title: 'Godaan', meta: 'Munshi Premchand' },
-  { image: 'book-02-metamorphosis.jpg', title: 'Metamorphosis', meta: 'Franz Kafka' },
-  { image: 'book-03-kafan.jpg', title: 'Kafan', meta: 'Munshi Premchand' },
+  {
+    image: 'book-04-make-something-wonderful.jpg',
+    title: 'Make Something Wonderful',
+    meta: 'Steve Jobs',
+    fullTitle: 'Make Something Wonderful',
+    author: 'Steve Jobs (Steve Jobs Archive)',
+    year: '2023',
+    length: '~250 pages',
+    genre: 'Non-fiction / collected writings',
+    info: 'Posthumous, unedited collection of Jobs’ own speeches, letters, interviews, and photos, with no biographer’s filter, just his words.',
+  },
+  {
+    image: 'book-01-godaan.jpg',
+    title: 'Godaan',
+    meta: 'Munshi Premchand',
+    fullTitle: 'Godaan',
+    author: 'Munshi Premchand',
+    year: '1936',
+    length: 'Novel',
+    genre: 'Fiction (social realism)',
+    info: 'Hori, an impoverished peasant, chases his one dream of owning a cow while debt and exploitation grind him down; he dies from overwork before he ever gets it.',
+  },
+  {
+    image: 'book-02-metamorphosis.jpg',
+    title: 'Metamorphosis',
+    meta: 'Franz Kafka',
+    fullTitle: 'The Metamorphosis',
+    author: 'Franz Kafka',
+    year: '1915',
+    length: '~70 pages',
+    genre: 'Novella (existentialist/absurdist fiction)',
+    info: 'Gregor Samsa wakes up transformed into an insect, and watches his usefulness, and his family’s patience, quietly run out.',
+  },
+  {
+    image: 'book-03-kafan.jpg',
+    title: 'Kafan',
+    meta: 'Munshi Premchand',
+    fullTitle: 'Kafan',
+    author: 'Munshi Premchand',
+    year: '1936',
+    genre: 'Fiction (social realism)',
+    info: 'A father and son, too poor and too apathetic to help the dying woman in their house, take the money collected for her funeral shroud and spend it on food and drink instead.',
+  },
 ];
 
 // title/meta below are the grid's display fields — left as they already
@@ -112,8 +161,15 @@ const movies = movieRows.flat();
         </div>
         <div class="card-row">
           {
-            books.map((b) => (
-              <div class="card">
+            books.map((b, i) => (
+              <div
+                class="card"
+                data-book-index={i}
+                role="button"
+                tabindex="0"
+                aria-haspopup="dialog"
+                aria-label={`View details for ${b.fullTitle}`}
+              >
                 <div class="card-cover">
                   <div class="card-crop">
                     <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
@@ -187,8 +243,15 @@ const movies = movieRows.flat();
           <p>Progress is slower than my wishlist.</p>
         </header>
         <div class="m-card-grid">
-          {books.map((b) => (
-            <div class="m-card">
+          {books.map((b, i) => (
+            <div
+              class="m-card"
+              data-book-index={i}
+              role="button"
+              tabindex="0"
+              aria-haspopup="dialog"
+              aria-label={`View details for ${b.fullTitle}`}
+            >
               <div class="m-card-cover">
                 <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
               </div>
@@ -227,11 +290,14 @@ const movies = movieRows.flat();
   </Fragment>
 </AppLayout>
 
-<!-- Film-info overlay: a small centered card (see .film-overlay below)
-     showing the clicked poster's full title, director/runtime/genre, and a
-     crisp synopsis. Same reasoning and pattern as /music's .album-overlay:
-     lives outside <AppLayout> here in the template, then gets moved to
-     document.body by the script below on mount, since AppLayout hardcodes
+<!-- Info overlay: a small centered card (see .film-overlay below), shared
+     by both books and movies (one .card-cover img/.card-title/.card-sub
+     recipe already covers both grids, so one overlay covers both detail
+     views too) — showing the clicked cover's full title, author/year/
+     length/genre or director/runtime/genre, and a crisp synopsis. Same
+     reasoning and pattern as /music's .album-overlay: lives outside
+     <AppLayout> here in the template, then gets moved to document.body by
+     the script below on mount, since AppLayout hardcodes
      scaleMode="fit-both" (transform:scale(...) on .scale-frame) and any
      transformed ancestor becomes the containing block for a
      position:fixed descendant — left inside that subtree this overlay
@@ -240,7 +306,7 @@ const movies = movieRows.flat();
      transition:persist — appending to document.body (not
      document.documentElement) is correct since it only needs to exist
      while /reading is open. -->
-<div class="film-overlay" id="film-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Film details">
+<div class="film-overlay" id="film-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Details">
   <div class="film-overlay-card">
     <button type="button" class="film-overlay-close" id="film-overlay-close" aria-label="Close">&times;</button>
     <div class="film-overlay-header">
@@ -256,11 +322,14 @@ const movies = movieRows.flat();
   </div>
 </div>
 
-<script define:vars={{ movies }}>
+<script define:vars={{ movies, books }}>
   // Page-specific (not the global __xInit guard pattern Layout.astro uses
   // for elements that persist across navigations) — this script and the
   // overlay markup it wires up only exist while /reading itself is loaded,
-  // re-running fresh on every visit.
+  // re-running fresh on every visit. Shared by both books and movies —
+  // same glass-card recipe, so one overlay instead of a second
+  // near-identical one on the same page (direct instruction: "add the
+  // info overlay for books as well").
   (function () {
     const overlay = document.getElementById('film-overlay');
     if (!overlay) return;
@@ -292,7 +361,26 @@ const movies = movieRows.flat();
       closeBtn.focus();
     }
 
-    function closeMovie() {
+    function openBook(index, trigger) {
+      const b = books[index];
+      if (!b) return;
+      lastTrigger = trigger || null;
+
+      imgEl.src = `/images/reading/${b.image}`;
+      imgEl.alt = b.fullTitle;
+      titleEl.textContent = `${b.fullTitle} (${b.year})`;
+      // length is optional (e.g. Kafan is just "a short story", not worth
+      // its own field) — filter(Boolean) drops it instead of leaving a
+      // stray "· ·" behind.
+      infoEl.textContent = [b.author, b.length, b.genre].filter(Boolean).join(' · ');
+      synopsisEl.textContent = b.info;
+
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      closeBtn.focus();
+    }
+
+    function closeOverlay() {
       overlay.classList.remove('is-open');
       overlay.setAttribute('aria-hidden', 'true');
       if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
@@ -309,12 +397,22 @@ const movies = movieRows.flat();
       });
     });
 
-    closeBtn.addEventListener('click', closeMovie);
+    document.querySelectorAll('[data-book-index]').forEach((el) => {
+      el.addEventListener('click', () => openBook(Number(el.dataset.bookIndex), el));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openBook(Number(el.dataset.bookIndex), el);
+        }
+      });
+    });
+
+    closeBtn.addEventListener('click', closeOverlay);
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeMovie();
+      if (e.target === overlay) closeOverlay();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeMovie();
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeOverlay();
     });
   })();
 </script>

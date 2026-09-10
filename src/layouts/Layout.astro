@@ -123,8 +123,9 @@ const {
   <div id="maximize-portal"></div>
 
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-    <button type="button" class="lightbox-close" aria-label="Close image">&times;</button>
+    <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
     <img class="lightbox-image" src="" alt="" />
+    <video class="lightbox-video" muted loop playsinline></video>
   </div>
 
 
@@ -187,7 +188,7 @@ const {
       <div class="music-widget-trigger" id="music-widget-trigger">
         <button type="button" class="music-widget-art-btn" id="music-widget-art-btn" aria-label="Now playing: Good Days by SZA, open player">
           <span class="music-widget-art">
-            <img src="/images/music/good-days-cover.png" alt="" draggable="false" />
+            <img src="/images/music/good-days-cover.png" alt="" draggable="false" id="music-widget-art-img" />
           </span>
         </button>
         <button type="button" class="music-widget-icon-btn" id="music-widget-icon-btn" data-icon="chevron" aria-label="Play or pause">
@@ -202,11 +203,11 @@ const {
   <div class="music-overlay" id="music-overlay" aria-hidden="true">
     <div class="music-overlay-card">
       <div class="music-overlay-art">
-        <img src="/images/music/good-days-cover.png" alt="" />
+        <img src="/images/music/good-days-cover.png" alt="" id="music-overlay-art-img" />
       </div>
       <div class="music-overlay-meta">
-        <p class="music-overlay-title">Good Days</p>
-        <p class="music-overlay-artist">SZA</p>
+        <p class="music-overlay-title" id="music-overlay-title">Good Days</p>
+        <p class="music-overlay-artist" id="music-overlay-artist">SZA</p>
       </div>
 
       <!-- Timeline/seek bar — direct instruction ("the large overlay main
@@ -280,25 +281,13 @@ const {
         </div>
       </div>
 
-      <!-- Queue panel — toggled by the button above. There's no real
-           playlist yet (one placeholder track, same as prev/next's own
-           currentTime=0 stub), so this is a minimal but genuinely
-           functional stub rather than a decorative button: it opens/closes
-           a real panel that lists what's actually playing, not a no-op.
-           Swap the single <li> for a real .map() over a track list once
-           one exists. -->
+      <!-- Queue panel — toggled by the button above. Real track list now
+           (see TRACKS in the script below): items are rendered from that
+           array by renderQueue(), not hardcoded here, so the heading is the
+           only static child — clicking a non-current item loads that track
+           (see the click delegation on this panel further down). -->
       <div class="music-overlay-queue-panel" id="music-overlay-queue-panel">
-        <p class="music-overlay-queue-heading">Up next</p>
-        <div class="music-overlay-queue-item">
-          <span class="music-overlay-queue-item-art">
-            <img src="/images/music/good-days-cover.png" alt="" />
-          </span>
-          <span class="music-overlay-queue-item-meta">
-            <span class="music-overlay-queue-item-title">Good Days</span>
-            <span class="music-overlay-queue-item-artist">SZA</span>
-          </span>
-          <span class="music-overlay-queue-item-tag">Now playing</span>
-        </div>
+        <p class="music-overlay-queue-heading">Tracklist</p>
       </div>
     </div>
   </div>
@@ -1114,16 +1103,31 @@ const {
       color: #8b8b8b;
     }
 
-    .music-overlay-queue-item {
+    /* :global() on every rule below — renderQueue() (see the script further
+       down) builds these items with document.createElement/innerHTML, and
+       elements created that way never get Astro's data-astro-cid-* scoping
+       attribute, so plain scoped selectors would silently fail to match
+       them (same gotcha as the overlay images/videos on the work page). */
+    :global(.music-overlay-queue-item) {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 10px 12px;
       border-radius: 14px;
       background: rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: background 0.15s ease-out;
     }
 
-    .music-overlay-queue-item-art {
+    :global(.music-overlay-queue-item:not(:last-child)) {
+      margin-bottom: 8px;
+    }
+
+    :global(.music-overlay-queue-item:hover) {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    :global(.music-overlay-queue-item-art) {
       flex-shrink: 0;
       width: 36px;
       height: 36px;
@@ -1131,14 +1135,14 @@ const {
       overflow: hidden;
     }
 
-    .music-overlay-queue-item-art img {
+    :global(.music-overlay-queue-item-art img) {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .music-overlay-queue-item-meta {
+    :global(.music-overlay-queue-item-meta) {
       flex: 1;
       min-width: 0;
       display: flex;
@@ -1146,7 +1150,7 @@ const {
       gap: 2px;
     }
 
-    .music-overlay-queue-item-title {
+    :global(.music-overlay-queue-item-title) {
       font-family: var(--font-body);
       font-weight: 500;
       font-size: 13px;
@@ -1156,14 +1160,14 @@ const {
       text-overflow: ellipsis;
     }
 
-    .music-overlay-queue-item-artist {
+    :global(.music-overlay-queue-item-artist) {
       font-family: var(--font-body);
       font-weight: 300;
       font-size: 12px;
       color: #8b8b8b;
     }
 
-    .music-overlay-queue-item-tag {
+    :global(.music-overlay-queue-item-tag) {
       flex-shrink: 0;
       font-family: var(--font-mono);
       font-size: 10px;
@@ -1493,9 +1497,13 @@ const {
       transform-origin: center center;
     }
 
-    /* Case-study image lightbox: sits outside .scale-frame so the enlarged
-       image renders at real viewport size, independent of the page's fit
-       scale. Click any .cs-content img to open. */
+    /* Case-study media lightbox: sits outside .scale-frame so the enlarged
+       image/video renders at real viewport size, independent of the page's
+       fit scale. Click any .cs-content img or video to open — only one of
+       .lightbox-image/.lightbox-video is ever visible at a time (see
+       openLightboxImage/openLightboxVideo below), the other stays
+       display:none so an empty <video> or <img> never reserves layout
+       space or shows a broken-media icon. */
     .lightbox {
       position: fixed;
       inset: 0;
@@ -1517,7 +1525,8 @@ const {
       transition: opacity 0.25s ease-out, visibility 0s linear 0s;
     }
 
-    .lightbox-image {
+    .lightbox-image,
+    .lightbox-video {
       max-width: 88vw;
       max-height: 86vh;
       object-fit: contain;
@@ -1527,7 +1536,8 @@ const {
       transition: transform 0.25s ease-out;
     }
 
-    .lightbox.is-open .lightbox-image {
+    .lightbox.is-open .lightbox-image,
+    .lightbox.is-open .lightbox-video {
       transform: scale(1);
     }
 
@@ -1951,7 +1961,7 @@ const {
       window.__dockEntranceDelayMs = leaving ? FADE_S * 1000 : 0;
     });
 
-    // Case-study image lightbox. Bound once on the persistent `document` —
+    // Case-study media lightbox. Bound once on the persistent `document` —
     // this script re-runs on every Astro navigation (the #lightbox element
     // itself is replaced each time), so re-binding would stack duplicate
     // listeners; the flag below guards against that and every lookup below
@@ -1959,18 +1969,53 @@ const {
     if (!window.__lightboxInit) {
       window.__lightboxInit = true;
 
-      const openLightbox = (src, alt) => {
+      const openLightboxImage = (src, alt) => {
         const overlay = document.getElementById('lightbox');
         const imgEl = overlay?.querySelector('.lightbox-image');
-        if (!overlay || !(imgEl instanceof HTMLImageElement)) return;
+        const videoEl = overlay?.querySelector('.lightbox-video');
+        if (!overlay || !(imgEl instanceof HTMLImageElement) || !(videoEl instanceof HTMLVideoElement)) return;
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        videoEl.style.display = 'none';
+        imgEl.style.display = '';
         imgEl.src = src;
         imgEl.alt = alt;
         overlay.classList.add('is-open');
         overlay.setAttribute('aria-hidden', 'false');
       };
 
+      // Enlarged the same way an image does, but playing — direct
+      // instruction: case-study videos should open into a larger frame like
+      // images do, not sit inert. Muted/loop, matching every other autoplay
+      // clip on the site (the reel filmstrip's own hero video included) —
+      // no site video anywhere plays with sound, so this stays consistent
+      // rather than introducing the one exception.
+      //
+      // radius carries over the SAME border-radius the small inline slot
+      // used (read off its .phone-shot-empty container at the call site
+      // below), rather than the flat 16px .lightbox-image uses — direct
+      // instruction: the large overlay should crop corners "the same way"
+      // as the small form, not with a generic photo-lightbox rounding that
+      // doesn't match the phone-shaped mockup slots (ph-hero/ph-tall/
+      // ph-full are 60px, ph-control is 30px).
+      const openLightboxVideo = (src, radius) => {
+        const overlay = document.getElementById('lightbox');
+        const imgEl = overlay?.querySelector('.lightbox-image');
+        const videoEl = overlay?.querySelector('.lightbox-video');
+        if (!overlay || !(imgEl instanceof HTMLImageElement) || !(videoEl instanceof HTMLVideoElement)) return;
+        imgEl.style.display = 'none';
+        imgEl.removeAttribute('src');
+        videoEl.style.display = '';
+        videoEl.style.borderRadius = radius || '';
+        videoEl.src = src;
+        videoEl.play().catch(() => {});
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      };
+
       const closeLightbox = () => {
         const overlay = document.getElementById('lightbox');
+        overlay?.querySelector('.lightbox-video')?.pause();
         overlay?.classList.remove('is-open');
         overlay?.setAttribute('aria-hidden', 'true');
       };
@@ -1986,7 +2031,15 @@ const {
 
         const img = target.closest('.cs-content img');
         if (img instanceof HTMLImageElement) {
-          openLightbox(img.currentSrc || img.src, img.alt);
+          openLightboxImage(img.currentSrc || img.src, img.alt);
+          return;
+        }
+
+        const video = target.closest('.cs-content video');
+        if (video instanceof HTMLVideoElement) {
+          const slot = video.closest('.phone-shot-empty');
+          const radius = slot ? getComputedStyle(slot).borderRadius : '';
+          openLightboxVideo(video.currentSrc || video.src, radius);
         }
       });
 
@@ -2029,11 +2082,44 @@ const {
       // all. This whole block only ever runs once (the __musicWidgetInit
       // guard around this entire init block), so there's no risk of
       // creating a second iframe on a later navigation.
+
+      // Real track list (was a single hardcoded track) — TRACKS is the one
+      // source of truth for both playback (scWidget.load(), see loadTrack
+      // below) and the queue panel's markup (see renderQueue below), so
+      // adding a third song later only ever means pushing one more entry
+      // here.
+      const TRACKS = [
+        {
+          title: 'Good Days',
+          artist: 'SZA',
+          cover: '/images/music/good-days-cover.png',
+          url: 'https://soundcloud.com/qwarqrtt43/good-days-sza-best-173940637',
+        },
+        {
+          title: 'Starry Eyes',
+          artist: 'Cigarettes After Sex',
+          cover: '/images/music/starry-eyes-cover.png',
+          url: 'https://soundcloud.com/cigarettesaftersex/04-starry-eyes-mp3',
+        },
+      ];
+      let currentTrackIndex = 0;
+
+      // Only used for the iframe's own bootstrap src (the initial track) —
+      // subsequent track switches go through scWidget.load(), which takes
+      // the raw track url plus a separate options object instead of this
+      // wrapped/query-string form.
+      function scPlayerSrc(trackUrl) {
+        return (
+          'https://w.soundcloud.com/player/?url=' +
+          encodeURIComponent(trackUrl) +
+          '&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false'
+        );
+      }
+
       const scIframe = document.createElement('iframe');
       scIframe.id = 'music-sc-iframe';
-      scIframe.title = 'Good Days by SZA - SoundCloud player';
-      scIframe.src =
-        'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fqwarqrtt43%2Fgood-days-sza-best-173940637&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false';
+      scIframe.title = TRACKS[0].title + ' by ' + TRACKS[0].artist + ' - SoundCloud player';
+      scIframe.src = scPlayerSrc(TRACKS[0].url);
       scIframe.style.cssText = 'position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; border:none;';
       scIframe.setAttribute('allow', 'autoplay');
       document.documentElement.appendChild(scIframe);
@@ -2048,10 +2134,57 @@ const {
 
       const widget = document.getElementById('music-widget');
       const widgetIcon = document.getElementById('music-widget-icon-btn');
+      const widgetArtImg = document.getElementById('music-widget-art-img');
+      const widgetArtBtn = document.getElementById('music-widget-art-btn');
       const overlay = document.getElementById('music-overlay');
+      const overlayArtImg = document.getElementById('music-overlay-art-img');
+      const overlayTitleEl = document.getElementById('music-overlay-title');
+      const overlayArtistEl = document.getElementById('music-overlay-artist');
       const overlayPlayBtn = document.getElementById('music-overlay-play');
       const overlayPrevBtn = document.getElementById('music-overlay-prev');
       const overlayNextBtn = document.getElementById('music-overlay-next');
+      const queuePanel = document.getElementById('music-overlay-queue-panel');
+
+      // Reflects the current track into every piece of UI that shows it —
+      // the small widget's art/aria-label, the big overlay's art/title/
+      // artist, and the queue panel's "Now playing" tag (via renderQueue).
+      // Called once at init (for the starting track) and again by loadTrack
+      // whenever prev/next/a queue item switches tracks.
+      function updateNowPlayingUI() {
+        const track = TRACKS[currentTrackIndex];
+        if (!track) return;
+        if (widgetArtImg instanceof HTMLImageElement) widgetArtImg.src = track.cover;
+        widgetArtBtn?.setAttribute('aria-label', 'Now playing: ' + track.title + ' by ' + track.artist + ', open player');
+        if (overlayArtImg instanceof HTMLImageElement) overlayArtImg.src = track.cover;
+        if (overlayTitleEl) overlayTitleEl.textContent = track.title;
+        if (overlayArtistEl) overlayArtistEl.textContent = track.artist;
+        scIframe.title = track.title + ' by ' + track.artist + ' - SoundCloud player';
+        renderQueue();
+      }
+
+      // Rebuilds the queue panel's items from TRACKS — the heading
+      // (.music-overlay-queue-heading) is the only static child, so this
+      // only ever removes/re-adds .music-overlay-queue-item siblings.
+      // Clicking a non-current item switches to it (see the click
+      // delegation on queuePanel further down); the current track keeps
+      // playing/paused state across the switch via loadTrack's autoplay arg.
+      function renderQueue() {
+        if (!(queuePanel instanceof HTMLElement)) return;
+        queuePanel.querySelectorAll('.music-overlay-queue-item').forEach((el) => el.remove());
+        TRACKS.forEach((track, i) => {
+          const item = document.createElement('div');
+          item.className = 'music-overlay-queue-item';
+          item.dataset.trackIndex = String(i);
+          item.innerHTML =
+            '<span class="music-overlay-queue-item-art"><img src="' + track.cover + '" alt="" /></span>' +
+            '<span class="music-overlay-queue-item-meta">' +
+            '<span class="music-overlay-queue-item-title">' + track.title + '</span>' +
+            '<span class="music-overlay-queue-item-artist">' + track.artist + '</span>' +
+            '</span>' +
+            (i === currentTrackIndex ? '<span class="music-overlay-queue-item-tag">Now playing</span>' : '');
+          queuePanel.appendChild(item);
+        });
+      }
 
       // Source of truth for "is playing" lives on the widget's own dataset
       // (survives navigation via transition:persist, same reasoning as
@@ -2340,16 +2473,52 @@ const {
 
       overlayPlayBtn?.addEventListener('click', togglePlay);
 
-      // Stubs until a real playlist exists (currently one track) — restart
-      // the current track rather than doing nothing, so the buttons still
-      // feel responsive. Swap for real track-list navigation (a new
-      // SC.Widget.load() call, or swapping the iframe's track URL) once
-      // there's more than one song.
+      // Real track-list navigation — swaps the widget's loaded track via
+      // SC.Widget's own load(url, options), rather than recreating the
+      // iframe (which would re-trigger the whole "detach resets browsing
+      // context" problem the iframe's long init comment above describes).
+      // autoplay carries the CURRENT playing state across the switch so
+      // prev/next keeps playing if a track was already playing, or stays
+      // paused if it wasn't — SoundCloud's own READY event only fires once
+      // ever (on the very first track), so every load after that relies on
+      // this call's own `callback` option to know when the new track is
+      // actually ready, not another READY bind.
+      function loadTrack(index, { autoplay = false } = {}) {
+        const track = TRACKS[index];
+        if (!track || !scWidget) return;
+        currentTrackIndex = index;
+        scDurationMs = 0;
+        scPositionMs = 0;
+        updateTimelineUI();
+        updateNowPlayingUI();
+        scWidget.load(track.url, {
+          auto_play: autoplay,
+          hide_related: true,
+          show_comments: false,
+          show_user: false,
+          show_reposts: false,
+          show_teaser: false,
+          visual: false,
+          callback: () => {
+            scReady = true;
+            scWidget.getDuration((ms) => {
+              scDurationMs = ms;
+              updateTimelineUI();
+            });
+            scWidget.setVolume(scMuted ? 0 : scVolume * 100);
+            if (autoplay) {
+              scPlayingState = true;
+              setPlaying(true);
+            }
+          },
+        });
+      }
+
       overlayPrevBtn?.addEventListener('click', () => {
-        if (scWidget && scReady) scWidget.seekTo(0);
+        loadTrack((currentTrackIndex - 1 + TRACKS.length) % TRACKS.length, { autoplay: scPlayingState });
       });
       overlayNextBtn?.addEventListener('click', () => {
-        if (scWidget && scReady) scWidget.seekTo(0);
+        loadTrack((currentTrackIndex + 1) % TRACKS.length, { autoplay: scPlayingState });
       });
 
       // Timeline/seek bar. Big-overlay-only, per direct instruction (the
@@ -2470,15 +2639,25 @@ const {
         volumeControl.classList.remove('is-open');
       });
 
-      // Queue button — toggles the panel added above. Real behavior (opens
-      // an actual panel listing what's playing), not decorative, even
-      // though there's only one placeholder track to list right now (see
-      // that panel's own markup comment).
+      // Queue button — toggles the panel added above (queuePanel itself is
+      // declared up top, alongside the other overlay element lookups, since
+      // renderQueue/updateNowPlayingUI need it too).
       const queueBtn = document.getElementById('music-overlay-queue');
-      const queuePanel = document.getElementById('music-overlay-queue-panel');
       queueBtn?.addEventListener('click', () => {
         const open = queuePanel?.classList.toggle('is-open');
         queueBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      // Clicking a queue item jumps to that track — delegated on the panel
+      // itself rather than per-item listeners, since renderQueue rebuilds
+      // the items (and would otherwise need to reattach a listener on every
+      // rebuild).
+      queuePanel?.addEventListener('click', (e) => {
+        const item = e.target instanceof Element ? e.target.closest('.music-overlay-queue-item') : null;
+        if (!(item instanceof HTMLElement) || !item.dataset.trackIndex) return;
+        const index = Number(item.dataset.trackIndex);
+        if (index === currentTrackIndex) return;
+        loadTrack(index, { autoplay: scPlayingState });
       });
 
       overlay?.addEventListener('click', (e) => {
@@ -2537,6 +2716,11 @@ const {
         });
       }
       initSoundCloudWidget();
+
+      // Populates the queue panel for the starting track (index 0) — every
+      // later switch does this itself via loadTrack -> updateNowPlayingUI,
+      // but nothing else calls it for the very first load.
+      updateNowPlayingUI();
 
       document.addEventListener('astro:before-preparation', closeOverlay);
       document.addEventListener('astro:page-load', refreshRouteVisibility);
