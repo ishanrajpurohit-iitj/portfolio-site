@@ -2750,5 +2750,35 @@ const {
       }
     }
   </script>
+
+  <!-- Sitewide autoplay fix, independent of the music widget above (own
+       script, own concern, nothing shared). A hard page load/reload always
+       autoplays <video autoplay> elements correctly — that's the browser
+       parsing the document fresh. Astro's client-side navigation instead
+       swaps the new page's HTML into the existing document via JS, and
+       browsers don't reliably honor the declarative autoplay attribute for
+       elements that arrive that way rather than through the initial parse.
+       Direct report: "page reload krne pe chal ja rahe" (works on reload,
+       not on a normal in-app navigation) — reproduced on every video on the
+       site, not just one page, confirming it's this general SPA-navigation
+       gap rather than a per-page bug. Fixes it the same direct way as the
+       couple of page-specific fallbacks already in the codebase (Writings'
+       Captures tab, the Photoshop 2030 case study): explicitly call .play()
+       after every navigation completes. Runs after EVERY astro:page-load
+       (not gated behind a run-once guard, unlike the music widget's own
+       init above) because it must re-arm for each new page's videos, not
+       just the first one — safe to call repeatedly since it only acts on
+       videos still .paused. -->
+  <script>
+    function playAutoplayVideos() {
+      document.querySelectorAll('video[autoplay]').forEach((video) => {
+        if (video instanceof HTMLVideoElement && video.paused) {
+          video.play().catch(() => {});
+        }
+      });
+    }
+    playAutoplayVideos();
+    document.addEventListener('astro:page-load', playAutoplayVideos);
+  </script>
 </body>
 </html>
