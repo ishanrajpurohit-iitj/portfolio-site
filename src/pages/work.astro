@@ -1162,12 +1162,6 @@ const otherWorkResolved = otherWork.map((w) => ({
     position: relative;
     display: block;
     width: 100%;
-    /* Fixed ratio (was height:auto, sized off each image's own natural
-       aspect ratio) — a consistent card height reads as one clean column
-       instead of every card being a different size. Portrait-leaning
-       since most Other Work pieces are posters/packaging, not landscape
-       decks. */
-    aspect-ratio: 3 / 4;
     box-shadow:
       0px 2px 6px rgba(0, 0, 0, 0.08),
       0px 14px 32px rgba(0, 0, 0, 0.14);
@@ -1176,12 +1170,9 @@ const otherWorkResolved = otherWork.map((w) => ({
 
   .m-ow-item-cover img,
   .m-ow-item-cover video {
-    position: absolute;
-    inset: 0;
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
   }
 
   .m-ow-item-caption {
