@@ -344,7 +344,15 @@ const sections = [
 <script>
   function playPanelVideos(panel: Element | null) {
     panel?.querySelectorAll('video').forEach((video) => {
-      if (video instanceof HTMLVideoElement && video.paused) video.play().catch(() => {});
+      if (!(video instanceof HTMLVideoElement)) return;
+      // Same fix as Writings' Captures tab: a load attempted while this
+      // panel was still display:none (every panel but Problem starts
+      // hidden) can leave the element stuck in a failed resource-selection
+      // state — play() alone never recovers from that, load() does.
+      if (video.error || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        video.load();
+      }
+      if (video.paused) video.play().catch(() => {});
     });
   }
 

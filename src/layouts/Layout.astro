@@ -2751,28 +2751,34 @@ const {
     }
   </script>
 
-  <!-- Sitewide autoplay fix, independent of the music widget above (own
-       script, own concern, nothing shared). A hard page load/reload always
-       autoplays <video autoplay> elements correctly — that's the browser
-       parsing the document fresh. Astro's client-side navigation instead
-       swaps the new page's HTML into the existing document via JS, and
-       browsers don't reliably honor the declarative autoplay attribute for
-       elements that arrive that way rather than through the initial parse.
-       Direct report: "page reload krne pe chal ja rahe" (works on reload,
-       not on a normal in-app navigation) — reproduced on every video on the
-       site, not just one page, confirming it's this general SPA-navigation
-       gap rather than a per-page bug. Fixes it the same direct way as the
-       couple of page-specific fallbacks already in the codebase (Writings'
-       Captures tab, the Photoshop 2030 case study): explicitly call .play()
-       after every navigation completes. Runs after EVERY astro:page-load
-       (not gated behind a run-once guard, unlike the music widget's own
-       init above) because it must re-arm for each new page's videos, not
-       just the first one — safe to call repeatedly since it only acts on
-       videos still .paused. -->
+  <!-- Sitewide autoplay-recovery fix, independent of the music widget above
+       (own script, own concern, nothing shared). Root cause, confirmed live
+       via the browser's own console (not guesswork): a <video autoplay>
+       whose load was attempted while its container was still display:none
+       (any tabbed/paneled section that isn't the default-visible one) can
+       get stuck in a failed resource-selection state — networkState
+       NETWORK_NO_SOURCE, video.error set, and critically, calling .play()
+       on it afterward does NOT retry the load; it just rejects forever with
+       "NotSupportedError: no supported sources". Direct report: "page
+       reload krne pe chal ja rahe" (works on a hard reload — the video
+       loads only after loading, resource selection succeeds fine — but not
+       after switching to it in-app). .load() explicitly restarts resource
+       selection; only called when actually stuck, never on an
+       already-playing video, or it'd restart it from 0 every time this
+       runs. This is the sitewide safety net; Writings' Captures tab and the
+       Photoshop 2030 case study have their own copies of the same fix
+       scoped to their own panels, for the exact moment their tab becomes
+       visible — this one catches anything else. Runs after EVERY
+       astro:page-load (not gated behind a run-once guard, unlike the music
+       widget's own init above) since it must re-arm for each new page. -->
   <script>
     function playAutoplayVideos() {
       document.querySelectorAll('video[autoplay]').forEach((video) => {
-        if (video instanceof HTMLVideoElement && video.paused) {
+        if (!(video instanceof HTMLVideoElement)) return;
+        if (video.error || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+          video.load();
+        }
+        if (video.paused) {
           video.play().catch(() => {});
         }
       });

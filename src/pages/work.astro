@@ -642,6 +642,31 @@ const otherWorkResolved = otherWork.map((w) => ({
   })();
 </script>
 
+<!-- Other Work's cover videos (Adobe's coverVideo, e.g.) start inside the
+     Other Work tab panel, which is display:none until that tab is selected
+     — Case Studies is the default. A <video autoplay> whose load was
+     attempted while hidden can get stuck in a failed resource-selection
+     state (networkState NETWORK_NO_SOURCE) that .play() alone never
+     recovers from; confirmed live via the browser's own console, same root
+     cause as Writings' Captures tab and the Photoshop 2030 case study,
+     which have their own copies of this exact fix. load() restarts
+     resource selection; only called when actually stuck, never on an
+     already-playing video. -->
+<script>
+  function playOtherWorkVideos() {
+    document.querySelectorAll('.other-work-grid video, .m-other-work-grid video').forEach((video) => {
+      if (!(video instanceof HTMLVideoElement)) return;
+      if (video.error || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        video.load();
+      }
+      if (video.paused) video.play().catch(() => {});
+    });
+  }
+  playOtherWorkVideos();
+  document.getElementById('tab-other-work')?.addEventListener('change', playOtherWorkVideos);
+  document.getElementById('m-tab-other-work')?.addEventListener('change', playOtherWorkVideos);
+</script>
+
 <style>
   .w-page {
     width: 100%;
