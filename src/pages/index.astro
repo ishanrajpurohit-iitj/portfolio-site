@@ -214,10 +214,18 @@ import '../styles/home.css';
   </div>
 
   <Fragment slot="mobile">
-    <div class="m-home-backdrop">
-      <img src="/images/shared/desktop-backdrop.jpg" alt="" />
-    </div>
     <div class="m-home">
+      <!-- Hidden entirely in View mode (see .m-home:has(...) rule below) —
+           the desk-photo backdrop was fighting for contrast with the résumé
+           text sitting on top of it ("text nahi dikh raha"), so View mode
+           just goes back to the page's plain background. Moved inside
+           .m-home (was a sibling before it) purely so this component's own
+           already-proven .m-home:has(#toggle:not(:checked)) selector can
+           reach it directly — position:fixed means the move doesn't change
+           where it actually renders. -->
+      <div class="m-home-backdrop">
+        <img src="/images/shared/desktop-backdrop.jpg" alt="" />
+      </div>
       <!-- Same View/Play mode toggle desktop's Nav.astro has, scaled down —
            direct feedback: "add the view play toggle on top scaled
            according to mobile." A separate #m-mode-toggle id (not the
@@ -583,6 +591,14 @@ import '../styles/home.css';
   .m-home:has(.m-toggle-checkbox:not(:checked)) .m-home-panel-view {
     display: flex;
     animation: m-panel-fade-in 0.3s ease-out;
+  }
+
+  /* View mode's résumé text sits directly on the page background (no card/
+     panel behind it), so the desk-photo backdrop showing through was
+     killing contrast — direct feedback: "remove the backdrop behind view
+     mode, text nahi dikh raha". Play mode keeps the backdrop as before. */
+  .m-home:has(.m-toggle-checkbox:not(:checked)) .m-home-backdrop {
+    display: none;
   }
 
   @keyframes m-panel-fade-in {
