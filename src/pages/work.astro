@@ -622,6 +622,26 @@ const otherWorkResolved = otherWork.map((w) => ({
     }
     bindOtherWorkOverlay();
     document.addEventListener('astro:page-load', bindOtherWorkOverlay);
+
+    // Deep link into a specific Other Work piece, e.g. /work#adobe-inter-iit-reels
+    // (used by Photoshop 2030's "More Visuals" tab to link straight to the
+    // Adobe reel instead of just dropping the visitor on /work and making
+    // them find it) — switches to the Other Work tab and opens the filmstrip
+    // overlay directly on that piece. Runs after bindOtherWorkOverlay() above
+    // so overlay/frame/etc are already queried and ready for openPiece().
+    function applyDeepLink() {
+      const hash = window.location.hash.replace('#', '');
+      if (!hash) return;
+      const idx = otherWork.findIndex((p) => p.id === hash);
+      if (idx === -1) return;
+      const radio = document.getElementById('tab-other-work');
+      if (radio instanceof HTMLInputElement) radio.checked = true;
+      const mobileRadio = document.getElementById('m-tab-other-work');
+      if (mobileRadio instanceof HTMLInputElement) mobileRadio.checked = true;
+      openPiece(idx);
+    }
+    applyDeepLink();
+    document.addEventListener('astro:page-load', applyDeepLink);
   })();
 </script>
 
