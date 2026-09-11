@@ -468,6 +468,11 @@
 
 .panel-view {
   overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.panel-view::-webkit-scrollbar {
+  display: none;
 }
 
 .panel-play {

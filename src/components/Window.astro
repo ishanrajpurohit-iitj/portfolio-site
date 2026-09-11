@@ -338,5 +338,10 @@ const { title, width = 1184, height, transitionName } = Astro.props;
     flex: 1 0 0;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .window-content::-webkit-scrollbar {
+    display: none;
   }
 </style>

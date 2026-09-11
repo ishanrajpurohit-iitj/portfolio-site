@@ -339,9 +339,14 @@ const sections = [
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    scrollbar-width: none;
     padding: 0 64px 72px 0;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .cs-row::-webkit-scrollbar {
+    display: none;
   }
 
   .cs-sidebar {
