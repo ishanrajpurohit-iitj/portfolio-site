@@ -75,13 +75,17 @@ const albums = [
     pick: { title: 'I Feel Good', length: '5:17', by: 'Vishal Dadlani, Shilpa Rao' },
   },
   {
-    image: '07-lsd-title-ep.jpg',
-    artist: 'LSD and the Search for God',
-    album: 'Title EP',
-    released: 'January 16, 2007',
-    length: '22:03',
-    trackCount: 5,
-    pick: { title: 'Starting Over', length: '5:04', by: 'LSD and the Search for God' },
+    image: '07-lost-ark-compilation-vol8.jpg',
+    artist: 'Various Artists (recorded at The Lost Ark Studio, a California studio)',
+    album: 'Lost Ark Studio Compilation, Vol. 8',
+    released: '2014 (April 24, 2014 on Bandcamp; streamed later on Aug 12, 2016)',
+    trackCount: 10,
+    pick: {
+      title: 'Waiting Room',
+      length: '6:33',
+      by: 'Phoebe Bridgers',
+      note: 'Phoebe Bridgers wrote this at 16. It’s one of her earliest recorded songs, a fan favorite deep cut of raw, sincere devotion. It briefly disappeared from streaming in early 2023, then she re-released it on Bandcamp in May 2023 with proceeds going to Music Will, a music education nonprofit.',
+    },
   },
   {
     image: '08-smush-iywihibhn.jpg',
@@ -316,6 +320,11 @@ for (let i = 0; i < albums.length; i += 4) {
         <p class="album-overlay-pick-length" id="album-overlay-pick-length"></p>
       </div>
       <p class="album-overlay-pick-by" id="album-overlay-pick-by"></p>
+      <!-- Optional — why THIS track got picked, not just what it is. Only
+         Lost Ark Studio Vol. 8's Phoebe Bridgers pick has one so far;
+         hidden (display:none) when a.pick.note is absent, same pattern as
+         .album-overlay-credit/.album-overlay-pick-by above. -->
+      <p class="album-overlay-pick-note" id="album-overlay-pick-note"></p>
     </div>
   </div>
 </div>
@@ -353,12 +362,17 @@ for (let i = 0; i < albums.length; i += 4) {
       const pickTitleEl = document.getElementById('album-overlay-pick-title');
       const pickLengthEl = document.getElementById('album-overlay-pick-length');
       const pickByEl = document.getElementById('album-overlay-pick-by');
+      const pickNoteEl = document.getElementById('album-overlay-pick-note');
 
       imgEl.src = `/images/music/${a.image}`;
       imgEl.alt = `${a.album} by ${a.artist}`;
       titleEl.textContent = a.album;
       artistEl.textContent = a.artist;
-      infoEl.textContent = `Released: ${a.released} · ${a.trackCount} tracks · ${a.length} total`;
+      // length is optional — a compilation like Lost Ark Studio Vol. 8 has
+      // no single stated runtime, only a per-track one (see pick.length
+      // below), so filter(Boolean) drops "· undefined total" instead of
+      // leaving a stray fragment when it's absent.
+      infoEl.textContent = [`Released: ${a.released}`, `${a.trackCount} tracks`, a.length ? `${a.length} total` : null].filter(Boolean).join(' · ');
       creditEl.textContent = a.credit || '';
       creditEl.style.display = a.credit ? '' : 'none';
 
@@ -366,6 +380,8 @@ for (let i = 0; i < albums.length; i += 4) {
       pickLengthEl.textContent = a.pick.length;
       pickByEl.textContent = a.pick.by;
       pickByEl.style.display = a.pick.by ? '' : 'none';
+      pickNoteEl.textContent = a.pick.note || '';
+      pickNoteEl.style.display = a.pick.note ? '' : 'none';
 
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
@@ -763,6 +779,15 @@ for (let i = 0; i < albums.length; i += 4) {
     font-family: var(--font-body);
     font-weight: 300;
     font-size: 12px;
+    color: #8b8b8b;
+  }
+
+  .album-overlay-pick-note {
+    margin: 10px 0 0;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.5;
     color: #8b8b8b;
   }
 
