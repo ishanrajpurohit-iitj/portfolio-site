@@ -281,14 +281,14 @@
 
 .home-cv-header h2 {
   margin: 0;
-  font-size: calc(26px / var(--frame-scale, 1));
+  font-size: calc(29px / var(--frame-scale, 1));
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .home-cv-title {
   margin: calc(6px / var(--frame-scale, 1)) 0 0;
-  font-size: calc(13px / var(--frame-scale, 1));
+  font-size: calc(15px / var(--frame-scale, 1));
   font-weight: 300;
   color: #6b6558;
 }
@@ -298,7 +298,7 @@
   align-items: center;
   gap: calc(8px / var(--frame-scale, 1));
   margin-top: calc(10px / var(--frame-scale, 1));
-  font-size: calc(12px / var(--frame-scale, 1));
+  font-size: calc(14px / var(--frame-scale, 1));
 }
 
 .home-cv-links a {
@@ -316,7 +316,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: calc(4px / var(--frame-scale, 1));
-  font-size: calc(12px / var(--frame-scale, 1));
+  font-size: calc(14px / var(--frame-scale, 1));
   color: #6b6558;
   text-align: right;
   white-space: nowrap;
@@ -339,14 +339,14 @@
 
 .home-cv-summary {
   margin: 0;
-  font-size: calc(13px / var(--frame-scale, 1));
+  font-size: calc(15px / var(--frame-scale, 1));
   font-weight: 300;
   line-height: 1.7;
 }
 
 .home-cv-section h3 {
   margin: 0 0 calc(14px / var(--frame-scale, 1));
-  font-size: calc(11px / var(--frame-scale, 1));
+  font-size: calc(13px / var(--frame-scale, 1));
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -369,7 +369,7 @@
 }
 
 .home-cv-entry-title {
-  font-size: calc(13px / var(--frame-scale, 1));
+  font-size: calc(15px / var(--frame-scale, 1));
   font-weight: 500;
 }
 
@@ -391,7 +391,7 @@
 }
 
 .home-cv-entry-meta {
-  font-size: calc(11px / var(--frame-scale, 1));
+  font-size: calc(13px / var(--frame-scale, 1));
   font-weight: 300;
   color: #6b6558;
   white-space: nowrap;
@@ -399,7 +399,7 @@
 
 .home-cv-entry-org {
   margin: calc(4px / var(--frame-scale, 1)) 0 0;
-  font-size: calc(12px / var(--frame-scale, 1));
+  font-size: calc(14px / var(--frame-scale, 1));
   font-weight: 300;
   line-height: 1.6;
   color: #6b6558;
@@ -407,7 +407,7 @@
 
 .home-cv-entry-highlights {
   margin: calc(6px / var(--frame-scale, 1)) 0 0;
-  font-size: calc(11px / var(--frame-scale, 1));
+  font-size: calc(13px / var(--frame-scale, 1));
   font-weight: 300;
   line-height: 1.6;
   color: #a39c8c;
@@ -415,7 +415,7 @@
 
 .home-cv-skills {
   margin: 0;
-  font-size: calc(12px / var(--frame-scale, 1));
+  font-size: calc(14px / var(--frame-scale, 1));
   font-weight: 300;
   line-height: 1.8;
 }
@@ -428,7 +428,7 @@
   align-items: center;
   justify-content: space-between;
   gap: calc(16px / var(--frame-scale, 1));
-  font-size: calc(11px / var(--frame-scale, 1));
+  font-size: calc(13px / var(--frame-scale, 1));
   color: #6b6558;
 }
 
