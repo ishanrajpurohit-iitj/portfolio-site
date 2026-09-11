@@ -373,6 +373,17 @@
   font-weight: 500;
 }
 
+/* Winking aside on the Chemical Engineering degree — a product designer
+   with this on the transcript is the one genuine surprise in an otherwise
+   straight-faced résumé, so it gets to look like one: italic, muted,
+   lighter weight than the title it's attached to, not a badge fighting
+   for attention. */
+.home-cv-surprise {
+  font-style: italic;
+  font-weight: 300;
+  color: #8b8578;
+}
+
 .home-cv-entry-title a {
   color: #1a1a1a;
   text-decoration: underline;
