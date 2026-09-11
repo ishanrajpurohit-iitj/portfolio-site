@@ -654,28 +654,13 @@ const otherWorkResolved = otherWork.map((w) => ({
      hardcoding boAt, so flagging any other piece the same way is enough
      to give it the same treatment later. Separate script/IIFE from the
      filmstrip overlay above — unrelated concerns, no reason to share
-     state.
-
-     Rebinds on every astro:page-load, not just once at the top — same
-     script-dedup bug as everywhere else on this site: define:vars renders
-     byte-identical script content every time (otherWork never changes), so
-     Astro skips re-executing this tag's top-level code on a revisit even
-     though the grid's <img> elements are genuinely fresh. Confirmed live:
-     after navigating away from /work and back once, cycling never restarted.
-     startCycling() calls stopCycling() first so it's safe to call repeatedly
-     (covers astro:page-load's own documented double-fire on first load too,
-     without ending up with doubled intervals). -->
+     state. -->
 <script define:vars={{ otherWork: otherWorkResolved }}>
   (function () {
     const CYCLE_MS = 420;
-    let timers = [];
-
-    function stopCycling() {
-      timers.splice(0).forEach((t) => clearInterval(t));
-    }
+    const timers = [];
 
     function startCycling() {
-      stopCycling();
       document.querySelectorAll('[data-ow-index]').forEach((trigger) => {
         const img = trigger.querySelector('img[data-cycle="true"]');
         if (!img) return;
@@ -691,12 +676,15 @@ const otherWorkResolved = otherWork.map((w) => ({
       });
     }
 
+    function stopCycling() {
+      timers.splice(0).forEach((t) => clearInterval(t));
+    }
+
     startCycling();
-    document.addEventListener('astro:page-load', startCycling);
     // Clear timers before a client-side navigation swaps the DOM out from
     // under them — same reasoning as the Home carousel's own
     // astro:before-preparation cleanup elsewhere on this site.
-    document.addEventListener('astro:before-preparation', stopCycling);
+    document.addEventListener('astro:before-preparation', stopCycling, { once: true });
   })();
 </script>
 
