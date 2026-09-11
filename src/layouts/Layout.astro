@@ -2648,6 +2648,22 @@ const {
       // silently left them pointing at a detached node.
       function bindOverlayInteractions() {
         overlay = document.getElementById('music-overlay');
+        if (!overlay || overlay.dataset.owBound === 'true') return;
+        // Guards against binding the SAME live element twice — confirmed
+        // live: astro:page-load fires an extra time right after the very
+        // first page load's own top-level call (same double-invocation
+        // Astro's lifecycle produces elsewhere, see index.astro's
+        // typewriteHeadline comment), and since nothing navigated away
+        // between those two firings, both calls queried this identical
+        // #music-overlay and each attached its own click listener to
+        // queueBtn/overlayPlayBtn/volumeControl/etc. A click then fired
+        // BOTH listeners — for anything toggle-based (queue panel open/
+        // closed, togglePlay's play/pause) that's toggle-then-toggle-back
+        // in the same event, netting zero: "the queue button doesn't do
+        // anything." A fresh #music-overlay from a real navigation has no
+        // dataset yet, so this only skips the redundant SAME-element
+        // re-bind, never a genuine rebind after navigating.
+        overlay.dataset.owBound = 'true';
         overlayArtImg = document.getElementById('music-overlay-art-img');
         overlayTitleEl = document.getElementById('music-overlay-title');
         overlayArtistEl = document.getElementById('music-overlay-artist');
