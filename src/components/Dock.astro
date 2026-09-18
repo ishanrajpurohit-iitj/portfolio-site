@@ -49,6 +49,7 @@ const items = [
   <div class="dock-background"></div>
   <a class="dock-link" href="/" aria-label="Home" data-transition-slow>
     <img class="dock-icon" src="/images/shared/dock/icon-home.png" alt="" width="48" height="35" />
+    <span class="dock-tooltip">Home</span>
   </a>
   <div class="dock-separator-frame">
     <div class="dock-separator"></div>
@@ -69,6 +70,7 @@ const items = [
         data-inactive-h={item.inactive.height}
       >
         <img class="dock-icon" src={state.src} width={state.width} height={state.height} alt="" />
+        <span class="dock-tooltip">{item.label}</span>
       </a>
     );
   })}
@@ -169,6 +171,45 @@ const items = [
 
   .dock-icon {
     display: block;
+  }
+
+  .dock-tooltip {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px) scale(0.94);
+    transform-origin: bottom center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(40, 40, 40, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      opacity 0.12s ease,
+      transform 0.12s ease;
+  }
+
+  .dock-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(40, 40, 40, 0.85);
+  }
+
+  .dock-link:hover .dock-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    transition-delay: 0.4s;
   }
 
   .dock-separator-frame {
