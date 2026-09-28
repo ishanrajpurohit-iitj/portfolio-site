@@ -172,7 +172,7 @@ const movies = movieRows.flat();
               >
                 <div class="card-cover">
                   <div class="card-crop">
-                    <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
+                    <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} loading="lazy" />
                   </div>
                 </div>
                 <div class="card-meta">
@@ -210,7 +210,7 @@ const movies = movieRows.flat();
                 >
                   <div class="card-cover">
                     <div class="card-crop">
-                      <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} />
+                      <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} loading="lazy" />
                     </div>
                   </div>
                   <div class="card-meta">
@@ -253,7 +253,7 @@ const movies = movieRows.flat();
               aria-label={`View details for ${b.fullTitle}`}
             >
               <div class="m-card-cover">
-                <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} />
+                <img src={`/images/reading/${b.image}`} alt={`${b.title} by ${b.meta}`} loading="lazy" />
               </div>
               <p class="m-card-title">{b.title}</p>
               <p class="m-card-sub">{b.meta}</p>
@@ -278,7 +278,7 @@ const movies = movieRows.flat();
               aria-label={`View details for ${m.fullTitle}`}
             >
               <div class="m-card-cover">
-                <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} />
+                <img src={`/images/reading/${m.image}`} alt={`${m.title} (${m.meta})`} loading="lazy" />
               </div>
               <p class="m-card-title">{m.title}</p>
               <p class="m-card-sub">{m.meta}</p>
