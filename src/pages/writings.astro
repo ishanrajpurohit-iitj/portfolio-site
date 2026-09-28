@@ -16,7 +16,7 @@ const journalEntries = [
     title: 'meet ishan (no, not me)',
     date: '08.09.2026',
     preview: 'this is ishan. i am not sure about loving going to school, but he loves coming back fro...',
-    image: { src: 'meet-ishan-childhood.png', alt: 'A childhood photo of Ishan, framed inside a collage of old school photos.' },
+    image: { src: 'meet-ishan-childhood.webp', alt: 'A childhood photo of Ishan, framed inside a collage of old school photos.' },
     body: [
       'this is ishan.',
       'i am not sure about loving going to school, but he loves coming back from there. he loves drawing, he loves using ms paint. he loves using the computer.',
@@ -40,7 +40,7 @@ const journalEntries = [
     date: '03.09.2026',
     preview: 'yes yes yes. i am a final year undergrad in the department of chemical enginee...',
     image: {
-      src: 'chemical-engineering-portrait.png',
+      src: 'chemical-engineering-portrait.webp',
       alt: 'Ishan smiling on a rooftop at night, city lights in the background, in a halftone-print photo style.',
     },
     body: [
@@ -141,7 +141,11 @@ const journalEntries = [
               <div class="w-detail-body">
                 {entry.image && (
                   <div class="w-detail-image">
-                    <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                    <picture>
+                      <source srcset={`/images/writings/${entry.image.src.replace(/\.webp$/, '.avif')}`} type="image/avif" />
+                      <source srcset={`/images/writings/${entry.image.src}`} type="image/webp" />
+                      <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                    </picture>
                   </div>
                 )}
                 {entry.body.map((para) => (
@@ -247,7 +251,11 @@ const journalEntries = [
               <div class="m-w-detail-body">
                 {entry.image && (
                   <div class="m-w-detail-image">
-                    <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                    <picture>
+                      <source srcset={`/images/writings/${entry.image.src.replace(/\.webp$/, '.avif')}`} type="image/avif" />
+                      <source srcset={`/images/writings/${entry.image.src}`} type="image/webp" />
+                      <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                    </picture>
                   </div>
                 )}
                 {entry.body.map((para) => (

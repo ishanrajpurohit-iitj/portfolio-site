@@ -14,7 +14,7 @@ import MobileTitlebar from '../components/MobileTitlebar.astro';
 // index.astro's Home "View" panel).
 const caseStudies = [
   {
-    image: '/images/work/card-csite.png',
+    image: '/images/work/card-csite.webp',
     imageStyle: 'left:0.09%; top:-107.91%; width:100%; height:315.81%;',
     title: 'Digitizing construction-site management across three roles',
     description: "A mobile + web platform for India's unorganized construction sector. I was the only designer: research, information architecture, the design system, UI, and prototyping.",
@@ -22,7 +22,7 @@ const caseStudies = [
     href: '/work/csite',
   },
   {
-    image: '/images/work/card-photoshop2030.png',
+    image: '/images/work/card-photoshop2030.webp',
     video: '/images/work/photoshop2030/more-visuals-1-cover.mp4',
     title: 'Reimagining Photoshop as a 2030 AI editor you can talk to',
     description: 'A concept for a mobile, AI-first Photoshop for 2030, built to stay fast on low-compute devices. I was the designer on a six-person team, owning the product vision, the home experience, Orby, and the interaction model.',
@@ -199,7 +199,10 @@ const otherWorkResolved = otherWork.map((w) => ({
                     {c.video ? (
                       <video src={c.video} poster={c.image} autoplay muted loop playsinline preload="auto" />
                     ) : (
-                      <img src={c.image} alt={c.title} style={c.imageStyle} />
+                      <picture>
+                        <source srcset={c.image.replace(/\.webp$/, '.avif')} type="image/avif" />
+                        <img src={c.image} alt={c.title} style={c.imageStyle} />
+                      </picture>
                     )}
                   </span>
                   <span class="cs-item-title">{c.title}</span>
@@ -302,7 +305,10 @@ const otherWorkResolved = otherWork.map((w) => ({
                   {c.video ? (
                     <video src={c.video} poster={c.image} autoplay muted loop playsinline preload="auto" />
                   ) : (
-                    <img src={c.image} alt={c.title} style={c.imageStyle} />
+                    <picture>
+                      <source srcset={c.image.replace(/\.webp$/, '.avif')} type="image/avif" />
+                      <img src={c.image} alt={c.title} style={c.imageStyle} />
+                    </picture>
                   )}
                 </span>
                 <span class="m-cs-item-title">{c.title}</span>
