@@ -375,7 +375,7 @@ const otherWorkResolved = otherWork.map((w) => ({
   </Fragment>
 </AppLayout>
 
-<!-- Other-Work item viewer — a cinematic filmstrip, not a small dialog box:
+{/* Other-Work item viewer — a cinematic filmstrip, not a small dialog box:
      the active slide sits large and sharp in the center with the previous/
      next slide receding, hazy, and partly hidden behind it on either side
      (direct instruction: "build something like this with bigger displays,
@@ -387,7 +387,7 @@ const otherWorkResolved = otherWork.map((w) => ({
      has (music.astro's .album-overlay, reading.astro's .film-overlay):
      AppLayout hardcodes scaleMode="fit-both", so left inside that subtree
      this would inherit the ambient scale-down and center against the
-     shrunk frame instead of the real viewport. -->
+     shrunk frame instead of the real viewport. */}
 <div class="ow-overlay" id="ow-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Work item viewer">
   <button type="button" class="ow-overlay-close" id="ow-overlay-close" aria-label="Close">&times;</button>
   <div class="ow-stage" id="ow-stage">
@@ -645,7 +645,7 @@ const otherWorkResolved = otherWork.map((w) => ({
   })();
 </script>
 
-<!-- Cover-cycling — grid covers for pieces flagged coverCycle:true hard-cut
+{/* Cover-cycling — grid covers for pieces flagged coverCycle:true hard-cut
      through every slide in that piece on a fast, uncrossfaded loop (no
      transition, just an instant swap) — direct instruction: "quickly
      changing animation... match cuts type, not literally that but that
@@ -664,7 +664,7 @@ const otherWorkResolved = otherWork.map((w) => ({
      after navigating away from /work and back once, cycling never restarted.
      startCycling() calls stopCycling() first so it's safe to call repeatedly
      (covers astro:page-load's own documented double-fire on first load too,
-     without ending up with doubled intervals). -->
+     without ending up with doubled intervals). */}
 <script define:vars={{ otherWork: otherWorkResolved }}>
   (function () {
     const CYCLE_MS = 420;
@@ -700,7 +700,7 @@ const otherWorkResolved = otherWork.map((w) => ({
   })();
 </script>
 
-<!-- Other Work's cover videos (Adobe's coverVideo, e.g.) start inside the
+{/* Other Work's cover videos (Adobe's coverVideo, e.g.) start inside the
      Other Work tab panel, which is display:none until that tab is selected
      — Case Studies is the default. A <video autoplay> whose load was
      attempted while hidden can get stuck in a failed resource-selection
@@ -709,7 +709,7 @@ const otherWorkResolved = otherWork.map((w) => ({
      cause as Writings' Captures tab and the Photoshop 2030 case study,
      which have their own copies of this exact fix. load() restarts
      resource selection; only called when actually stuck, never on an
-     already-playing video. -->
+     already-playing video. */}
 <script>
   function playOtherWorkVideos() {
     document.querySelectorAll('.other-work-grid video, .m-other-work-grid video').forEach((video) => {

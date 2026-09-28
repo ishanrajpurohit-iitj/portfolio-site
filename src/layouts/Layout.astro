@@ -40,7 +40,7 @@ const {
 
   <ClientRouter />
 
-  <!-- Holds --frame-scale as an actual stylesheet rule instead of an inline
+  {/* Holds --frame-scale as an actual stylesheet rule instead of an inline
        style on <html>. transition:persist keeps this literal <style> node
        (and whatever JS has written into its textContent) across every
        client-side navigation, because Astro's router unconditionally wipes
@@ -58,7 +58,7 @@ const {
        dock-link navigation — an unscaled 1440x1024 canvas being clipped by
        the viewport — until a full reload) kept recurring on a real device
        regardless. Persisting the node this way needs no race to win at
-       all: nothing ever removes it, so there's nothing to reapply. -->
+       all: nothing ever removes it, so there's nothing to reapply. */}
   <style id="frame-scale-style" is:inline transition:name="frame-scale-style" transition:persist>:root{--frame-scale:1}</style>
 
 </head>
@@ -105,7 +105,7 @@ const {
     </div>
   </main>
 
-  <!-- Maximize's true-fullscreen target: a window being maximized (see
+  {/* Maximize's true-fullscreen target: a window being maximized (see
        Window.astro's flipResize/initWindowControls) gets physically moved
        here via appendChild, escaping .scale-frame's transform:scale(...)
        entirely. That's not optional cosmetic choice — position:fixed's
@@ -119,7 +119,7 @@ const {
        never actually reaching the real edges of the screen horizontally
        (or vice versa, depending on which dimension fit-both's Math.min ends
        up constrained by). Moved back to its original DOM position on
-       un-maximize. -->
+       un-maximize. */}
   <div id="maximize-portal"></div>
 
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
@@ -129,7 +129,7 @@ const {
   </div>
 
 
-  <!-- Persistent global "now playing" widget. Lives out here (not inside
+  {/* Persistent global "now playing" widget. Lives out here (not inside
        .scale-frame) for the exact reason #maximize-portal above does:
        position:fixed's containing block is normally the real viewport, but
        ANY transformed ancestor becomes the containing block for fixed
@@ -174,17 +174,17 @@ const {
        a body-only swap, so there's nothing left to detach. See
        initSoundCloudWidget's own iframe-creation code further down for the
        actual element (same src/style/allow attributes as this used to
-       have). -->
+       have). */}
   <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
 
   <div class="music-widget" id="music-widget" transition:name="music-widget" transition:persist>
     <div class="music-widget-slide">
-      <!-- Two separate buttons, not one — direct instruction: the icon
+      {/* Two separate buttons, not one — direct instruction: the icon
            itself should toggle play/pause, while the rest of the widget
            (the album art) opens the full overlay. A <button> can't nest
            another <button>, hence .music-widget-trigger is a plain div now
            (still carries the pill background via ::before) wrapping two
-           sibling buttons instead of one button wrapping two spans. -->
+           sibling buttons instead of one button wrapping two spans. */}
       <div class="music-widget-trigger" id="music-widget-trigger">
         <button type="button" class="music-widget-art-btn" id="music-widget-art-btn" aria-label="Now playing: Good Days by SZA, open player">
           <span class="music-widget-art">
@@ -210,7 +210,7 @@ const {
         <p class="music-overlay-artist" id="music-overlay-artist">SZA</p>
       </div>
 
-      <!-- Timeline/seek bar — direct instruction ("the large overlay main
+      {/* Timeline/seek bar — direct instruction ("the large overlay main
            player should have more [controls]"), scoped to THIS overlay
            only, not the small widget. Track is clickable/draggable to seek;
            the fill width and both time labels are driven live off the real
@@ -218,7 +218,7 @@ const {
            event and a one-time getDuration() call on READY (see
            initSoundCloudWidget in the script below) — not an <audio>
            element's timeupdate/loadedmetadata, now that playback is a real
-           embedded SoundCloud track rather than a self-hosted file. -->
+           embedded SoundCloud track rather than a self-hosted file. */}
       <div class="music-overlay-timeline">
         <div class="music-overlay-timeline-track" id="music-overlay-timeline-track">
           <div class="music-overlay-timeline-fill" id="music-overlay-timeline-fill"></div>
@@ -230,11 +230,11 @@ const {
         </div>
       </div>
 
-      <!-- Everything that used to be two rows (a centered prev/play/next
+      {/* Everything that used to be two rows (a centered prev/play/next
            row, then a full-width volume bar below it) is now one row —
            direct instruction: volume was "taking up too much space" as its
            own bar, so it's folded in alongside transport instead, plus a
-           new queue button flanking the other side. -->
+           new queue button flanking the other side. */}
       <div class="music-overlay-controls">
         <button type="button" class="music-overlay-queue" id="music-overlay-queue" aria-label="Queue" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h13M4 12h13M4 18h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><circle cx="19" cy="15" r="2.2" stroke="currentColor" stroke-width="1.6" fill="none" /></svg>
@@ -253,13 +253,13 @@ const {
           </button>
         </div>
 
-        <!-- Icon-only now, not an icon+always-visible-bar — direct
+        {/* Icon-only now, not an icon+always-visible-bar — direct
              instruction: hovering reveals the slider in a popover above the
              icon (pure-CSS :hover, no JS needed to show/hide it), while
              clicking the icon itself still mutes/unmutes directly, same as
-             before. Two separate gestures, two separate actions. -->
+             before. Two separate gestures, two separate actions. */}
         <div class="music-overlay-volume-control" id="music-overlay-volume-control">
-          <!-- .music-overlay-volume-popover's own box now touches the icon
+          {/* .music-overlay-volume-popover's own box now touches the icon
                directly (bottom:100%, no gap) and its padding-bottom bridges
                what used to be dead space between the two — reported back as
                "slider disappears the moment I try to move the cursor up
@@ -268,7 +268,7 @@ const {
                reached the popover. The pretty card + its own slide-in
                animation moved to the inner div instead, so the outer
                hit-box stays geometrically constant (touching, not
-               animating) while only the visual layer moves. -->
+               animating) while only the visual layer moves. */}
           <div class="music-overlay-volume-popover">
             <div class="music-overlay-volume-popover-inner">
               <input type="range" class="music-overlay-volume-slider" id="music-overlay-volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
@@ -281,11 +281,11 @@ const {
         </div>
       </div>
 
-      <!-- Queue panel — toggled by the button above. Real track list now
+      {/* Queue panel — toggled by the button above. Real track list now
            (see TRACKS in the script below): items are rendered from that
            array by renderQueue(), not hardcoded here, so the heading is the
            only static child — clicking a non-current item loads that track
-           (see the click delegation on this panel further down). -->
+           (see the click delegation on this panel further down). */}
       <div class="music-overlay-queue-panel" id="music-overlay-queue-panel">
         <p class="music-overlay-queue-heading">Tracklist</p>
       </div>
@@ -1737,7 +1737,7 @@ const {
     }
   </style>
 
-  <!-- Holds every navigation's actual duration/sequencing CSS, written into
+  {/* Holds every navigation's actual duration/sequencing CSS, written into
        its textContent per-navigation from astro:before-preparation (see
        buildNavSequenceCSS in the script below) instead of toggled as
        classes on <html> — confirmed live that classList.toggle there
@@ -1754,7 +1754,7 @@ const {
        regardless of which stylesheet it's in, so the one later in DOM order
        wins; this one needs to win over the static default duration rule
        above it, and being later in source order is what makes that happen,
-       not anything about being un-layered (both blocks already are). -->
+       not anything about being un-layered (both blocks already are). */}
   <style id="nav-sequence-style" is:inline transition:name="nav-sequence-style" transition:persist></style>
 
   <script>
@@ -2828,7 +2828,7 @@ const {
     }
   </script>
 
-  <!-- Sitewide autoplay-recovery fix, independent of the music widget above
+  {/* Sitewide autoplay-recovery fix, independent of the music widget above
        (own script, own concern, nothing shared). Root cause, confirmed live
        via the browser's own console (not guesswork): a <video autoplay>
        whose load was attempted while its container was still display:none
@@ -2847,7 +2847,7 @@ const {
        scoped to their own panels, for the exact moment their tab becomes
        visible — this one catches anything else. Runs after EVERY
        astro:page-load (not gated behind a run-once guard, unlike the music
-       widget's own init above) since it must re-arm for each new page. -->
+       widget's own init above) since it must re-arm for each new page. */}
   <script>
     function playAutoplayVideos() {
       document.querySelectorAll('video[autoplay]').forEach((video) => {

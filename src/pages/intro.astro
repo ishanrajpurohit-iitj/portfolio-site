@@ -11,10 +11,10 @@ import Dock from '../components/Dock.astro';
   backdrop={true}
 >
   <div class="intro-stage" id="intro-stage" data-beat="1">
-    <!-- Matches every inner page's .app-content: the hero/content area sits
+    {/* Matches every inner page's .app-content: the hero/content area sits
          122px down (Home's 112px nav row + 10px flex gap), so anything
          positioned inside here uses the exact same top/left values Figma
-         gives relative to that content area — no manual offset needed. -->
+         gives relative to that content area — no manual offset needed. */}
     <div class="intro-content">
       <div class="intro-window">
         <Window title="Work" height={738} transitionName="active-window" />
@@ -24,10 +24,10 @@ import Dock from '../components/Dock.astro';
         <img src="/images/home/illustration-mac.png" alt="" />
       </div>
 
-      <!-- Same source image (uncropped) at Figma's own two sizes: small and
+      {/* Same source image (uncropped) at Figma's own two sizes: small and
            positioned so its baked-in "hello." ink lines up exactly with the
            "hello." already showing on the Mac screen (measured pixel-for-pixel
-           from illustration-mac.png), then Figma's exact in-window size/position. -->
+           from illustration-mac.png), then Figma's exact in-window size/position. */}
       <div class="intro-hello">
         <img src="/images/intro/hello-zoom.png" alt="" />
       </div>
@@ -38,7 +38,7 @@ import Dock from '../components/Dock.astro';
     </div>
   </div>
 
-  <!-- Mobile never had this at all — .intro-stage above lives inside
+  {/* Mobile never had this at all — .intro-stage above lives inside
        .scale-viewport, which is display:none below the 1024px breakpoint
        (see Layout.astro's .mobile-shell comment), so the mobile fragment
        rendered NOTHING here. The desktop beat-sequencer script below still
@@ -54,8 +54,8 @@ import Dock from '../components/Dock.astro';
        screen -> Mac fades, hello reappears standalone -> hello scales up,
        evoking becoming the destination -> navigate. See the shared
        playIntro/playMobileIntro dispatch in the script below for why each
-       version only ever runs on its own matching viewport now. -->
-  <!-- Rebuilt to match Figma node 2397:10677 ("phone flow new") exactly,
+       version only ever runs on its own matching viewport now. */}
+  {/* Rebuilt to match Figma node 2397:10677 ("phone flow new") exactly,
        pixel-for-pixel — direct instruction after the first two versions
        both improvised instead of implementing what was actually designed
        there. That file duplicates Home's own Play-panel layout (Toggle,
@@ -75,7 +75,7 @@ import Dock from '../components/Dock.astro';
        fades Mac out and grows Hello to (-27,38,403x178) — deliberately
        overflowing the Carousel's own left edge and covering the chevrons,
        exactly as drawn (chevrons never move or fade in the Figma file
-       either). -->
+       either). */}
   <Fragment slot="mobile">
     <div class="m-intro-stage" id="m-intro-stage" data-beat="1">
       <div class="m-intro-toggle">
@@ -88,7 +88,7 @@ import Dock from '../components/Dock.astro';
         <p>A Product Designer taking ideas from 0 to 1 while crafting thoughtful products and visual experiences.</p>
         <p class="m-intro-hero-meta">Currently at IIT Jodhpur</p>
       </header>
-      <!-- .m-intro-window is the REAL Work window, at the REAL scale
+      {/* .m-intro-window is the REAL Work window, at the REAL scale
            /work's own .mobile-content:has(.m-titlebar) resolves to
            (Layout.astro) — not a small decorative box living inside the
            350x300 Carousel. Direct correction: "the window should be of
@@ -109,7 +109,7 @@ import Dock from '../components/Dock.astro';
            values a precomputed transform can't express. Placed BEFORE
            .m-intro-carousel so it still paints underneath Mac/Hello
            (same DOM-order-is-paint-order logic as before), even though
-           it's no longer nested inside that box. -->
+           it's no longer nested inside that box. */}
       <div class="m-intro-window">
         <div class="m-intro-window-titlebar">
           <div class="m-intro-window-lights">
@@ -124,13 +124,13 @@ import Dock from '../components/Dock.astro';
         </div>
       </div>
       <div class="m-intro-carousel">
-        <!-- Chevrons come FIRST in the DOM now, before Mac/Hello — the
+        {/* Chevrons come FIRST in the DOM now, before Mac/Hello — the
            Figma file paints Hello's big Beat-3 box AFTER (on top of) the
            chevrons, which is what actually covers them once Hello grows
            over their position; they never fade or move themselves. The
            earlier version had chevrons LAST, so they stayed on top of
            Hello instead of getting covered by it — direct feedback: "the
-           carousel arrows are still visible!". -->
+           carousel arrows are still visible!". */}
         <button type="button" class="m-hero-chevron m-hero-chevron-prev" disabled aria-label="Previous">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12.5 5L7.5 10L12.5 15" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />

@@ -336,12 +336,12 @@ const sections = [
   </Fragment>
 </AppLayout>
 
-<!-- Section videos autoplay declaratively, but every panel except the
+{/* Section videos autoplay declaratively, but every panel except the
      default (Problem) starts display:none — a video inside a hidden
      ancestor fails its autoplay attempt silently and never resumes it once
      the panel becomes visible (browsers don't retroactively retry). So each
      tab switch explicitly calls .play() on that panel's own videos, the
-     same fix already used for Writings' Captures tab. -->
+     same fix already used for Writings' Captures tab. */}
 <script>
   function playPanelVideos(panel: Element | null) {
     panel?.querySelectorAll('video').forEach((video) => {

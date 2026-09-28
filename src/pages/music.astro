@@ -283,7 +283,7 @@ for (let i = 0; i < albums.length; i += 4) {
   </Fragment>
 </AppLayout>
 
-<!-- Album-info overlay: a small centered card (see .album-overlay below)
+{/* Album-info overlay: a small centered card (see .album-overlay below)
      showing the clicked album's cover, release info, and one personal-pick
      track. Lives outside <AppLayout> here in the template, then gets moved
      to document.body by the script below on mount — same reason
@@ -298,7 +298,7 @@ for (let i = 0; i < albums.length; i += 4) {
      only needs to exist while /music is open, so appending to
      document.body (not document.documentElement, unlike the persistent
      music iframe) is correct: it's fine for it to go away on the next
-     navigation's body swap. -->
+     navigation's body swap. */}
 <div class="album-overlay" id="album-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Album top pick">
   <div class="album-overlay-card">
     <button type="button" class="album-overlay-close" id="album-overlay-close" aria-label="Close">&times;</button>
@@ -320,10 +320,10 @@ for (let i = 0; i < albums.length; i += 4) {
         <p class="album-overlay-pick-length" id="album-overlay-pick-length"></p>
       </div>
       <p class="album-overlay-pick-by" id="album-overlay-pick-by"></p>
-      <!-- Optional — why THIS track got picked, not just what it is. Only
+      {/* Optional — why THIS track got picked, not just what it is. Only
          Lost Ark Studio Vol. 8's Phoebe Bridgers pick has one so far;
          hidden (display:none) when a.pick.note is absent, same pattern as
-         .album-overlay-credit/.album-overlay-pick-by above. -->
+         .album-overlay-credit/.album-overlay-pick-by above. */}
       <p class="album-overlay-pick-note" id="album-overlay-pick-note"></p>
     </div>
   </div>

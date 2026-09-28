@@ -77,7 +77,7 @@ import '../styles/home.css';
       </div>
     </div>
 
-    <!-- "View" mode is THE resume/CV view, not a project-card list with a
+    {/* "View" mode is THE resume/CV view, not a project-card list with a
          resume button — direct correction ("no this was the view mode of
          portfolio"): the toggle's two states ARE "Play" (the interactive
          desktop-app experience) vs "View" (the actual résumé). There is no
@@ -91,7 +91,7 @@ import '../styles/home.css';
          read without pretending there's more elsewhere. Every fact here is
          the user's own real resume text (pasted directly), not
          paraphrased/invented. Minor in Management deliberately omitted —
-         direct correction: "i am no longer in minor in magement". -->
+         direct correction: "i am no longer in minor in magement". */}
     <section class="home-cv panel-view">
       <div class="home-cv-inner">
         <header class="home-cv-header">
@@ -215,25 +215,25 @@ import '../styles/home.css';
 
   <Fragment slot="mobile">
     <div class="m-home">
-      <!-- Hidden entirely in View mode (see .m-home:has(...) rule below) —
+      {/* Hidden entirely in View mode (see .m-home:has(...) rule below) —
            the desk-photo backdrop was fighting for contrast with the résumé
            text sitting on top of it ("text nahi dikh raha"), so View mode
            just goes back to the page's plain background. Moved inside
            .m-home (was a sibling before it) purely so this component's own
            already-proven .m-home:has(#toggle:not(:checked)) selector can
            reach it directly — position:fixed means the move doesn't change
-           where it actually renders. -->
+           where it actually renders. */}
       <div class="m-home-backdrop">
         <img src="/images/shared/desktop-backdrop.jpg" alt="" />
       </div>
-      <!-- Same View/Play mode toggle desktop's Nav.astro has, scaled down —
+      {/* Same View/Play mode toggle desktop's Nav.astro has, scaled down —
            direct feedback: "add the view play toggle on top scaled
            according to mobile." A separate #m-mode-toggle id (not the
            desktop one) since both trees render into the same document at
            once (see Layout.astro's .mobile-shell comment) and an id must
            be unique per page. Checked = Play (hero+carousel) by default,
            unchecked = View (project list) — same semantics and default as
-           desktop's own #mode-toggle. -->
+           desktop's own #mode-toggle. */}
       <div class="m-home-toggle">
         <label for="m-mode-toggle" class="m-toggle-label">View</label>
         <div class="m-toggle-switch">
@@ -251,7 +251,7 @@ import '../styles/home.css';
             <p class="m-hero-meta">Currently at IIT Jodhpur</p>
           </header>
 
-          <!-- Replaces the two buttons this section had (2026-09-04) —
+          {/* Replaces the two buttons this section had (2026-09-04) —
                those replaced the ORIGINAL desk-illustration collage back on
                2026-09-03 (see git history) because individual desk items
                never worked well as tap targets on a phone with no hover to
@@ -271,7 +271,7 @@ import '../styles/home.css';
                data-transition-slow matches every other Home-leaving
                trigger (Dock's Home icon, desktop's mac/turntable/racket/
                books/moleskine, Window's red close) — see Layout.astro's
-               isSlow handling. -->
+               isSlow handling. */}
           <div class="m-hero-carousel">
             <div class="m-hero-carousel-viewport">
               <div class="m-hero-carousel-track">
@@ -305,16 +305,16 @@ import '../styles/home.css';
           </div>
         </div>
 
-        <!-- Mobile equivalent of .home-projects (desktop's own View panel)
+        {/* Mobile equivalent of .home-projects (desktop's own View panel)
              — reuses the exact ProjectCard data/props /work's own mobile
              fragment uses (see work.astro's .m-work-list), the single
              canonical source for this content; duplicating it back onto
              Home was an explicit, direct instruction reversing the
-             2026-09-03 removal, not an oversight. -->
-        <!-- Same "View mode IS the (complete) CV" content desktop's
+             2026-09-03 removal, not an oversight. */}
+        {/* Same "View mode IS the (complete) CV" content desktop's
              .home-cv has, see that section's own comment in this file for
              the full reasoning — same content, same Highlights-line
-             compression trick, mirrored for mobile. -->
+             compression trick, mirrored for mobile. */}
         <div class="m-home-panel-view m-home-cv">
           <header class="m-home-cv-header">
             <h1>Hi, I&rsquo;m Ishan</h1>

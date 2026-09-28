@@ -25,7 +25,7 @@ const items = [
 ];
 ---
 
-<!-- transition:persist: see the original comment this carried forward —
+{/* transition:persist: see the original comment this carried forward —
      this exact dock looks identical on every page (only which icon is
      active differs), so without persisting it, it was fading out and back
      in on every mobile navigation for no visible reason. Astro.url.pathname
@@ -33,7 +33,7 @@ const items = [
      on whichever page it first mounted on — the script below recomputes
      which icon is active (and swaps its actual asset, see updateDockActiveIcons
      in Dock.astro for why size has to travel with src) from location.pathname
-     on every astro:page-load instead. -->
+     on every astro:page-load instead. */}
 <nav class="mobile-dock" aria-label="Primary" transition:name="mobile-dock" transition:persist>
   {items.map((item) => {
     const active = isActive(item.href);

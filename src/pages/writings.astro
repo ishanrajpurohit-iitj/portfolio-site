@@ -69,7 +69,7 @@ const journalEntries = [
   description="Writings and photo captures from Ishan Rajpurohit: moments worth remembering."
 >
   <Window title="Writings & Captures" height={738} transitionName="active-window">
-    <!-- .w-page: a wrapper genuinely owned by THIS file's own scoped
+    {/* .w-page: a wrapper genuinely owned by THIS file's own scoped
          styles, needed so the :has() rules below (which reach from the
          nested w-view radios, several levels deep inside .panel-writings,
          up to .tab-switcher/.w-article-back, its OWN siblings at this
@@ -77,14 +77,14 @@ const journalEntries = [
          (Window.astro's own element, wrapping both) carries THAT file's
          scope hash, not this one's, so a selector for it written here
          would silently match nothing (same cross-file-scoping trap noted
-         elsewhere this session, see MEMORY.md's Astro gotchas entry). -->
+         elsewhere this session, see MEMORY.md's Astro gotchas entry). */}
     <div class="w-page">
-      <!-- Chevron-back row (see Figma node 285:1007, "Chevron left" — the
+      {/* Chevron-back row (see Figma node 285:1007, "Chevron left" — the
            same ChevronLeft component/positioning case studies use for
            their own "back to Work" row) — hidden by default, shown only
            while an article is open (see the :has() rules below), toggling
            back to the list rather than navigating anywhere (htmlFor, not
-           href — there's no separate URL for "the list" here). -->
+           href — there's no separate URL for "the list" here). */}
       <div class="w-article-back">
         <ChevronLeft htmlFor="w-view-list" />
       </div>
@@ -99,7 +99,7 @@ const journalEntries = [
         </div>
 
       <div class="tab-panel panel-writings">
-        <!-- Nested radio group, same technique as the Writings/Captures tab
+        {/* Nested radio group, same technique as the Writings/Captures tab
              pair above and the case-study sidebar tabs — #w-view-list
              (default) shows the entry list; each entry's title is a
              <label> for its own #w-view-{id} radio, switching to that
@@ -110,7 +110,7 @@ const journalEntries = [
              styling being identical to the list titles'). The chevron
              itself (Figma node 285:1007, "Chevron left" — same component
              case studies use) replaces .tab-switcher while an article is
-             open — see the :has() rules further down. -->
+             open — see the :has() rules further down. */}
         <div class="w-view-wrap">
           <input type="radio" name="w-view" id="w-view-list" class="w-view-radio" checked />
           {journalEntries.map((entry) => (
@@ -155,13 +155,13 @@ const journalEntries = [
 
       <div class="tab-panel panel-captures">
         <p class="captures-subtext">Not a professional, but I try to capture what moves me.</p>
-        <!-- Masonry grid (see .captures-grid below — natural aspect ratios,
+        {/* Masonry grid (see .captures-grid below — natural aspect ratios,
              CSS multi-column, no cropping). The four recordings are real
              clips now (public/images/writings/video-1..4.mp4, direct
              upload) — muted/looped/autoplaying right in the grid itself,
              poster= the extracted-frame cover so there's no blank flash
              before each buffers in. Non-interactive (plain <div>s) —
-             thumbnails alone are enough, no click-to-open viewer. -->
+             thumbnails alone are enough, no click-to-open viewer. */}
         <div class="captures-grid">
           <div class="capture-item is-video">
             <video src="/images/writings/video-1.mp4" poster="/images/writings/video-1.jpg" autoplay muted loop playsinline preload="auto"></video>
@@ -204,10 +204,10 @@ const journalEntries = [
         <label for="m-tab-captures" class="m-tab-pill">Captures</label>
       </div>
 
-      <!-- Mobile equivalent of the desktop .w-article-back chevron — same
+      {/* Mobile equivalent of the desktop .w-article-back chevron — same
            idea (hide the tab switcher while an article is open, show a
            back-to-list control instead), sized for touch rather than
-           reusing ChevronLeft.astro's fixed desktop dimensions/position. -->
+           reusing ChevronLeft.astro's fixed desktop dimensions/position. */}
       <div class="m-w-article-back">
         <label for="m-w-view-list" class="m-w-back-btn" aria-label="Back">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none">

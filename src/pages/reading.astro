@@ -290,7 +290,7 @@ const movies = movieRows.flat();
   </Fragment>
 </AppLayout>
 
-<!-- Info overlay: a small centered card (see .film-overlay below), shared
+{/* Info overlay: a small centered card (see .film-overlay below), shared
      by both books and movies (one .card-cover img/.card-title/.card-sub
      recipe already covers both grids, so one overlay covers both detail
      views too) — showing the clicked cover's full title, author/year/
@@ -305,7 +305,7 @@ const movies = movieRows.flat();
      viewport, and inherit its scale-down. Page-specific, not
      transition:persist — appending to document.body (not
      document.documentElement) is correct since it only needs to exist
-     while /reading is open. -->
+     while /reading is open. */}
 <div class="film-overlay" id="film-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Details">
   <div class="film-overlay-card">
     <button type="button" class="film-overlay-close" id="film-overlay-close" aria-label="Close">&times;</button>
