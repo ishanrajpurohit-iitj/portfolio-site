@@ -451,10 +451,9 @@ const otherWorkResolved = otherWork.map((w) => ({
     // roughly the neighbor's own look (scaled down, hazy, blurred, offset
     // to the side it's coming from) and animates up into the sharp,
     // full-size, centered hero — reads as that side card physically
-    // stepping forward to become the new center, not just a plain fade
-    // (direct instruction: "that inactive card behind should feel like
-    // coming forward"). Plain centered fade/scale on first open, where
-    // there's no "side" for it to come from.
+    // stepping forward to become the new center, not just a plain fade.
+    // Plain centered fade/scale on first open, where there's no "side"
+    // for it to come from.
     function heroStyle(direction) {
       const anim =
         direction === 'next'
