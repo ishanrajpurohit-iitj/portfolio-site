@@ -16,7 +16,7 @@ const journalEntries = [
     title: 'meet ishan (no, not me)',
     date: '08.09.2026',
     preview: 'this is ishan. i am not sure about loving going to school, but he loves coming back fro...',
-    image: { src: 'meet-ishan-childhood.webp', alt: 'A childhood photo of Ishan, framed inside a collage of old school photos.' },
+    image: { src: 'meet-ishan-childhood.webp', width: 915, height: 1256, alt: 'A childhood photo of Ishan, framed inside a collage of old school photos.' },
     body: [
       'this is ishan.',
       'i am not sure about loving going to school, but he loves coming back from there. he loves drawing, he loves using ms paint. he loves using the computer.',
@@ -41,6 +41,8 @@ const journalEntries = [
     preview: 'yes yes yes. i am a final year undergrad in the department of chemical enginee...',
     image: {
       src: 'chemical-engineering-portrait.webp',
+      width: 1086,
+      height: 1448,
       alt: 'Ishan smiling on a rooftop at night, city lights in the background, in a halftone-print photo style.',
     },
     body: [
@@ -144,7 +146,13 @@ const journalEntries = [
                     <picture>
                       <source srcset={`/images/writings/${entry.image.src.replace(/\.webp$/, '.avif')}`} type="image/avif" />
                       <source srcset={`/images/writings/${entry.image.src}`} type="image/webp" />
-                      <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                      <img
+                        src={`/images/writings/${entry.image.src}`}
+                        alt={entry.image.alt}
+                        width={entry.image.width}
+                        height={entry.image.height}
+                        loading="lazy"
+                      />
                     </picture>
                   </div>
                 )}
@@ -254,7 +262,13 @@ const journalEntries = [
                     <picture>
                       <source srcset={`/images/writings/${entry.image.src.replace(/\.webp$/, '.avif')}`} type="image/avif" />
                       <source srcset={`/images/writings/${entry.image.src}`} type="image/webp" />
-                      <img src={`/images/writings/${entry.image.src}`} alt={entry.image.alt} loading="lazy" />
+                      <img
+                        src={`/images/writings/${entry.image.src}`}
+                        alt={entry.image.alt}
+                        width={entry.image.width}
+                        height={entry.image.height}
+                        loading="lazy"
+                      />
                     </picture>
                   </div>
                 )}
@@ -568,10 +582,22 @@ const journalEntries = [
   }
 
   /* Floated right so paragraph text wraps along its left edge, magazine-style. */
+  {/* Fixed width, not max-width: a float with only a max-width and no
+       width shrink-wraps to its content's intrinsic size, which is 0
+       before the <img> inside it has loaded — collapsing this whole box
+       to zero area. A zero-area element can't be evaluated by the
+       browser's native loading="lazy" distance-from-viewport check, so
+       the image's fetch never started until something else (a scroll)
+       forced a layout recalc — confirmed live, this is the exact
+       mechanism behind the "photo loads very late" report. Width alone
+       reserves the horizontal dimension; the real fix for height is the
+       img's own width/height HTML attributes below, which let the
+       browser compute its aspect-ratio (and therefore its rendered
+       height) before the network request even starts. */}
   .w-detail-image {
     float: right;
     margin: 0 0 20px 28px;
-    max-width: 280px;
+    width: 280px;
     box-shadow: 3px 5px 12px 0px rgba(0, 0, 0, 0.26);
   }
 
@@ -839,7 +865,7 @@ const journalEntries = [
   }
 
   .m-w-detail-image {
-    max-width: 220px;
+    width: 220px;
     box-shadow: 3px 5px 12px 0px rgba(0, 0, 0, 0.26);
   }
 
