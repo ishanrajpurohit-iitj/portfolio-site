@@ -1333,6 +1333,12 @@ import '../styles/home.css';
   // double-fire on first load AND as the natural per-visit reset — no
   // manual bookkeeping needed, the flag simply doesn't exist yet on a truly
   // fresh page view.
+  //
+  // The wheel listener lives on `document`, which survives client-side
+  // navigation, so it has to be torn down when this Home visit's DOM is
+  // swapped out. Otherwise it keeps reading this visit's detached toggle
+  // (still "checked" = Play) and clicking its detached Mac link: a scroll on
+  // /work, or in View mode on a later Home visit, would start the intro.
   function initHomeScrollAutoClick() {
     const pageShell = document.querySelector('.page-shell');
     const toggle = document.getElementById('mode-toggle');
@@ -1340,6 +1346,9 @@ import '../styles/home.css';
     if (!(pageShell instanceof HTMLElement) || !(toggle instanceof HTMLInputElement) || !(macLink instanceof HTMLElement)) return;
     if (pageShell.dataset.autoClickBound === 'true') return;
     pageShell.dataset.autoClickBound = 'true';
+
+    const listeners = new AbortController();
+    document.addEventListener('astro:after-swap', () => listeners.abort(), { once: true });
 
     let triggered = false;
 
@@ -1359,11 +1368,11 @@ import '../styles/home.css';
       if (e.deltaY <= 0) return;
 
       triggered = true;
-      document.removeEventListener('wheel', onWheel);
+      listeners.abort();
       simulateMacClick(e.clientX, e.clientY, macLink);
     }
 
-    document.addEventListener('wheel', onWheel, { passive: true });
+    document.addEventListener('wheel', onWheel, { passive: true, signal: listeners.signal });
   }
 
   // Moves a small fake cursor from wherever the triggering scroll gesture's
