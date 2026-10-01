@@ -15,7 +15,7 @@ import '../styles/home.css';
 
     <div class="panel-stack">
     <div class="hero-content panel-play" data-figma-node="0:12">
-      <a class="illustration illustration-turntable" data-figma-node="2:2" href="/music" aria-label="Music" data-transition-slow>
+      <a class="illustration illustration-turntable" data-label="Music" data-figma-node="2:2" href="/music" aria-label="Music" data-transition-slow>
         <picture>
           <source srcset="/images/home/illustration-turntable.webp" type="image/webp" />
           <img
@@ -26,7 +26,7 @@ import '../styles/home.css';
         </picture>
       </a>
 
-      <a class="illustration-racket-wrap" data-figma-node="2:4" href="/hobbies" aria-label="Squash" data-transition-slow>
+      <a class="illustration-racket-wrap" data-label="Squash" data-figma-node="2:4" href="/hobbies" aria-label="Squash" data-transition-slow>
         <div class="illustration-racket-rotate">
           <div class="illustration-racket-frame">
             <picture>
@@ -37,7 +37,7 @@ import '../styles/home.css';
         </div>
       </a>
 
-      <a class="illustration illustration-books" data-figma-node="2:3" href="/reading#movies" aria-label="Books & Movies" data-transition-slow>
+      <a class="illustration illustration-books" data-label="Books &amp; Movies" data-figma-node="2:3" href="/reading#movies" aria-label="Books & Movies" data-transition-slow>
         <div class="illustration-crop">
           <picture>
             <source srcset="/images/home/illustration-books.webp" type="image/webp" />
@@ -57,7 +57,7 @@ import '../styles/home.css';
         </picture>
       </div>
 
-      <a class="illustration illustration-mac-zoom" data-figma-node="202:484" href="/intro" aria-label="Play intro">
+      <a class="illustration illustration-mac-zoom" data-label="See work" data-figma-node="202:484" href="/intro" aria-label="See work">
         <div class="illustration-crop">
           <picture>
             <source srcset="/images/home/illustration-mac.webp" type="image/webp" />
@@ -77,7 +77,7 @@ import '../styles/home.css';
         </picture>
       </div>
 
-      <a class="illustration illustration-moleskine" data-figma-node="3:5" href="/writings" aria-label="Writings & Captures" data-transition-slow>
+      <a class="illustration illustration-moleskine" data-label="Writings &amp; Captures" data-figma-node="3:5" href="/writings" aria-label="Writings & Captures" data-transition-slow>
         <div class="illustration-crop">
           <picture>
             <source srcset="/images/home/illustration-moleskine.webp" type="image/webp" />
@@ -1003,6 +1003,94 @@ import '../styles/home.css';
   typewriteHeadline();
   document.addEventListener('astro:page-load', typewriteHeadline);
 
+  // One-time hint that the desk items are links: if a visitor sits on Play
+  // mode without discovering any of them, every item lifts and shows its
+  // label once, in a wave (see .desk-nudge in home.css). Discovering means
+  // clicking an item or resting on one long enough to read its label — the
+  // desk fills the middle of the screen, so the pointer merely crossing an
+  // item on its way somewhere is too common to count. The sessionStorage
+  // flag keeps it from replaying on later visits to Home in the same
+  // session. Same .page-shell dataset guard as the other per-arrival
+  // scripts here, against astro:page-load's extra fire on first load.
+  const DESK_NUDGE_KEY = 'desk-nudge-seen';
+  const DESK_NUDGE_DELAY = 2500;
+  const DESK_NUDGE_DURATION = 1600 + 4 * 1300;
+  const DESK_DISCOVER_DWELL = 600;
+
+  function readNudgeSeen() {
+    try {
+      return sessionStorage.getItem(DESK_NUDGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function markNudgeSeen() {
+    try {
+      sessionStorage.setItem(DESK_NUDGE_KEY, '1');
+    } catch {}
+  }
+
+  function initDeskNudge() {
+    const pageShell = document.querySelector('.page-shell');
+    const panel = document.querySelector('.panel-play');
+    const toggle = document.getElementById('mode-toggle');
+    if (!(pageShell instanceof HTMLElement) || !(panel instanceof HTMLElement) || !(toggle instanceof HTMLInputElement)) return;
+    if (pageShell.dataset.deskNudgeBound === 'true') return;
+    pageShell.dataset.deskNudgeBound = 'true';
+    if (readNudgeSeen()) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const items = panel.querySelectorAll('.illustration[data-label], .illustration-racket-wrap');
+    let timer;
+    let dwellTimer;
+
+    function startDwell() {
+      clearTimeout(dwellTimer);
+      dwellTimer = setTimeout(cancel, DESK_DISCOVER_DWELL);
+    }
+
+    function stopDwell() {
+      clearTimeout(dwellTimer);
+    }
+
+    function cancel() {
+      clearTimeout(timer);
+      clearTimeout(dwellTimer);
+      markNudgeSeen();
+      items.forEach((el) => {
+        el.removeEventListener('pointerenter', startDwell);
+        el.removeEventListener('pointerleave', stopDwell);
+        el.removeEventListener('click', cancel);
+      });
+    }
+
+    items.forEach((el) => {
+      el.addEventListener('pointerenter', startDwell);
+      el.addEventListener('pointerleave', stopDwell);
+      el.addEventListener('click', cancel);
+    });
+    document.addEventListener(
+      'astro:before-preparation',
+      () => {
+        clearTimeout(timer);
+        clearTimeout(dwellTimer);
+      },
+      { once: true },
+    );
+
+    timer = setTimeout(() => {
+      // Mobile has no desk, and View mode hides it — nothing to point at.
+      if (window.innerWidth <= 1024 || !toggle.checked) return;
+      cancel();
+      panel.classList.add('desk-nudge');
+      setTimeout(() => panel.classList.remove('desk-nudge'), DESK_NUDGE_DURATION);
+    }, DESK_NUDGE_DELAY);
+  }
+
+  initDeskNudge();
+  document.addEventListener('astro:page-load', initDeskNudge);
+
   // Mobile hero carousel (see the markup comment above for the Figma node
   // and the reasoning behind chevrons-browse/image-navigates). Re-binds and
   // resets on every astro:page-load, same as typewriteHeadline above — Home
@@ -1230,7 +1318,6 @@ import '../styles/home.css';
 
   initHeroCarousel();
   document.addEventListener('astro:page-load', initHeroCarousel);
-</script>
 
   // Play mode's desk scene is a fixed, non-scrolling canvas (scaleMode
   // "fit-both" — see Layout.astro) with nothing below the fold at all, so a
@@ -1333,6 +1420,7 @@ import '../styles/home.css';
 
   initHomeScrollAutoClick();
   document.addEventListener('astro:page-load', initHomeScrollAutoClick);
+</script>
 
 {/* is:global — this cursor <div> is created via document.createElement in
      the script above, so it never receives Astro's data-astro-cid-*
